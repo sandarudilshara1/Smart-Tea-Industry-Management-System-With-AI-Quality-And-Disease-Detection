@@ -376,24 +376,32 @@ export default function OwnerReportView() {
             {activeReport === "production" && (
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold mb-4" style={{ color: ACCENT_COLOR }}>Production Report</h2>
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b-2" style={{ borderColor: ACCENT_COLOR }}>
-                      <th className="px-4 py-3 text-left">Factory</th>
-                      <th className="px-4 py-3 text-right">Production</th>
-                      <th className="px-4 py-3 text-right">Growth</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reportData.production.map((item, idx) => (
-                      <tr key={idx} className="border-b">
-                        <td className="px-4 py-3">{item.factory}</td>
-                        <td className="px-4 py-3 text-right">{item.production}</td>
-                        <td className="px-4 py-3 text-right text-green-600 font-bold">{item.growth}</td>
+                {reportData.production.length > 0 ? (
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b-2" style={{ borderColor: ACCENT_COLOR }}>
+                        <th className="px-4 py-3 text-left">Factory</th>
+                        <th className="px-4 py-3 text-right">Production</th>
+                        <th className="px-4 py-3 text-right">Growth</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {reportData.production.map((item, idx) => (
+                        <tr key={idx} className="border-b">
+                          <td className="px-4 py-3">{item.factory}</td>
+                          <td className="px-4 py-3 text-right">{item.production}</td>
+                          <td className="px-4 py-3 text-right text-green-600 font-bold">{item.growth}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="text-center py-12 border rounded-lg" style={{ borderColor: BORDER_COLOR }}>
+                    <Package size={48} className="mx-auto mb-4 text-gray-400" />
+                    <p className="text-gray-600 font-medium">No production data available</p>
+                    <p className="text-sm text-gray-500 mt-2">Production tracking system not yet implemented</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -401,24 +409,32 @@ export default function OwnerReportView() {
             {activeReport === "financial" && (
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold mb-4" style={{ color: ACCENT_COLOR }}>Financial Report</h2>
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b-2" style={{ borderColor: ACCENT_COLOR }}>
-                      <th className="px-4 py-3 text-left">Month</th>
-                      <th className="px-4 py-3 text-right">Revenue</th>
-                      <th className="px-4 py-3 text-right">Expenses</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reportData.financial.map((item, idx) => (
-                      <tr key={idx} className="border-b">
-                        <td className="px-4 py-3">{item.month}</td>
-                        <td className="px-4 py-3 text-right text-green-600">{item.revenue}</td>
-                        <td className="px-4 py-3 text-right text-red-600">{item.expenses}</td>
+                {reportData.financial.length > 0 ? (
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b-2" style={{ borderColor: ACCENT_COLOR }}>
+                        <th className="px-4 py-3 text-left">Month</th>
+                        <th className="px-4 py-3 text-right">Revenue</th>
+                        <th className="px-4 py-3 text-right">Expenses</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {reportData.financial.map((item, idx) => (
+                        <tr key={idx} className="border-b">
+                          <td className="px-4 py-3">{item.month}</td>
+                          <td className="px-4 py-3 text-right text-green-600">{item.revenue}</td>
+                          <td className="px-4 py-3 text-right text-red-600">{item.expenses}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="text-center py-12 border rounded-lg" style={{ borderColor: BORDER_COLOR }}>
+                    <DollarSign size={48} className="mx-auto mb-4 text-gray-400" />
+                    <p className="text-gray-600 font-medium">No financial data available</p>
+                    <p className="text-sm text-gray-500 mt-2">Financial tracking system not yet implemented</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -426,32 +442,40 @@ export default function OwnerReportView() {
             {activeReport === "quality" && (
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold mb-4" style={{ color: ACCENT_COLOR }}>Quality Assessment Report</h2>
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b-2" style={{ borderColor: ACCENT_COLOR }}>
-                      <th className="px-4 py-3 text-left">Factory</th>
-                      <th className="px-4 py-3 text-center">Grade</th>
-                      <th className="px-4 py-3 text-right">Quality Score</th>
-                      <th className="px-4 py-3 text-right">Assessments</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reportData.quality.map((item, idx) => (
-                      <tr key={idx} className="border-b">
-                        <td className="px-4 py-3">{item.factory}</td>
-                        <td className="px-4 py-3 text-center">
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                            item.grade.startsWith('A') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                          }`}>
-                            {item.grade}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right font-bold" style={{ color: ACCENT_COLOR }}>{item.score}/100</td>
-                        <td className="px-4 py-3 text-right text-gray-700">{item.assessments}</td>
+                {reportData.quality.length > 0 ? (
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b-2" style={{ borderColor: ACCENT_COLOR }}>
+                        <th className="px-4 py-3 text-left">Factory</th>
+                        <th className="px-4 py-3 text-center">Grade</th>
+                        <th className="px-4 py-3 text-right">Quality Score</th>
+                        <th className="px-4 py-3 text-right">Assessments</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {reportData.quality.map((item, idx) => (
+                        <tr key={idx} className="border-b">
+                          <td className="px-4 py-3">{item.factory}</td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                              item.grade.startsWith('A') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                            }`}>
+                              {item.grade}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right font-bold" style={{ color: ACCENT_COLOR }}>{item.score}/100</td>
+                          <td className="px-4 py-3 text-right text-gray-700">{item.assessments}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="text-center py-12 border rounded-lg" style={{ borderColor: BORDER_COLOR }}>
+                    <Award size={48} className="mx-auto mb-4 text-gray-400" />
+                    <p className="text-gray-600 font-medium">No quality assessment data available</p>
+                    <p className="text-sm text-gray-500 mt-2">Quality assessment system not yet implemented</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -459,34 +483,42 @@ export default function OwnerReportView() {
             {activeReport === "diseases" && (
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold mb-4" style={{ color: ACCENT_COLOR }}>Disease Monitoring Report</h2>
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b-2" style={{ borderColor: ACCENT_COLOR }}>
-                      <th className="px-4 py-3 text-left">Disease Name</th>
-                      <th className="px-4 py-3 text-center">Cases</th>
-                      <th className="px-4 py-3 text-center">Status</th>
-                      <th className="px-4 py-3 text-right">Affected Area</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reportData.diseases.map((item, idx) => (
-                      <tr key={idx} className="border-b">
-                        <td className="px-4 py-3 font-semibold">{item.disease}</td>
-                        <td className="px-4 py-3 text-center font-bold text-gray-700">{item.cases}</td>
-                        <td className="px-4 py-3 text-center">
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                            item.status === 'Active' ? 'bg-red-100 text-red-700' :
-                            item.status === 'Monitoring' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-green-100 text-green-700'
-                          }`}>
-                            {item.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right text-gray-700">{item.affectedArea}</td>
+                {reportData.diseases.length > 0 ? (
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b-2" style={{ borderColor: ACCENT_COLOR }}>
+                        <th className="px-4 py-3 text-left">Disease Name</th>
+                        <th className="px-4 py-3 text-center">Cases</th>
+                        <th className="px-4 py-3 text-center">Status</th>
+                        <th className="px-4 py-3 text-right">Affected Area</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {reportData.diseases.map((item, idx) => (
+                        <tr key={idx} className="border-b">
+                          <td className="px-4 py-3 font-semibold">{item.disease}</td>
+                          <td className="px-4 py-3 text-center font-bold text-gray-700">{item.cases}</td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                              item.status === 'Active' ? 'bg-red-100 text-red-700' :
+                              item.status === 'Monitoring' ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-green-100 text-green-700'
+                            }`}>
+                              {item.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right text-gray-700">{item.affectedArea}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="text-center py-12 border rounded-lg" style={{ borderColor: BORDER_COLOR }}>
+                    <AlertTriangle size={48} className="mx-auto mb-4 text-gray-400" />
+                    <p className="text-gray-600 font-medium">No disease monitoring data available</p>
+                    <p className="text-sm text-gray-500 mt-2">Disease monitoring system not yet implemented</p>
+                  </div>
+                )}
               </div>
             )}
 
