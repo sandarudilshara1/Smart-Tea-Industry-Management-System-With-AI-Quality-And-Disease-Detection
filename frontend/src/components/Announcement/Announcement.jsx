@@ -72,6 +72,28 @@ export default function AnnouncementComponent() {
     setTimeout(() => setNotification(null), 3000);
   };
 
+  // Handle file download
+  const handleDownload = (attachment) => {
+    if (!attachment || !attachment.url) {
+      showNotification("No file available for download", "error");
+      return;
+    }
+
+    try {
+      // Create a temporary anchor element and trigger download
+      const link = document.createElement('a');
+      link.href = attachment.url;
+      link.download = attachment.name || 'download';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showNotification(`Downloading ${attachment.name}...`, "success");
+    } catch (error) {
+      console.error("Download error:", error);
+      showNotification("Failed to download file", "error");
+    }
+  };
+
   // View-only: update and delete actions removed
 
   // Add new action removed per UI update
@@ -180,7 +202,7 @@ export default function AnnouncementComponent() {
                               </div>
                             </div>
                             <button 
-                              onClick={() => console.log("download", attachment)} 
+                              onClick={() => handleDownload(attachment)} 
                               className="p-2 text-[#165e52] hover:bg-[#165e52] hover:text-white rounded-lg transition-all"
                               title="Download file"
                             >

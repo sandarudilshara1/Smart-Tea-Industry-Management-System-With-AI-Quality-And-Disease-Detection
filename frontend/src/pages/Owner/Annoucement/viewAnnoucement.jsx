@@ -138,8 +138,24 @@ export default function GreenLeafDashboard() {
   };
 
   const handleDownloadAttachment = (attachment) => {
-    console.log("Download file:", attachment.name);
-    showNotification(`Downloading ${attachment.name}...`, "info");
+    if (!attachment || !attachment.url) {
+      showNotification("No file available for download", "error");
+      return;
+    }
+
+    try {
+      // Create a temporary anchor element and trigger download
+      const link = document.createElement('a');
+      link.href = attachment.url;
+      link.download = attachment.name || 'download';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showNotification(`Downloading ${attachment.name}...`, "success");
+    } catch (error) {
+      console.error("Download error:", error);
+      showNotification("Failed to download file", "error");
+    }
   };
 
   const NotificationComponent = () => {

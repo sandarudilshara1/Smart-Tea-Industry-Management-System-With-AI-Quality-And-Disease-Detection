@@ -106,15 +106,28 @@ export default function AddAnnouncement() {
     setDropdownOpen(false);
   };
 
-  const handleFileUpload = (event) => {
+  const handleFileUpload = async (event) => {
     const files = Array.from(event.target.files);
     if (files.length === 0) return;
-    const newAttachments = files.map((file) => ({
-      id: Date.now() + Math.random(),
-      name: file.name,
-      size: (file.size / (1024 * 1024)).toFixed(2) + " MB",
-      file: file,
-    }));
+
+    // Convert each file to base64 data URL
+    const filePromises = files.map((file) => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          resolve({
+            id: Date.now() + Math.random(),
+            name: file.name,
+            size: (file.size / (1024 * 1024)).toFixed(2) + " MB",
+            url: reader.result, // base64 data URL
+            file: file,
+          });
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    const newAttachments = await Promise.all(filePromises);
     setForm((prev) => ({
       ...prev,
       attachments: [...prev.attachments, ...newAttachments],
@@ -172,11 +185,11 @@ export default function AddAnnouncement() {
       subject: form.subject,
       content: form.content,
       factories: form.factories.map(f => Number(f)),
-      // For now, attachments are just metadata (file upload can be added later)
+      // Store attachments with base64 data URLs
       attachments: form.attachments.map(att => ({
         name: att.name,
         size: att.size,
-        url: '' // File upload functionality can be added later
+        url: att.url || '' // base64 data URL for download
       }))
     };
 
