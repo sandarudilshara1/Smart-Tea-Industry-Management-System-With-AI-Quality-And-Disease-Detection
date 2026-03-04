@@ -14,9 +14,28 @@ import {
 } from "lucide-react";
 import axios from "../../../api/axios";
 import { getLoanRates } from "../../../api/owner";
+import {
+  getOverview,
+  getProduction,
+  getFinancial,
+  getQuality,
+  getDiseases
+} from "../../../api/reports";
 
 const ACCENT_COLOR = "#165E52";
 const BORDER_COLOR = "#cfece6";
+
+// Helper function to format currency
+const formatCurrency = (value) => {
+  if (!value && value !== 0) return "N/A";
+  return `Rs. ${Number(value).toLocaleString()}`;
+};
+
+// Helper function to format numbers
+const formatNumber = (value) => {
+  if (!value && value !== 0) return "N/A";
+  return Number(value).toLocaleString();
+};
 
 export default function OwnerReportView() {
   const [activeReport, setActiveReport] = useState("overview");
@@ -24,46 +43,39 @@ export default function OwnerReportView() {
   const [teaRate, setTeaRate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showCalculator, setShowCalculator] = useState(false);
+  const [calcDisplay, setCalcDisplay] = useState("0");
+  const [reportData, setReportData] = useState({
+    overview: {},
+    production: [],
+    financial: [],
+    quality: [],
+    diseases: []
+  });
   const reportRef = useRef();
-
-  // Sample data
-  const reportData = {
-    overview: {
-      totalRevenue: "Rs. 12,450,000",
-      totalExpenses: "Rs. 8,200,000",
-      netProfit: "Rs. 4,250,000",
-      totalEmployees: 145,
-      activeFactories: 9,
-    },
-    production: [
-      { factory: "Andaradeniya Tea Factory", production: "12,500 kg", growth: "+11.3%" },
-      { factory: "Batuwangala Tea Factory", production: "10,800 kg", growth: "+9.7%" },
-      { factory: "Ruhuna Tea Factory", production: "14,200 kg", growth: "+13.2%" },
-      { factory: "Fortune Tea Factory", production: "11,600 kg", growth: "+10.5%" },
-    ],
-    financial: [
-      { month: "January", revenue: "Rs. 1,200,000", expenses: "Rs. 780,000" },
-      { month: "February", revenue: "Rs. 1,150,000", expenses: "Rs. 760,000" },
-      { month: "March", revenue: "Rs. 1,350,000", expenses: "Rs. 850,000" },
-      { month: "April", revenue: "Rs. 1,280,000", expenses: "Rs. 820,000" },
-    ],
-    quality: [
-      { factory: "Andaradeniya Tea Factory", grade: "A+", score: 92, assessments: 45 },
-      { factory: "Batuwangala Tea Factory", grade: "A", score: 88, assessments: 38 },
-      { factory: "Ruhuna Tea Factory", grade: "A", score: 89, assessments: 42 },
-      { factory: "Fortune Tea Factory", grade: "B+", score: 82, assessments: 36 },
-    ],
-    diseases: [
-      { disease: "Blister Blight", cases: 8, status: "Active", affectedArea: "12 hectares" },
-      { disease: "Red Rust", cases: 5, status: "Monitoring", affectedArea: "8 hectares" },
-      { disease: "Root Rot", cases: 3, status: "Under Control", affectedArea: "4 hectares" },
-    ],
-  };
 
   useEffect(() => {
     async function fetchData() {
+      setLoading(true);
       try {
-        const rates = await getLoanRates();
+        // Fetch all report data
+        const [overviewRes, productionRes, financialRes, qualityRes, diseasesRes, rates] = await Promise.all([
+          getOverview().catch(() => ({ data: {} })),
+          getProduction().catch(() => ({ data: [] })),
+          getFinancial().catch(() => ({ data: [] })),
+          getQuality().catch(() => ({ data: [] })),
+          getDiseases().catch(() => ({ data: [] })),
+          getLoanRates().catch(() => [])
+        ]);
+
+        setReportData({
+          overview: overviewRes.data || {},
+          production: productionRes.data || [],
+          financial: financialRes.data || [],
+          quality: qualityRes.data || [],
+          diseases: diseasesRes.data || []
+        });
+
+        // Set loan rate
         const today = new Date().toISOString().slice(0, 10);
         if (Array.isArray(rates)) {
           const sorted = rates.sort((a, b) => new Date(a.effectiveDate) - new Date(b.effectiveDate));
@@ -71,9 +83,11 @@ export default function OwnerReportView() {
           setLoanRate(current || null);
         }
       } catch (err) {
+        console.error('Error fetching report data:', err);
         setLoanRate(null);
       }
 
+      // Fetch tea rates
       try {
         const res = await axios.get("/api/tea_rates/approved");
         const teaRates = Array.isArray(res.data) ? res.data : [];
@@ -87,6 +101,7 @@ export default function OwnerReportView() {
           setTeaRate(latest);
         }
       } catch (err) {
+        console.error('Error fetching tea rates:', err);
         setTeaRate(null);
       }
 
@@ -99,7 +114,66 @@ export default function OwnerReportView() {
 
   const handleCalculator = () => {
     setShowCalculator(!showCalculator);
+    if (!showCalculator) setCalcDisplay("0");
   };
+
+  const handleCalcButton = (value) => {
+    if (value === '=') {
+      try {
+        // Evaluate expression safely
+        const result = Function('"use strict"; return (' + calcDisplay + ')')();
+        setCalcDisplay(String(result));
+      } catch {
+        setCalcDisplay('Error');
+        setTimeout(() => setCalcDisplay('0'), 1000);
+      }
+    } else if (value === 'C') {
+      setCalcDisplay('0');
+    } else if (value === 'Backspace') {
+      setCalcDisplay(prev => prev.length > 1 ? prev.slice(0, -1) : '0');
+    } else {
+      setCalcDisplay(prev => {
+        // Prevent multiple operators or decimals in a row
+        const lastChar = prev[prev.length - 1];
+        const operators = ['+', '-', '*', '/'];
+        
+        if (operators.includes(value) && operators.includes(lastChar)) {
+          return prev.slice(0, -1) + value;
+        }
+        
+        // Handle decimal point
+        if (value === '.') {
+          const parts = prev.split(/[\+\-\*\/]/);
+          const lastNumber = parts[parts.length - 1];
+          if (lastNumber.includes('.')) return prev;
+        }
+        
+        return prev === '0' && value !== '.' ? value : prev + value;
+      });
+    }
+  };
+
+  // Keyboard support for calculator
+  useEffect(() => {
+    if (!showCalculator) return;
+    
+    const handleKeyPress = (e) => {
+      const key = e.key;
+      if (/^[0-9\+\-\*\/\.]$/.test(key)) {
+        handleCalcButton(key);
+      } else if (key === 'Enter' || key === '=') {
+        handleCalcButton('=');
+      } else if (key === 'Escape' || key === 'c' || key === 'C') {
+        handleCalcButton('C');
+      } else if (key === 'Backspace') {
+        e.preventDefault();
+        handleCalcButton('Backspace');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [showCalculator, calcDisplay]);
 
   const reportTypes = [
     { id: "overview", label: "Overview", icon: Activity },
@@ -115,7 +189,15 @@ export default function OwnerReportView() {
       <style>{`
         @media print {
           .print\\:hidden { display: none !important; }
-          nav, aside { display: none !important; }
+          nav, aside, button { display: none !important; }
+          body { background: white; }
+          .bg-gray-50 { background: white; }
+          .shadow-md, .shadow-lg, .shadow-2xl { box-shadow: none; }
+          table { page-break-inside: auto; }
+          tr { page-break-inside: avoid; page-break-after: auto; }
+          thead { display: table-header-group; }
+          tfoot { display: table-footer-group; }
+          h1, h2, h3 { page-break-after: avoid; }
         }
       `}</style>
 
@@ -147,7 +229,7 @@ export default function OwnerReportView() {
         </div>
       </div>
 
-      {/* Simple Calculator Modal */}
+      {/* Enhanced Calculator Modal */}
       {showCalculator && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 print:hidden">
           <div className="bg-white rounded-lg shadow-2xl p-6 w-80">
@@ -155,38 +237,20 @@ export default function OwnerReportView() {
               <h3 className="text-xl font-bold" style={{ color: ACCENT_COLOR }}>Quick Calculator</h3>
               <button
                 onClick={() => setShowCalculator(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-700 text-2xl"
               >
                 ✕
               </button>
             </div>
-            <div className="bg-gray-100 p-3 rounded mb-4 text-right text-2xl font-mono">
-              <input
-                type="text"
-                id="calc-display"
-                defaultValue="0"
-                readOnly
-                className="w-full bg-transparent text-right outline-none"
-              />
+            <div className="bg-gray-100 p-4 rounded mb-4 text-right text-2xl font-mono min-h-[60px] flex items-center justify-end">
+              <div className="w-full overflow-x-auto">{calcDisplay}</div>
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-2 mb-2">
               {['7', '8', '9', '/', '4', '5', '6', '*', '1', '2', '3', '-', '0', '.', '=', '+'].map((btn) => (
                 <button
                   key={btn}
-                  onClick={() => {
-                    const display = document.getElementById('calc-display');
-                    if (btn === '=') {
-                      try {
-                        display.value = eval(display.value);
-                      } catch {
-                        display.value = 'Error';
-                      }
-                    } else {
-                      if (display.value === '0') display.value = '';
-                      display.value += btn;
-                    }
-                  }}
-                  className="p-4 rounded-lg font-semibold hover:opacity-80"
+                  onClick={() => handleCalcButton(btn)}
+                  className="p-4 rounded-lg font-semibold hover:opacity-80 transition-opacity"
                   style={{ 
                     backgroundColor: btn === '=' ? ACCENT_COLOR : '#f3f4f6',
                     color: btn === '=' ? 'white' : '#111'
@@ -195,15 +259,24 @@ export default function OwnerReportView() {
                   {btn}
                 </button>
               ))}
+            </div>
+            <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => {
-                  document.getElementById('calc-display').value = '0';
-                }}
-                className="col-span-4 p-4 rounded-lg font-semibold bg-red-500 text-white hover:bg-red-600"
+                onClick={() => handleCalcButton('Backspace')}
+                className="p-4 rounded-lg font-semibold bg-orange-500 text-white hover:bg-orange-600 transition-colors"
+              >
+                Backspace
+              </button>
+              <button
+                onClick={() => handleCalcButton('C')}
+                className="p-4 rounded-lg font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors"
               >
                 Clear
               </button>
             </div>
+            <p className="text-xs text-gray-500 mt-3 text-center">
+              Tip: Use keyboard for input (Esc to clear)
+            </p>
           </div>
         </div>
       )}
@@ -251,17 +324,17 @@ export default function OwnerReportView() {
                   <div className="border rounded-lg p-4" style={{ borderColor: BORDER_COLOR }}>
                     <DollarSign size={24} style={{ color: ACCENT_COLOR }} className="mb-2" />
                     <p className="text-sm text-gray-600">Total Revenue</p>
-                    <p className="text-2xl font-bold">{reportData.overview.totalRevenue}</p>
+                    <p className="text-2xl font-bold">{formatCurrency(reportData.overview.totalRevenue)}</p>
                   </div>
                   <div className="border rounded-lg p-4" style={{ borderColor: BORDER_COLOR }}>
                     <TrendingUp size={24} style={{ color: ACCENT_COLOR }} className="mb-2" />
                     <p className="text-sm text-gray-600">Total Expenses</p>
-                    <p className="text-2xl font-bold">{reportData.overview.totalExpenses}</p>
+                    <p className="text-2xl font-bold">{formatCurrency(reportData.overview.totalExpenses)}</p>
                   </div>
                   <div className="border rounded-lg p-4" style={{ borderColor: BORDER_COLOR }}>
                     <Activity size={24} style={{ color: ACCENT_COLOR }} className="mb-2" />
                     <p className="text-sm text-gray-600">Net Profit</p>
-                    <p className="text-2xl font-bold">{reportData.overview.netProfit}</p>
+                    <p className="text-2xl font-bold">{formatCurrency(reportData.overview.netProfit)}</p>
                   </div>
                 </div>
 
@@ -269,12 +342,31 @@ export default function OwnerReportView() {
                   <div className="border rounded-lg p-4" style={{ borderColor: BORDER_COLOR }}>
                     <Users size={24} style={{ color: ACCENT_COLOR }} className="mb-2" />
                     <p className="text-sm text-gray-600">Total Employees</p>
-                    <p className="text-2xl font-bold">{reportData.overview.totalEmployees}</p>
+                    <p className="text-2xl font-bold">{formatNumber(reportData.overview.totalEmployees)}</p>
                   </div>
                   <div className="border rounded-lg p-4" style={{ borderColor: BORDER_COLOR }}>
                     <Package size={24} style={{ color: ACCENT_COLOR }} className="mb-2" />
                     <p className="text-sm text-gray-600">Active Factories</p>
-                    <p className="text-2xl font-bold">{reportData.overview.activeFactories}</p>
+                    <p className="text-2xl font-bold">{formatNumber(reportData.overview.activeFactories)}</p>
+                  </div>
+                </div>
+
+                {/* Additional Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  <div className="border rounded-lg p-4" style={{ borderColor: BORDER_COLOR }}>
+                    <Users size={24} style={{ color: ACCENT_COLOR }} className="mb-2" />
+                    <p className="text-sm text-gray-600">Total Managers</p>
+                    <p className="text-2xl font-bold">{formatNumber(reportData.overview.totalManagers)}</p>
+                  </div>
+                  <div className="border rounded-lg p-4" style={{ borderColor: BORDER_COLOR }}>
+                    <Package size={24} style={{ color: ACCENT_COLOR }} className="mb-2" />
+                    <p className="text-sm text-gray-600">Total Drivers</p>
+                    <p className="text-2xl font-bold">{formatNumber(reportData.overview.totalDrivers)}</p>
+                  </div>
+                  <div className="border rounded-lg p-4" style={{ borderColor: BORDER_COLOR }}>
+                    <Package size={24} style={{ color: ACCENT_COLOR }} className="mb-2" />
+                    <p className="text-sm text-gray-600">Fertilizer Companies</p>
+                    <p className="text-2xl font-bold">{formatNumber(reportData.overview.totalCompanies)}</p>
                   </div>
                 </div>
               </div>
