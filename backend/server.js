@@ -71,6 +71,7 @@ app.use('/api/announcements', require('./routes/announcements'));
 app.use('/api/drivers', require('./routes/drivers'));
 app.use('/api/employees', require('./routes/employees'));
 app.use('/api/manager-info', require('./routes/managers'));
+app.use('/api/fertilizer-companies', require('./routes/fertilizerCompanies'));
 
 // Future API Routes
 // app.use('/api/users', require('./routes/users'));
