@@ -1,0 +1,35 @@
+.pm-root { padding: 20px; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+.pm-title { color: #0b6b57; margin-bottom: 16px; }
+.pm-tabs { display:flex; gap:8px; margin-bottom:12px }
+.pm-tab { padding:10px 18px; border-radius:6px; border:1px solid #e0e0e0; background:#f5f5f5; cursor:pointer }
+.pm-tab.active { background:#e6f1ec; border-color:#0b6b57; font-weight:600 }
+.pm-card { background: #fff; border-radius:8px; padding:18px; box-shadow: 0 1px 3px rgba(0,0,0,0.05) }
+.pm-header-row { display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start }
+.pm-summary { flex:1 1 520px }
+.pm-summary h3 { margin:0 0 10px 0 }
+.pm-summary-grid { display:flex; gap:12px; flex-wrap:wrap }
+.pm-sum-box { background:#f7faf7; padding:14px; border-radius:6px; min-width:200px }
+.pm-sum-box .label { color:#6b6b6b; font-size:13px }
+.pm-sum-box .value { font-size:22px; font-weight:700; margin-top:6px }
+.pm-sum-box .meta { color:#9a9a9a; font-size:12px; margin-top:6px }
+.pm-controls { display:flex; flex-direction:column; gap:12px; min-width:260px }
+.pm-actions { display:flex; gap:8px; align-items:center }
+.pm-select { display:flex; gap:6px; align-items:center; font-size:13px }
+.pm-select select, .pm-select input { margin-left:6px; padding:6px 8px; border-radius:4px; border:1px solid #ddd }
+.btn { padding:8px 12px; border-radius:6px; border:1px solid transparent; cursor:pointer }
+.btn-primary { background:#0b6b57; color:white }
+.btn-ghost { background:transparent; border:1px solid #ddd }
+.btn-sm { padding:6px 8px; font-size:13px }
+.pm-search { display:flex; gap:8px; align-items:center }
+.pm-search input { padding:8px 10px; border-radius:6px; border:1px solid #ddd; min-width:180px }
+.pm-table-wrap { margin-top:18px; overflow:auto }
+.pm-table { width:100%; border-collapse:collapse; min-width:800px }
+.pm-table th, .pm-table td { text-align:left; padding:10px 12px; border-bottom:1px solid #f0f0f0 }
+.pm-table thead th { background:#083525; color:white; position:sticky; top:0 }
+
+@media (max-width: 880px) {
+  .pm-header-row { flex-direction:column }
+  .pm-summary { order:2 }
+  .pm-controls { order:1; width:100% }
+  .pm-table { min-width:600px }
+}

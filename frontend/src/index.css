@@ -1,0 +1,129 @@
+/* Hide Sidebar and Navbar when printing */
+@media print {
+  .sidebar-print-hide, .navbar-print-hide {
+    display: none !important;
+  }
+}
+/* Enable smooth scrolling for the main scroll container */
+.custom-scrollbar {
+  scroll-behavior: smooth;
+}
+/* Custom scrollbar styles for better scroll UI */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #165e52 #e5e7eb;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #165e52;
+  border-radius: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #e5e7eb;
+  border-radius: 8px;
+}
+@import "tailwindcss";
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:root {
+  color-scheme: light;
+  color: #213547;
+  background-color: #ffffff;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  /* Add landing page background to all pages */
+  background: linear-gradient(to bottom right, #d1fae5, #6ee7b7, #5eead4);
+  min-height: 100vh;
+}
+
+a {
+  font-weight: 500;
+  color: #fff;
+  text-decoration: inherit;
+}
+
+a:hover {
+  color: fff;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 1.8em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 6px;
+  border: 1px solid transparent;
+  padding: 0.43em 0.8em;
+  font-size: 0.875em;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+/* 
+button:hover {
+  border-color: #2aef18;
+} */
+
+/* button:focus,
+button:focus-visible {
+  outline: 1px solid #22c55e;
+  outline-offset: 0px;
+} */
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+
+  a:hover {
+    color: #747bff;
+  }
+
+  /* button {
+    background-color: #f9f9f9;
+  } */
+}

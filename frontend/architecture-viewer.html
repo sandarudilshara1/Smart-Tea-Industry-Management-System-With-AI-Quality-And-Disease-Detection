@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tea Factory Management System - Architecture</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 60px;
+        }
+        
+        .section h2 {
+            color: #2d3748;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .section h3 {
+            color: #4a5568;
+            font-size: 1.5rem;
+            margin: 30px 0 15px 0;
+        }
+        
+        .diagram-container {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+        }
+        
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            min-height: 400px;
+        }
+        
+        .info-box {
+            background: #edf2f7;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .info-box h4 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .info-box ul {
+            margin-left: 20px;
+        }
+        
+        .info-box li {
+            margin: 8px 0;
+            color: #4a5568;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .feature-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-card h4 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+        
+        .feature-card p {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            opacity: 0.95;
+        }
+        
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .tech-badge {
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        footer {
+            background: #2d3748;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .section h2 {
+                font-size: 1.5rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏭 Tea Factory Management System</h1>
+            <p>Comprehensive Architecture & Data Flow Documentation</p>
+        </header>
+        
+        <div class="content">
+            <section class="section">
+                <h2>🏗️ High-Level System Architecture</h2>
+                <p>Complete system overview showing all layers from client to database</p>
+                <div class="diagram-container">
+                    <div class="mermaid">
+graph TB
+    subgraph "Client Layer"
+        Browser[Web Browser]
+    end
+    
+    subgraph "Presentation Layer - React Frontend"
+        Router[App Router]
+        Auth[Authentication Module]
+        
+        subgraph "User Interfaces"
+            OwnerUI[Owner Dashboard]
+            FMgrUI[Factory Manager Dashboard]
+            FertMgrUI[Fertilizer Manager Dashboard]
+            InvMgrUI[Inventory Manager Dashboard]
+            PayMgrUI[Payment Manager Dashboard]
+            TransMgrUI[Transport Manager Dashboard]
+            SupUI[Supplier Dashboard]
+            DrvUI[Driver Dashboard]
+        end
+        
+        subgraph "Shared Components"
+            Navbar[Navigation Bar]
+            Sidebar[Sidebar]
+            Charts[Charts & Analytics]
+            Notifications[Notifications]
+            Profile[Profile Management]
+        end
+        
+        subgraph "Feature Modules"
+            Inventory[Inventory Management]
+            Payment[Payment Processing]
+            Transport[Transport & Routes]
+            Fertilizer[Fertilizer Management]
+            Supply[Supply Chain]
+            Quality[Tea Quality Detection]
+            Disease[Disease Detection]
+        end
+    end
+    
+    subgraph "Service Layer"
+        API[API Service Layer]
+        
+        subgraph "API Modules"
+            AuthAPI[Auth API]
+            UserAPI[User API]
+            DriverAPI[Driver API]
+            SupplierAPI[Supplier API]
+            InventoryAPI[Inventory API]
+            PaymentAPI[Payment API]
+            LoanAPI[Loan API]
+            FertilizerAPI[Fertilizer API]
+            ManagerAPI[Manager API]
+            OwnerAPI[Owner API]
+        end
+        
+        Axios[Axios HTTP Client]
+    end
+    
+    subgraph "External Services"
+        Firebase[Firebase Auth & Storage]
+        Backend[Backend REST API Server]
+    end
+    
+    subgraph "Data Layer"
+        Database[(Database)]
+    end
+    
+    Browser --> Router
+    Router --> Auth
+    Auth --> Firebase
+    
+    Router --> OwnerUI
+    Router --> FMgrUI
+    Router --> FertMgrUI
+    Router --> InvMgrUI
+    Router --> PayMgrUI
+    Router --> TransMgrUI
+    Router --> SupUI
+    Router --> DrvUI
+    
+    OwnerUI --> Navbar
+    FMgrUI --> Navbar
+    FertMgrUI --> Navbar
+    InvMgrUI --> Navbar
+    PayMgrUI --> Navbar
+    TransMgrUI --> Navbar
+    SupUI --> Navbar
+    DrvUI --> Navbar
+    
+    OwnerUI --> Inventory
+    FMgrUI --> Inventory
+    FertMgrUI --> Fertilizer
+    InvMgrUI --> Inventory
+    PayMgrUI --> Payment
+    TransMgrUI --> Transport
+    SupUI --> Supply
+    
+    Inventory --> API
+    Payment --> API
+    Transport --> API
+    Fertilizer --> API
+    Supply --> API
+    Quality --> API
+    Disease --> API
+    
+    API --> Axios
+    Axios --> Backend
+    Axios --> Firebase
+    
+    Backend --> Database
+    Firebase --> Database
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>🔄 Data Flow Diagram</h2>
+                <p>Request-response cycle from user action to database and back</p>
+                <div class="diagram-container">
+                    <div class="mermaid">
+sequenceDiagram
+    participant User
+    participant UI as User Interface
+    participant Auth as Auth Module
+    participant API as API Layer
+    participant Backend as Backend Server
+    participant DB as Database
+    participant Firebase as Firebase
+    
+    User->>UI: Access Application
+    UI->>Auth: Check Authentication
+    Auth->>Firebase: Verify Token
+    Firebase-->>Auth: Auth Status
+    
+    alt Authenticated
+        Auth-->>UI: Grant Access
+        UI->>API: Request Data
+        API->>Backend: HTTP Request
+        Backend->>DB: Query Data
+        DB-->>Backend: Return Data
+        Backend-->>API: JSON Response
+        API-->>UI: Formatted Data
+        UI-->>User: Display Content
+    else Not Authenticated
+        Auth-->>UI: Redirect to Login
+        UI-->>User: Show Login Page
+        User->>UI: Submit Credentials
+        UI->>Firebase: Authenticate
+        Firebase-->>UI: Token
+        UI->>Backend: Register Session
+    end
+    
+    User->>UI: Perform Action (CRUD)
+    UI->>API: API Request
+    API->>Backend: HTTP Request (POST/PUT/DELETE)
+    Backend->>DB: Update Data
+    DB-->>Backend: Confirmation
+    Backend-->>API: Success Response
+    API-->>UI: Update State
+    UI-->>User: Show Notification
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>👥 User Role Flow</h2>
+                <p>Role-based access control and feature mapping for 8 different user types</p>
+                <div class="diagram-container">
+                    <div class="mermaid">
+graph TD
+    Start[User Login] --> Auth{Authentication}
+    Auth -->|Success| RoleCheck{Check User Role}
+    Auth -->|Failure| Login[Login Page]
+    
+    RoleCheck -->|Owner| OwnerDash[Owner Dashboard]
+    RoleCheck -->|Factory Manager| FMDash[Factory Manager Dashboard]
+    RoleCheck -->|Fertilizer Manager| FertDash[Fertilizer Manager Dashboard]
+    RoleCheck -->|Inventory Manager| InvDash[Inventory Manager Dashboard]
+    RoleCheck -->|Payment Manager| PayDash[Payment Manager Dashboard]
+    RoleCheck -->|Transport Manager| TransDash[Transport Manager Dashboard]
+    RoleCheck -->|Supplier| SupDash[Supplier Dashboard]
+    RoleCheck -->|Driver| DrvDash[Driver Dashboard]
+    
+    OwnerDash --> OwnerFeatures[Manage All Operations<br/>View Reports<br/>Manage Employers<br/>Set Rates<br/>Announcements]
+    FMDash --> FMFeatures[Manage Inventory<br/>Manage Drivers<br/>Manage Routes<br/>Manage Suppliers<br/>Manage Fertilizers]
+    FertDash --> FertFeatures[Manage Stock<br/>Track Requests<br/>View History<br/>Generate Reports<br/>Driver Routes]
+    InvDash --> InvFeatures[Record Leaf Weight<br/>Record Bag Weight<br/>View History]
+    PayDash --> PayFeatures[Process Payments<br/>Manage Advances<br/>Manage Loans<br/>Set Tea Rates]
+    TransDash --> TransFeatures[Manage Routes<br/>Assign Drivers<br/>Track Vehicles]
+    SupDash --> SupFeatures[Submit Supply<br/>View History<br/>Track Payments]
+    DrvDash --> DrvFeatures[View Routes<br/>Update Status<br/>View Assignments]
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>🧩 Component Architecture</h2>
+                <p>React application structure with routing and layout layers</p>
+                <div class="diagram-container">
+                    <div class="mermaid">
+graph LR
+    subgraph "React Application"
+        Main[main.jsx Entry Point]
+        App[App.jsx]
+        Context[Auth Context]
+        
+        subgraph "Routing Layer"
+            AppRouter[App Router]
+            OwnerRoutes[Owner Routes]
+            FMRoutes[Factory Manager Routes]
+            FertRoutes[Fertilizer Manager Routes]
+            InvRoutes[Inventory Manager Routes]
+            PayRoutes[Payment Manager Routes]
+            TransRoutes[Transport Manager Routes]
+        end
+        
+        subgraph "Layout Layer"
+            MainLayout[Main Layout]
+            InvLayout[Inventory Manager Layout]
+        end
+        
+        subgraph "Page Components"
+            Dashboards[Role-Based Dashboards]
+            Features[Feature Pages]
+        end
+    end
+    
+    Main --> App
+    App --> Context
+    App --> AppRouter
+    AppRouter --> OwnerRoutes
+    AppRouter --> FMRoutes
+    AppRouter --> FertRoutes
+    AppRouter --> InvRoutes
+    AppRouter --> PayRoutes
+    AppRouter --> TransRoutes
+    
+    OwnerRoutes --> MainLayout
+    FMRoutes --> MainLayout
+    FertRoutes --> MainLayout
+    InvRoutes --> InvLayout
+    PayRoutes --> MainLayout
+    TransRoutes --> MainLayout
+    
+    MainLayout --> Dashboards
+    InvLayout --> Dashboards
+    Dashboards --> Features
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>💻 Technology Stack</h2>
+                <div class="tech-stack">
+                    <span class="tech-badge">React 18+</span>
+                    <span class="tech-badge">Vite</span>
+                    <span class="tech-badge">Tailwind CSS</span>
+                    <span class="tech-badge">React Router</span>
+                    <span class="tech-badge">Axios</span>
+                    <span class="tech-badge">Firebase Auth</span>
+                    <span class="tech-badge">Firebase Storage</span>
+                    <span class="tech-badge">Context API</span>
+                    <span class="tech-badge">RESTful API</span>
+                    <span class="tech-badge">Chart Libraries</span>
+                </div>
+                <div class="diagram-container">
+                    <div class="mermaid">
+graph TB
+    subgraph "Frontend Technologies"
+        React[React 18+]
+        Vite[Vite Build Tool]
+        Tailwind[Tailwind CSS]
+        Router[React Router]
+    end
+    
+    subgraph "State & Context"
+        Context[React Context API]
+        AuthCtx[Auth Context]
+    end
+    
+    subgraph "HTTP & API"
+        Axios[Axios HTTP Client]
+        RestAPI[RESTful API]
+    end
+    
+    subgraph "Authentication & Storage"
+        FirebaseAuth[Firebase Authentication]
+        FirebaseStorage[Firebase Storage]
+    end
+    
+    subgraph "UI Components"
+        CustomUI[Custom Components]
+        Charts[Chart Libraries]
+        Forms[Form Components]
+    end
+    
+    React --> Vite
+    React --> Tailwind
+    React --> Router
+    React --> Context
+    Context --> AuthCtx
+    React --> Axios
+    Axios --> RestAPI
+    React --> FirebaseAuth
+    React --> FirebaseStorage
+    React --> CustomUI
+    CustomUI --> Charts
+    CustomUI --> Forms
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>✨ Key Features</h2>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>🔐 Role-Based Access Control</h4>
+                        <p>8 distinct user roles with customized interfaces and permissions for secure, organized operations</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🔔 Real-time Notifications</h4>
+                        <p>System-wide notification system keeps all stakeholders informed of critical updates</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📊 Analytics & Reporting</h4>
+                        <p>Comprehensive charts and data visualization for informed decision-making</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📦 Inventory Tracking</h4>
+                        <p>Real-time leaf and bag weight management with complete history tracking</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>💰 Payment Processing</h4>
+                        <p>Complete payment, advance, and loan management system with tea rate control</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🚚 Supply Chain Management</h4>
+                        <p>End-to-end tracking from supplier submissions to factory processing</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🍃 Quality Control</h4>
+                        <p>Tea quality assessment and disease detection modules for product excellence</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🗺️ Route Optimization</h4>
+                        <p>Transport and delivery route management with driver assignment capabilities</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>🎯 Module Breakdown</h2>
+                
+                <div class="info-box">
+                    <h4>1. Owner Module - Complete System Oversight</h4>
+                    <ul>
+                        <li>Dashboard with comprehensive metrics</li>
+                        <li>Employer and role management</li>
+                        <li>Payment approvals and financial oversight</li>
+                        <li>Tea and fertilizer rate setting</li>
+                        <li>System-wide announcements</li>
+                        <li>Supplier and company management</li>
+                        <li>Comprehensive reporting across all modules</li>
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <h4>2. Factory Manager Module - Operations Management</h4>
+                    <ul>
+                        <li>Dashboard with key operational metrics</li>
+                        <li>Inventory oversight and management</li>
+                        <li>Driver coordination and assignments</li>
+                        <li>Route planning and optimization</li>
+                        <li>Supplier relationship management</li>
+                        <li>Fertilizer stock monitoring</li>
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <h4>3. Fertilizer Manager Module - Fertilizer Operations</h4>
+                    <ul>
+                        <li>Stock level management and tracking</li>
+                        <li>Request processing and fulfillment</li>
+                        <li>Distribution tracking</li>
+                        <li>Driver route coordination</li>
+                        <li>Historical data and reporting</li>
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <h4>4. Inventory Manager Module - Weight Recording</h4>
+                    <ul>
+                        <li>Fresh tea leaf weight recording</li>
+                        <li>Processed bag weight tracking</li>
+                        <li>Complete inventory history</li>
+                        <li>Real-time updates and synchronization</li>
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <h4>5. Payment Manager Module - Financial Processing</h4>
+                    <ul>
+                        <li>Payment processing and disbursement</li>
+                        <li>Advance payment management</li>
+                        <li>Loan administration</li>
+                        <li>Tea rate configuration</li>
+                        <li>Payment history and reports</li>
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <h4>6. Transport Manager Module - Logistics</h4>
+                    <ul>
+                        <li>Route creation and management</li>
+                        <li>Driver assignment and scheduling</li>
+                        <li>Vehicle tracking</li>
+                        <li>Schedule coordination</li>
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <h4>7. Supplier Module - Tea Supply</h4>
+                    <ul>
+                        <li>Tea supply submission portal</li>
+                        <li>Supply history tracking</li>
+                        <li>Payment status monitoring</li>
+                        <li>Performance metrics</li>
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <h4>8. Driver Module - Delivery Management</h4>
+                    <ul>
+                        <li>Route assignment viewing</li>
+                        <li>Delivery status updates</li>
+                        <li>Pickup and delivery tracking</li>
+                        <li>Schedule management</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>🔒 Security & Scalability</h2>
+                <div class="info-box">
+                    <h4>Security Features</h4>
+                    <ul>
+                        <li>Firebase Authentication for secure user management</li>
+                        <li>Token-based session management</li>
+                        <li>Role-based route protection</li>
+                        <li>API authentication headers</li>
+                        <li>Secure data transmission (HTTPS)</li>
+                        <li>Input validation and sanitization</li>
+                    </ul>
+                </div>
+                <div class="info-box">
+                    <h4>Scalability Features</h4>
+                    <ul>
+                        <li>Modular component architecture</li>
+                        <li>Lazy loading of routes for performance</li>
+                        <li>Code splitting with Vite build optimization</li>
+                        <li>API abstraction layer for flexibility</li>
+                        <li>Reusable component library</li>
+                        <li>Centralized state management with Context API</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+        
+        <footer>
+            <p>Tea Factory Management System - Architectural Documentation</p>
+            <p>Generated on January 11, 2026</p>
+        </footer>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            sequence: {
+                useMaxWidth: true,
+                diagramMarginX: 50,
+                diagramMarginY: 10
+            }
+        });
+    </script>
+</body>
+</html>
