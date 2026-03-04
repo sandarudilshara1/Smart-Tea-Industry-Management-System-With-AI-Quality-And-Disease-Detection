@@ -1,100 +1,208 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { getVehicleById } from "../../../api/vehicle";
+import { Loader, Truck, Calendar, User } from "lucide-react";
 
-export default function ViewVehicle({ vehicles }) {
-  const { vehicleNumber } = useParams();
+const ACCENT_COLOR = "#165E52";
+const BORDER_COLOR = "#cfece6";
+
+export default function ViewVehicle() {
+  const { id } = useParams();
   const navigate = useNavigate();
+  const [vehicle, setVehicle] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Find vehicle by vehicleNumber
-  const vehicle = vehicles.find((v) => v.vehicleNumber === vehicleNumber);
+  useEffect(() => {
+    fetchVehicle();
+  }, [id]);
 
-  if (!vehicle)
-    return <div className="p-8 text-center">Vehicle not found.</div>;
+  const fetchVehicle = async () => {
+    try {
+      setLoading(true);
+      const data = await getVehicleById(id);
+      setVehicle(data);
+    } catch (err) {
+      console.error('Error fetching vehicle:', err);
+      setError('Failed to load vehicle details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader className="animate-spin" size={32} style={{ color: ACCENT_COLOR }} />
+      </div>
+    );
+  }
+
+  if (error || !vehicle) {
+    return (
+      <div className="p-8 text-center text-red-600">
+        {error || 'Vehicle not found'}
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow space-y-6">
-      <button
-        onClick={() => navigate(-1)}
-        className="text-blue-600 mb-4 hover:underline"
-      >
-        &larr; Back
-      </button>
+    <div className="min-h-screen bg-[#f8fdfc] p-6">
+      <div className="max-w-4xl mx-auto">
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-6 px-4 py-2 rounded-lg border bg-white hover:bg-gray-50 transition-colors"
+          style={{ borderColor: BORDER_COLOR, color: ACCENT_COLOR }}
+        >
+          ← Back
+        </button>
 
-      {/* Vehicle Info Section */}
-      <div className="flex items-center gap-6">
-        {vehicle.vehicleImage ? (
-          <img
-            src={
-              typeof vehicle.vehicleImage === "string"
-                ? vehicle.vehicleImage
-                : URL.createObjectURL(vehicle.vehicleImage)
-            }
-            alt="Vehicle"
-            className="w-32 h-32 object-cover rounded-lg border"
-          />
-        ) : (
-          <div className="w-32 h-32 bg-gray-200 flex items-center justify-center rounded-lg border text-gray-400">
-            No Image
-          </div>
-        )}
-
-        <div>
-          <h2 className="text-2xl font-bold mb-2">
-            {vehicle.vehicleType}{" "}
-            <span className="text-gray-500">({vehicle.vehicleNumber})</span>
+        <div className="bg-white rounded-lg shadow-md border p-8" style={{ borderColor: BORDER_COLOR }}>
+          <h2 className="text-3xl font-bold mb-6" style={{ color: ACCENT_COLOR }}>
+            Vehicle Details
           </h2>
-          <div className="mt-2">
-            <span className="font-semibold">Capacity:</span> {vehicle.capacity}
-          </div>
-          <div>
-            <span className="font-semibold">Status:</span> {vehicle.status}
-          </div>
-          <div>
-            <span className="font-semibold">Last Service:</span>{" "}
-            {vehicle.lastServiceDate}
-          </div>
-        </div>
-      </div>
 
-      {/* Driver Info Section */}
-      <div>
-        <h3 className="font-semibold mb-2">Assigned Driver</h3>
-        {vehicle.assignedDriver ? (
-          <div className="flex items-center gap-4">
-            {vehicle.driverImage ? (
-              <img
-                src={vehicle.driverImage}
-                alt={vehicle.assignedDriver}
-                className="w-16 h-16 rounded-full border object-cover"
-              />
-            ) : (
-              <div className="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center text-gray-600">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-8 w-8"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M5.121 17.804A9 9 0 1118.879 6.196 9 9 0 015.12 17.804z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Vehicle Number */}
+            <div>
+              <label className="text-sm font-medium text-gray-600">Vehicle Number</label>
+              <p className="text-lg font-semibold mt-1" style={{ color: ACCENT_COLOR }}>
+                {vehicle.vehicleNumber}
+              </p>
+            </div>
+
+            {/* Vehicle Type */}
+            <div>
+              <label className="text-sm font-medium text-gray-600">Type</label>
+              <p className="text-lg font-semibold mt-1" style={{ color: ACCENT_COLOR }}>
+                {vehicle.vehicleType}
+              </p>
+            </div>
+
+            {/* Model */}
+            <div>
+              <label className="text-sm font-medium text-gray-600">Model</label>
+              <p className="text-lg font-semibold mt-1" style={{ color: ACCENT_COLOR }}>
+                {vehicle.model}
+              </p>
+            </div>
+
+            {/* Capacity */}
+            <div>
+              <label className="text-sm font-medium text-gray-600">Capacity</label>
+              <p className="text-lg font-semibold mt-1" style={{ color: ACCENT_COLOR }}>
+                {vehicle.capacity}
+              </p>
+            </div>
+
+            {/* Status */}
+            <div>
+              <label className="text-sm font-medium text-gray-600">Status</label>
+              <p className="text-lg font-semibold mt-1" style={{ color: ACCENT_COLOR }}>
+                {vehicle.status}
+              </p>
+            </div>
+
+            {/* Assigned Driver */}
+            <div>
+              <label className="text-sm font-medium text-gray-600">Assigned Driver</label>
+              <p className="text-lg font-semibold mt-1" style={{ color: ACCENT_COLOR }}>
+                {vehicle.assignedDriver || 'Not Assigned'}
+              </p>
+            </div>
+
+            {/* Registration Number */}
+            {vehicle.registrationNumber && (
+              <div>
+                <label className="text-sm font-medium text-gray-600">Registration Number</label>
+                <p className="text-lg font-semibold mt-1" style={{ color: ACCENT_COLOR }}>
+                  {vehicle.registrationNumber}
+                </p>
               </div>
             )}
-            <span className="text-lg">{vehicle.assignedDriver}</span>
+
+            {/* Manufacturing Year */}
+            {vehicle.manufacturingYear && (
+              <div>
+                <label className="text-sm font-medium text-gray-600">Year</label>
+                <p className="text-lg font-semibold mt-1" style={{ color: ACCENT_COLOR }}>
+                  {vehicle.manufacturingYear}
+                </p>
+              </div>
+            )}
+
+            {/* Fuel Type */}
+            {vehicle.fuelType && (
+              <div>
+                <label className="text-sm font-medium text-gray-600">Fuel Type</label>
+                <p className="text-lg font-semibold mt-1" style={{ color: ACCENT_COLOR }}>
+                  {vehicle.fuelType}
+                </p>
+              </div>
+            )}
+
+            {/* Mileage */}
+            {vehicle.mileage !== undefined && (
+              <div>
+                <label className="text-sm font-medium text-gray-600">Mileage</label>
+                <p className="text-lg font-semibold mt-1" style={{ color: ACCENT_COLOR }}>
+                  {vehicle.mileage} km
+                </p>
+              </div>
+            )}
+
+            {/* Last Service Date */}
+            {vehicle.lastServiceDate && (
+              <div>
+                <label className="text-sm font-medium text-gray-600">Last Service Date</label>
+                <p className="text-lg font-semibold mt-1" style={{ color: ACCENT_COLOR }}>
+                  {new Date(vehicle.lastServiceDate).toLocaleDateString()}
+                </p>
+              </div>
+            )}
+
+            {/* Next Service Date */}
+            {vehicle.nextServiceDate && (
+              <div>
+                <label className="text-sm font-medium text-gray-600">Next Service Date</label>
+                <p className="text-lg font-semibold mt-1" style={{ color: ACCENT_COLOR }}>
+                  {new Date(vehicle.nextServiceDate).toLocaleDateString()}
+                </p>
+              </div>
+            )}
+
+            {/* Insurance Expiry */}
+            {vehicle.insuranceExpiryDate && (
+              <div>
+                <label className="text-sm font-medium text-gray-600">Insurance Expiry</label>
+                <p className="text-lg font-semibold mt-1" style={{ color: ACCENT_COLOR }}>
+                  {new Date(vehicle.insuranceExpiryDate).toLocaleDateString()}
+                </p>
+              </div>
+            )}
+
+            {/* Notes */}
+            {vehicle.notes && (
+              <div className="md:col-span-2">
+                <label className="text-sm font-medium text-gray-600">Notes</label>
+                <p className="text-lg mt-1" style={{ color: ACCENT_COLOR }}>
+                  {vehicle.notes}
+                </p>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="text-gray-500">No driver assigned</div>
-        )}
+
+          {/* Action Buttons */}
+          <div className="mt-8 flex gap-4">
+            <button
+              onClick={() => navigate(`/transportManager/vehicle/edit/${vehicle._id}`)}
+              className="px-6 py-2 rounded-lg text-white font-semibold hover:opacity-90 transition-opacity"
+              style={{ backgroundColor: '#172526' }}
+            >
+              Edit Vehicle
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
