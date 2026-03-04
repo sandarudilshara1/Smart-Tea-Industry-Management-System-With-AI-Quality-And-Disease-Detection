@@ -48,7 +48,7 @@ A comprehensive full-stack web application for managing tea factory operations, 
   - Vehicle tracking and maintenance
   - Delivery scheduling and confirmation
 
-- **Fertilizer Management**:
+- **Fertilizer Management**: 
   - Stock inventory and usage tracking
   - Distribution to suppliers
   - Request management system
