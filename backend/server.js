@@ -69,6 +69,8 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/announcements', require('./routes/announcements'));
 app.use('/api/drivers', require('./routes/drivers'));
+app.use('/api/employees', require('./routes/employees'));
+app.use('/api/manager-info', require('./routes/managers'));
 
 // Future API Routes
 // app.use('/api/users', require('./routes/users'));

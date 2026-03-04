@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit, Trash, X, Search, Mail, Phone, MapPin, Briefcase, Calendar, DollarSign, User } from "lucide-react";
+import { getAllEmployees, createEmployee, updateEmployee, deleteEmployee } from "../../../api/employee";
 
 const ACCENT_COLOR = "#165e52";
 const BUTTON_COLOR = "#172526";
@@ -292,153 +293,49 @@ const EmployerManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
+  const [loading, setLoading] = useState(true);
+  const [notification, setNotification] = useState(null);
 
-  // Load sample data
+  // Fetch employees from backend
   useEffect(() => {
-    const sampleEmployees = [
-      {
-        id: 1,
-        firstName: "Kamal",
-        lastName: "Silva",
-        email: "kamal.silva@greenleaf.lk",
-        phone: "+94 77 123 4567",
-        position: "Factory Manager",
-        department: "Management",
-        salary: "85000",
-        hireDate: "2020-03-15",
-        address: "123, Main Street",
-        city: "Colombo",
-        status: "Active",
-      },
-      {
-        id: 2,
-        firstName: "Nimal",
-        lastName: "Fernando",
-        email: "nimal.fernando@greenleaf.lk",
-        phone: "+94 77 234 5678",
-        position: "Transport Manager",
-        department: "Transport",
-        salary: "75000",
-        hireDate: "2019-07-20",
-        address: "45, Kandy Road",
-        city: "Kandy",
-        status: "Active",
-      },
-      {
-        id: 3,
-        firstName: "Sunil",
-        lastName: "Perera",
-        email: "sunil.perera@greenleaf.lk",
-        phone: "+94 77 345 6789",
-        position: "Driver",
-        department: "Transport",
-        salary: "45000",
-        hireDate: "2021-01-10",
-        address: "78, Galle Road",
-        city: "Galle",
-        status: "Active",
-      },
-      {
-        id: 4,
-        firstName: "Sanduni",
-        lastName: "Jayawardena",
-        email: "sanduni.j@greenleaf.lk",
-        phone: "+94 77 456 7890",
-        position: "Inventory Manager",
-        department: "Inventory",
-        salary: "70000",
-        hireDate: "2020-09-05",
-        address: "92, Hill Street",
-        city: "Nuwara Eliya",
-        status: "Active",
-      },
-      {
-        id: 5,
-        firstName: "Ravi",
-        lastName: "Kumar",
-        email: "ravi.kumar@greenleaf.lk",
-        phone: "+94 77 567 8901",
-        position: "Fertilizer Manager",
-        department: "Fertilizer",
-        salary: "65000",
-        hireDate: "2021-05-12",
-        address: "34, Temple Road",
-        city: "Matara",
-        status: "Active",
-      },
-      {
-        id: 6,
-        firstName: "Chamari",
-        lastName: "Dissanayake",
-        email: "chamari.d@greenleaf.lk",
-        phone: "+94 77 678 9012",
-        position: "Quality Inspector",
-        department: "Quality Control",
-        salary: "55000",
-        hireDate: "2022-02-18",
-        address: "56, Station Road",
-        city: "Hatton",
-        status: "Active",
-      },
-      {
-        id: 7,
-        firstName: "Asanka",
-        lastName: "Bandara",
-        email: "asanka.b@greenleaf.lk",
-        phone: "+94 77 789 0123",
-        position: "Payment Manager",
-        department: "Payment",
-        salary: "72000",
-        hireDate: "2019-11-30",
-        address: "89, Lake Road",
-        city: "Badulla",
-        status: "On Leave",
-      },
-      {
-        id: 8,
-        firstName: "Pradeep",
-        lastName: "Mendis",
-        email: "pradeep.m@greenleaf.lk",
-        phone: "+94 77 890 1234",
-        position: "Field Worker",
-        department: "Field Operations",
-        salary: "38000",
-        hireDate: "2022-06-01",
-        address: "12, Forest Lane",
-        city: "Ratnapura",
-        status: "Active",
-      },
-      {
-        id: 9,
-        firstName: "Dilini",
-        lastName: "Wickramasinghe",
-        email: "dilini.w@greenleaf.lk",
-        phone: "+94 77 901 2345",
-        position: "Tea Collector",
-        department: "Production",
-        salary: "42000",
-        hireDate: "2021-08-15",
-        address: "67, Valley View",
-        city: "Dimbula",
-        status: "Active",
-      },
-      {
-        id: 10,
-        firstName: "Mahesh",
-        lastName: "Rajapaksa",
-        email: "mahesh.r@greenleaf.lk",
-        phone: "+94 77 012 3456",
-        position: "Warehouse Supervisor",
-        department: "Inventory",
-        salary: "58000",
-        hireDate: "2020-12-03",
-        address: "101, Industrial Road",
-        city: "Kurunegala",
-        status: "Inactive",
-      },
-    ];
-    setEmployees(sampleEmployees);
+    fetchEmployees();
   }, []);
+
+  const fetchEmployees = async () => {
+    try {
+      setLoading(true);
+      const response = await getAllEmployees();
+      if (response.success) {
+        // Transform data to match frontend format
+        const transformedEmployees = response.data.employees.map(emp => ({
+          id: emp._id,
+          firstName: emp.firstName,
+          lastName: emp.lastName,
+          email: emp.email,
+          phone: emp.phone,
+          position: emp.position,
+          department: emp.department,
+          salary: emp.salary.toString(),
+          hireDate: emp.hireDate.split('T')[0],
+          address: emp.address || '',
+          city: emp.city || '',
+          status: emp.status
+        }));
+        setEmployees(transformedEmployees);
+      }
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      showNotification('Failed to load employees', 'error');
+      setEmployees([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
 
   const handleOpenModal = (employee = null) => {
     setEditingEmployee(employee);
@@ -450,28 +347,54 @@ const EmployerManagement = () => {
     setEditingEmployee(null);
   };
 
-  const handleSaveEmployee = (employeeData) => {
-    if (editingEmployee) {
-      // Update existing employee
-      setEmployees((prev) =>
-        prev.map((emp) =>
-          emp.id === editingEmployee.id ? { ...employeeData, id: emp.id } : emp
-        )
+  const handleSaveEmployee = async (employeeData) => {
+    try {
+      if (editingEmployee) {
+        // Update existing employee
+        const response = await updateEmployee(editingEmployee.id, {
+          ...employeeData,
+          salary: Number(employeeData.salary)
+        });
+        if (response.success) {
+          showNotification('Employee updated successfully', 'success');
+          fetchEmployees();
+        }
+      } else {
+        // Add new employee
+        const response = await createEmployee({
+          ...employeeData,
+          salary: Number(employeeData.salary)
+        });
+        if (response.success) {
+          showNotification('Employee added successfully', 'success');
+          fetchEmployees();
+        }
+      }
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error saving employee:', error);
+      showNotification(
+        error?.response?.data?.message || 'Failed to save employee',
+        'error'
       );
-    } else {
-      // Add new employee
-      const newEmployee = {
-        ...employeeData,
-        id: employees.length + 1,
-      };
-      setEmployees((prev) => [...prev, newEmployee]);
     }
-    handleCloseModal();
   };
 
-  const handleDeleteEmployee = (id) => {
+  const handleDeleteEmployee = async (id) => {
     if (window.confirm("Are you sure you want to delete this employee?")) {
-      setEmployees((prev) => prev.filter((emp) => emp.id !== id));
+      try {
+        const response = await deleteEmployee(id);
+        if (response.success) {
+          showNotification('Employee deleted successfully', 'success');
+          fetchEmployees();
+        }
+      } catch (error) {
+        console.error('Error deleting employee:', error);
+        showNotification(
+          error?.response?.data?.message || 'Failed to delete employee',
+          'error'
+        );
+      }
     }
   };
 

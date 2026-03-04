@@ -1,12 +1,14 @@
-import { Search } from "lucide-react";
+import { Search, X, CheckCircle, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { getManagers, getManagersByFactory } from "../../../api/manager";
+import api from "../../../api/axios";
 
 export default function ManagerDashboard() {
   const [selectedRole, setSelectedRole] = useState("");
   const [selectedFactory, setSelectedFactory] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [managers, setManagers] = useState([]);
+  const [notification, setNotification] = useState(null);
 
   const factoryOptions = [
     { id: "1", name: "Wawlugala Tea Factory" },
@@ -70,17 +72,42 @@ export default function ManagerDashboard() {
     });
   }, [managers, selectedRole, selectedFactory, searchTerm]);
 
-  const handleStatusToggle = (id) => {
-    setManagers((prev) =>
-      prev.map((manager) =>
-        manager.id === id
-          ? {
-              ...manager,
-              status: manager.status === "Active" ? "Suspended" : "Active",
-            }
-          : manager
-      )
-    );
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  const handleStatusToggle = async (id, currentStatus) => {
+    try {
+      const newStatus = currentStatus === "Active" ? false : true;
+      const response = await api.patch(`/manager-info/${id}/status`, {
+        isActive: newStatus
+      });
+      
+      if (response.data.success) {
+        // Update local state
+        setManagers((prev) =>
+          prev.map((manager) =>
+            manager.id === id
+              ? {
+                  ...manager,
+                  status: newStatus ? "Active" : "Suspended",
+                }
+              : manager
+          )
+        );
+        showNotification(
+          `Manager ${newStatus ? 'activated' : 'suspended'} successfully`,
+          'success'
+        );
+      }
+    } catch (error) {
+      console.error('Error updating manager status:', error);
+      showNotification(
+        error?.response?.data?.message || 'Failed to update manager status',
+        'error'
+      );
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -100,8 +127,24 @@ export default function ManagerDashboard() {
     );
   };
 
+  const Notification = () => {
+    if (!notification) return null;
+    const style = notification.type === 'success' ? 'bg-green-600' : 'bg-red-600';
+    const Icon = notification.type === 'success' ? CheckCircle : XCircle;
+    return (
+      <div className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-lg text-white ${style} shadow-lg flex items-center gap-3`}>
+        <Icon className="w-5 h-5" />
+        <span className="font-medium">{notification.message}</span>
+        <button onClick={() => setNotification(null)} className="ml-2 hover:opacity-70">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#f8fdfc]">
+      <Notification />
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center">
@@ -201,7 +244,7 @@ export default function ManagerDashboard() {
                   <div className="text-center">{manager.factory}</div>
                   <div className="flex justify-center">
                     <button
-                      onClick={() => handleStatusToggle(manager.id)}
+                      onClick={() => handleStatusToggle(manager.id, manager.status)}
                       className={`px-3 py-1 rounded-lg font-medium text-xs transition-colors ${
                         manager.status === "Active"
                           ? "bg-red-100 text-red-700 hover:bg-red-200"

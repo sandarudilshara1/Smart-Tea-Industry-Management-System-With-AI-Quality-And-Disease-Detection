@@ -16,7 +16,7 @@ const generateToken = (userId, role) => {
 // @access  Public
 exports.register = async (req, res) => {
     try {
-        const { email, password, role, firstName, lastName, phone, address, nic } = req.body;
+        const { email, password, role, firstName, lastName, phone, address, nic, factoryId, factoryName } = req.body;
 
         // Validation
         if (!email || !password || !role || !firstName || !lastName) {
@@ -76,6 +76,8 @@ exports.register = async (req, res) => {
             phone: phone || '',
             address: address || '',
             nic: nic || '',
+            factoryId: factoryId || null,
+            factoryName: factoryName || '',
             isActive: true
         });
 

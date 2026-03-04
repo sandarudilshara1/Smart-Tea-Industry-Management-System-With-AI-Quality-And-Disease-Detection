@@ -76,6 +76,9 @@ export default function AddManagersInterface() {
 
   const handleSave = async () => {
     try {
+      // Find the factory name
+      const selectedFactory = factoryOptions.find(f => f.id === formData.factory);
+      
       const payload = {
         firstName: formData.name.split(' ')[0] || formData.name,
         lastName: formData.name.split(' ').slice(1).join(' ') || '',
@@ -85,7 +88,8 @@ export default function AddManagersInterface() {
         nic: formData.nic,
         phone: formData.mobile,
         address: formData.address,
-        // factoryId can be stored in address or added to User model if needed
+        factoryId: formData.factory ? Number(formData.factory) : null,
+        factoryName: selectedFactory ? selectedFactory.name : ''
       };
       
       console.log("Data sent to backend:", payload);

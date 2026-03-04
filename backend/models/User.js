@@ -40,6 +40,14 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: false
     },
+    factoryId: {
+        type: Number,
+        required: false
+    },
+    factoryName: {
+        type: String,
+        required: false
+    },
     isActive: {
         type: Boolean,
         default: true
