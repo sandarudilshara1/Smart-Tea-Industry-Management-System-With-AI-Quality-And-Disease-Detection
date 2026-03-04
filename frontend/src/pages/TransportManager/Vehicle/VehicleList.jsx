@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Truck,
@@ -9,45 +9,12 @@ import {
   Trash2,
   UserCircle,
   Plus,
+  Loader,
 } from "lucide-react";
+import { getAllVehicles, deleteVehicle, getVehicleStats } from "../../../api/vehicle";
 
 const ACCENT_COLOR = "#165E52"; // Title & highlights
 const BUTTON_COLOR = "#172526"; // Buttons
-
-const initialVehicles = [
-  {
-    id: "TRK-001",
-    model: "Tata Ace",
-    status: "Available",
-    driver: null,
-    lastService: "2024-03-15",
-    capacity: "200kg",
-  },
-  {
-    id: "TRK-002",
-    model: "Tata Ace",
-    status: "In Use",
-    driver: "Mr.Perera",
-    lastService: "2024-06-15",
-    capacity: "500kg",
-  },
-  {
-    id: "TRK-003",
-    model: "Tata Ace",
-    status: "Maintenance",
-    driver: null,
-    lastService: "2023-06-15",
-    capacity: "500kg",
-  },
-  {
-    id: "TRK-004",
-    model: "Tata Ace",
-    status: "In Use",
-    driver: "Mr.Perera",
-    lastService: "2024-06-15",
-    capacity: "500kg",
-  },
-];
 
 const statusColors = {
   Available: "bg-[#e1f4ef] text-[#165E52]",
@@ -141,13 +108,49 @@ function VehicleSummaryCards({ summary }) {
 }
 
 export default function Vehicle() {
-  const [vehicles, setVehicles] = useState(initialVehicles);
+  const [vehicles, setVehicles] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
-  const [filteredVehicles, setFilteredVehicles] = useState(initialVehicles);
+  const [filteredVehicles, setFilteredVehicles] = useState([]);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [vehicleToDelete, setVehicleToDelete] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ total: 0, available: 0, inUse: 0, maintenance: 0 });
+  const [notification, setNotification] = useState(null);
   const navigate = useNavigate();
+
+  // Fetch vehicles on component mount
+  useEffect(() => {
+    fetchVehicles();
+    fetchStats();
+  }, []);
+
+  const fetchVehicles = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllVehicles({ isActive: true });
+      setVehicles(data);
+    } catch (error) {
+      console.error('Error fetching vehicles:', error);
+      showNotification('Failed to load vehicles', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const statsData = await getVehicleStats();
+      setStats(statsData);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
 
   React.useEffect(() => {
     let filtered = vehicles;
@@ -158,17 +161,27 @@ export default function Vehicle() {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
         (v) =>
-          v.id.toLowerCase().includes(term) ||
-          v.model.toLowerCase().includes(term)
+          v.vehicleNumber?.toLowerCase().includes(term) ||
+          v.model?.toLowerCase().includes(term) ||
+          v.vehicleType?.toLowerCase().includes(term)
       );
     }
     setFilteredVehicles(filtered);
   }, [searchTerm, filterStatus, vehicles]);
 
-  const confirmDelete = () => {
-    setVehicles((prev) => prev.filter((v) => v.id !== vehicleToDelete));
-    setConfirmModalOpen(false);
-    setVehicleToDelete(null);
+  const confirmDelete = async () => {
+    try {
+      await deleteVehicle(vehicleToDelete);
+      setVehicles((prev) => prev.filter((v) => v._id !== vehicleToDelete));
+      showNotification('Vehicle deleted successfully', 'success');
+      fetchStats(); // Refresh stats
+    } catch (error) {
+      console.error('Error deleting vehicle:', error);
+      showNotification('Failed to delete vehicle', 'error');
+    } finally {
+      setConfirmModalOpen(false);
+      setVehicleToDelete(null);
+    }
   };
 
   const cancelDelete = () => {
@@ -176,25 +189,26 @@ export default function Vehicle() {
     setVehicleToDelete(null);
   };
 
-  // Stats Calculation
-  const vehicleStats = {
-    total: vehicles.length,
-    available: vehicles.filter((v) => v.status === "Available").length,
-    inUse: vehicles.filter((v) => v.status === "In Use").length,
-    maintenance: vehicles.filter((v) => v.status === "Maintenance").length,
-  };
-
   return (
     <div className="min-h-screen bg-[#f8fdfc] p-6">
+      {/* Notification */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
+          notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        } text-white font-medium`}>
+          {notification.message}
+        </div>
+      )}
+
       <VehicleHeader
-        onAddVehicle={() => navigate("/transportManager/Vehicle/add")}
+        onAddVehicle={() => navigate("/transportManager/vehicle/add")}
       />
 
       <VehicleSummaryCards
         summary={{
-          total: vehicleStats.total,
-          available: vehicleStats.available,
-          maintenance: vehicleStats.maintenance,
+          total: stats.total,
+          available: stats.available,
+          maintenance: stats.maintenance,
         }}
       />
 
@@ -202,7 +216,7 @@ export default function Vehicle() {
       <div className="bg-white rounded-lg shadow-sm border border-[#cfece6] p-5 flex flex-col md:flex-row justify-between gap-4 mb-6">
         <input
           type="text"
-          placeholder="Search"
+          placeholder="Search by vehicle number, model, or type..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full md:w-56 pl-4 pr-10 py-2 text-sm border border-[#cfece6] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#165E52] focus:border-transparent bg-[#f8fdfc] text-[#165E52]"
@@ -216,6 +230,7 @@ export default function Vehicle() {
           <option>Available</option>
           <option>In Use</option>
           <option>Maintenance</option>
+          <option>Unavailable</option>
         </select>
       </div>
 
@@ -233,28 +248,26 @@ export default function Vehicle() {
         </div>
 
         <div className="divide-y divide-[#cfece6]">
-          {filteredVehicles.length === 0 ? (
+          {loading ? (
+            <div className="p-8 text-center">
+              <Loader className="animate-spin mx-auto mb-2" size={32} style={{ color: ACCENT_COLOR }} />
+              <p className="text-[#165E52] opacity-80">Loading vehicles...</p>
+            </div>
+          ) : filteredVehicles.length === 0 ? (
             <div className="p-8 text-center text-[#165E52] opacity-80">
               No vehicles found.
             </div>
           ) : (
             filteredVehicles.map((v, idx) => (
               <div
-                key={v.id}
+                key={v._id}
                 className={`grid grid-cols-7 gap-4 p-4 items-center ${
                   idx % 2 === 0 ? "bg-white" : "bg-[#f8fdfc]"
                 } hover:bg-[#e1f4ef] transition-colors`}
               >
                 <div className="flex items-center gap-2 justify-center text-[#165E52] font-semibold text-lg">
-                  {/* <span
-                    role="img"
-                    aria-label="Truck"
-                    className="rounded-full bg-[#e1f4ef] p-1 text-2xl"
-                  >
-                    🚛
-                  </span> */}
                   <div>
-                    <div>{v.id}</div>
+                    <div>{v.vehicleNumber}</div>
                     <div className="text-xs text-[#165E52] opacity-70">
                       {v.model}
                     </div>
@@ -271,10 +284,10 @@ export default function Vehicle() {
                 </div>
 
                 <div className="text-[#165E52] text-center">
-                  {v.driver ? (
+                  {v.assignedDriver ? (
                     <span className="flex items-center justify-center gap-2 text-[#165E52] opacity-90">
                       <UserCircle size={20} />
-                      {v.driver}
+                      {v.assignedDriver}
                     </span>
                   ) : (
                     <span className="italic text-gray-400">-</span>
@@ -283,13 +296,13 @@ export default function Vehicle() {
 
                 <div className="text-[#165E52] text-center">{v.capacity}</div>
                 <div className="text-[#165E52] text-center">
-                  {v.lastService}
+                  {v.lastServiceDate ? new Date(v.lastServiceDate).toLocaleDateString() : '-'}
                 </div>
 
                 <div className="flex justify-center gap-3 col-span-2">
                   <button
                     onClick={() =>
-                      navigate(`/transportManager/Vehicle/view/${v.id}`)
+                      navigate(`/transportManager/vehicle/view/${v._id}`)
                     }
                     className="p-2 rounded-full text-[#165E52] hover:bg-[#e1f4ef] hover:text-[#01251F] transition-colors"
                     title="View"
@@ -298,7 +311,7 @@ export default function Vehicle() {
                   </button>
                   <button
                     onClick={() =>
-                      navigate(`/transportManager/vehicle/edit/${v.id}`)
+                      navigate(`/transportManager/vehicle/edit/${v._id}`)
                     }
                     className="p-2 rounded-full text-yellow-700 hover:bg-yellow-100 hover:text-yellow-900 transition-colors"
                     title="Edit"
@@ -307,7 +320,7 @@ export default function Vehicle() {
                   </button>
                   <button
                     onClick={() => {
-                      setVehicleToDelete(v.id);
+                      setVehicleToDelete(v._id);
                       setConfirmModalOpen(true);
                     }}
                     className="p-2 rounded-full text-red-700 hover:bg-red-100 hover:text-red-900 transition-colors"

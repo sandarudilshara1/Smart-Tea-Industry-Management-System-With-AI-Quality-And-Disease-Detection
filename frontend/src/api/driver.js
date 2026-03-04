@@ -24,7 +24,7 @@ export const getAllDrivers = async (filters = {}) => {
         const queryString = params.toString();
         const url = queryString ? `/drivers?${queryString}` : '/drivers';
         const response = await axios.get(url);
-        return response.data;
+        return response.data.data || response.data;
     } catch (error) {
         throw error.response?.data || { message: 'Failed to fetch drivers' };
     }
