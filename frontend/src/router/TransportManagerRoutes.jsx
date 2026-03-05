@@ -2,8 +2,7 @@ import { Route } from "react-router-dom";
 import AnnouncementComponent from "../components/Announcement/Announcement";
 import Layout from "../layouts/Layout";
 import TransportManagerDashboard from "../pages/TransportManager/dashboard";
-import DriverDetails from "../pages/TransportManager/Drivers/AddDriverDetails";
-import DriverUser from "../pages/TransportManager/Drivers/AddDriverUser";
+import AddDriver from "../pages/TransportManager/Drivers/AddDriver";
 import Drivers from "../pages/TransportManager/Drivers/DriverList";
 import Emergency from "../pages/TransportManager/Emergency/EmergencyList";
 import CreateRoute from "../pages/TransportManager/Route/CreateRoute";
@@ -34,20 +33,11 @@ const transportManagerRoutes = [
     }
   />,
   <Route
-    key="driver_details"
-    path="/transportManager/drivers/details"
+    key="add_driver"
+    path="/transportManager/drivers/add"
     element={
       <Layout>
-        <DriverDetails />
-      </Layout>
-    }
-  />,
-  <Route
-    key="driver_user"
-    path="/transportManager/drivers/user"
-    element={
-      <Layout>
-        <DriverUser />
+        <AddDriver />
       </Layout>
     }
   />,
