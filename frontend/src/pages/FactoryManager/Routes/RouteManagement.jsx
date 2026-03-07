@@ -1,30 +1,37 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Eye, Edit, MapPin, Users } from "lucide-react";
 import RouteHeader from "./RouteHeader";
 import RouteFilters from "./RouteFilters";
 import RouteSummaryCards from "./RouteSummaryCards";
 import RouteModal from "./RouteModal";
 import SupplierSelectionModal from "./SupplierSelectionModal";
-import {
-  routes as initialRoutes,
-  routeSuppliers,
-  availableDrivers,
-  regions,
-} from "./routeData";
+import { regions } from "./routeData";
 import {
   getRouteSummary,
   filterRoutes,
   sortRoutes,
-  generateRouteId,
 } from "./routeUtils";
+import {
+  getAllRoutes,
+  createRoute as createRouteAPI,
+  updateRoute as updateRouteAPI,
+  deleteRoute as deleteRouteAPI,
+} from "../../../api/route";
+import { getAllDrivers } from "../../../api/driver";
 
 export default function RouteManagement() {
   const [currentView, setCurrentView] = useState("routes");
   const [selectedRoute, setSelectedRoute] = useState(null);
-  const [routes, setRoutes] = useState(initialRoutes);
+  const [routes, setRoutes] = useState([]);
   const [showRouteModal, setShowRouteModal] = useState(false);
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [editingRoute, setEditingRoute] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [availableDrivers, setAvailableDrivers] = useState([]);
+  const [availableVehicles, setAvailableVehicles] = useState([]);
+  
+  const factoryId = 1; // TODO: Get from auth context
 
   const [filters, setFilters] = useState({
     search: "",
@@ -34,6 +41,63 @@ export default function RouteManagement() {
   });
   const [sortBy, setSortBy] = useState("routeName");
   const [sortOrder, setSortOrder] = useState("asc");
+
+  // Fetch routes and drivers on mount
+  useEffect(() => {
+    fetchRoutes();
+    fetchDrivers();
+  }, []);
+
+  const fetchRoutes = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await getAllRoutes(factoryId);
+      console.log('📊 Routes API response:', response);
+      if (response.success && response.content) {
+        // Map backend fields to frontend format
+        const mappedRoutes = response.content.map(route => ({
+          id: route._id,
+          routeId: route.routeNumber,
+          routeName: route.routeName,
+          area: route.area,
+          description: route.description,
+          assignedDriver: route.driverId?.name || null,
+          driverId: route.driverId?._id,
+          vehicleId: route.vehicleId?._id,
+          vehicleNumber: route.vehicleId?.vehicleNumber,
+          supplierCount: route.supplierCount || 0,
+          status: route.status,
+          collectionDays: route.collectionDays || [],
+          distance: '---', // Not in schema
+          estimatedTime: '---', // Not in schema
+          lastMonthWeight: 0, // TODO: Calculate from actual data
+          actualLoad: 0, // TODO: Calculate from actual data
+          createdDate: route.createdAt ? new Date(route.createdAt).toISOString().split('T')[0] : null,
+          lastUpdated: route.updatedAt ? new Date(route.updatedAt).toISOString().split('T')[0] : null,
+          ...route
+        }));
+        console.log('✅ Setting routes:', mappedRoutes.length, 'routes');
+        setRoutes(mappedRoutes);
+      }
+    } catch (err) {
+      console.error('❌ Error fetching routes:', err);
+      setError(err.message || 'Failed to load routes');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDrivers = async () => {
+    try {
+      const response = await getAllDrivers();
+      if (response.success && response.data && response.data.drivers) {
+        setAvailableDrivers(response.data.drivers);
+      }
+    } catch (err) {
+      console.error('Error fetching drivers:', err);
+    }
+  };
 
   const filteredAndSortedRoutes = useMemo(() => {
     const filtered = filterRoutes(routes, filters);
@@ -71,26 +135,10 @@ export default function RouteManagement() {
 
   const handleSupplierSubmit = (newSuppliers) => {
     if (!selectedRoute || !newSuppliers.length) return;
-    const currentSuppliers = routeSuppliers[selectedRoute.id] || [];
-    routeSuppliers[selectedRoute.id] = [...currentSuppliers, ...newSuppliers];
-    setRoutes((prev) =>
-      prev.map((route) =>
-        route.id === selectedRoute.id
-          ? {
-              ...route,
-              supplierCount: (routeSuppliers[selectedRoute.id] || []).length,
-              lastUpdated: new Date().toISOString().split("T")[0],
-            }
-          : route
-      )
-    );
-    if (selectedRoute) {
-      setSelectedRoute({
-        ...selectedRoute,
-        supplierCount: (routeSuppliers[selectedRoute.id] || []).length,
-        lastUpdated: new Date().toISOString().split("T")[0],
-      });
-    }
+    // TODO: Implement supplier assignment API
+    console.log('Assigning suppliers:', newSuppliers, 'to route:', selectedRoute.id);
+    // Refresh routes to get updated supplier count
+    fetchRoutes();
   };
 
   const handleCreateRoute = () => {
@@ -103,35 +151,34 @@ export default function RouteManagement() {
     setShowRouteModal(true);
   };
 
-  const handleSubmitRoute = (routeData) => {
-    if (editingRoute) {
-      setRoutes((prev) =>
-        prev.map((route) =>
-          route.id === editingRoute.id
-            ? {
-                ...route,
-                ...routeData,
-                lastUpdated: new Date().toISOString().split("T")[0],
-              }
-            : route
-        )
-      );
-      if (selectedRoute && selectedRoute.id === editingRoute.id) {
-        setSelectedRoute({ ...selectedRoute, ...routeData });
-      }
-    } else {
-      const newRoute = {
-        id: generateRouteId(routes),
+  const handleSubmitRoute = async (routeData) => {
+    try {
+      const payload = {
         ...routeData,
-        supplierCount: 0,
-        actualLoad: 0,
-        createdDate: new Date().toISOString().split("T")[0],
-        lastUpdated: new Date().toISOString().split("T")[0],
+        factoryId,
       };
-      setRoutes((prev) => [...prev, newRoute]);
+
+      if (editingRoute) {
+        // Update existing route
+        const response = await updateRouteAPI(editingRoute._id || editingRoute.id, payload);
+        console.log('✅ Route updated:', response);
+        if (response.success) {
+          await fetchRoutes(); // Refresh list
+        }
+      } else {
+        // Create new route
+        const response = await createRouteAPI(payload);
+        console.log('✅ Route created:', response);
+        if (response.success) {
+          await fetchRoutes(); // Refresh list
+        }
+      }
+      setShowRouteModal(false);
+      setEditingRoute(null);
+    } catch (err) {
+      console.error('❌ Error saving route:', err);
+      throw err; // Re-throw to be handled by modal
     }
-    setShowRouteModal(false);
-    setEditingRoute(null);
   };
 
   const getStatusBadge = (status) => {
@@ -390,7 +437,7 @@ export default function RouteManagement() {
                   </div>
 
                   <div className="divide-y divide-[#cfece6]">
-                    {routeSuppliers[selectedRoute.id].map((supplier) => (
+                    {selectedRoute.suppliers.map((supplier) => (
                       <div
                         key={supplier.id}
                         className="grid grid-cols-5 gap-4 p-3 items-center hover:bg-gray-100 transition-colors"
@@ -431,7 +478,7 @@ export default function RouteManagement() {
 
                   <div className="flex items-center justify-between text-sm text-gray-600 p-4 border-t border-[#cfece6] bg-white">
                     <div>
-                      Showing {routeSuppliers[selectedRoute.id].length} suppliers on this route
+                      Showing {selectedRoute.suppliers.length} suppliers on this route
                     </div>
                   </div>
                 </>
@@ -463,8 +510,8 @@ export default function RouteManagement() {
         }}
         onSubmit={handleSubmitRoute}
         route={editingRoute}
-        drivers={availableDrivers}
-        regions={regions}
+        availableDrivers={availableDrivers}
+        availableVehicles={availableVehicles}
       />
 
       {/* Supplier Selection Modal */}
@@ -472,7 +519,7 @@ export default function RouteManagement() {
         isOpen={showSupplierModal}
         onClose={() => setShowSupplierModal(false)}
         onSubmit={handleSupplierSubmit}
-        currentSupplierIds={(routeSuppliers[selectedRoute?.id] || []).map(
+        currentSupplierIds={(selectedRoute?.suppliers || []).map(
           (supplier) => supplier.id
         )}
       />

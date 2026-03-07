@@ -63,11 +63,21 @@ const DriverManagement = () => {
       setLoading(true);
       setError(null);
       const response = await getAllDrivers();
-      if (response.success) {
+      console.log('📊 Drivers API response:', response); // Debug log
+      if (response.success && response.data && response.data.drivers) {
+        console.log('✅ Setting drivers:', response.data.drivers.length, 'drivers');
         setDrivers(response.data.drivers);
+      } else {
+        console.warn('⚠️ Unexpected response structure:', response);
+        // Fallback: try to set drivers anyway if they exist
+        if (response.drivers) {
+          setDrivers(response.drivers);
+        } else if (Array.isArray(response)) {
+          setDrivers(response);
+        }
       }
     } catch (err) {
-      console.error('Error fetching drivers:', err);
+      console.error('❌ Error fetching drivers:', err);
       setError(err.message || 'Failed to load drivers');
     } finally {
       setLoading(false);
@@ -140,6 +150,7 @@ const DriverManagement = () => {
       if (editingDriver) {
         // Update existing driver
         const response = await updateDriverAPI(editingDriver._id, driverData);
+        console.log('✅ Driver updated:', response);
         if (response.success) {
           setDrivers((prev) =>
             prev.map((d) =>
@@ -150,14 +161,21 @@ const DriverManagement = () => {
       } else {
         // Create new driver
         const response = await createDriverAPI(driverData);
-        if (response.success) {
-          setDrivers((prev) => [...prev, response.data.driver]);
+        console.log('✅ Driver created:', response);
+        if (response.success && response.data && response.data.driver) {
+          const newDriver = response.data.driver;
+          console.log('➕ Adding driver to state:', newDriver.name, newDriver._id);
+          setDrivers((prev) => {
+            const updated = [...prev, newDriver];
+            console.log('📊 Total drivers after add:', updated.length);
+            return updated;
+          });
         }
       }
       setShowDriverModal(false);
       setEditingDriver(null);
     } catch (err) {
-      console.error('Error saving driver:', err);
+      console.error('❌ Error saving driver:', err);
       alert(err.message || 'Failed to save driver');
     }
   };

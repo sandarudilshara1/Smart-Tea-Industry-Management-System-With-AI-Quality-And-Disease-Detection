@@ -49,6 +49,8 @@ exports.createDriver = async (req, res) => {
             isActive: true
         });
 
+        console.log(`✅ POST /api/drivers - Created driver: ${driver.name} (${driver._id})`);
+
         res.status(201).json({
             success: true,
             message: 'Driver created successfully',
@@ -108,13 +110,15 @@ exports.getAllDrivers = async (req, res) => {
             .populate('userId', 'firstName lastName email role')
             .sort({ createdAt: -1 });
 
+        console.log(`📊 GET /api/drivers - Found ${drivers.length} drivers`);
+
         res.status(200).json({
             success: true,
             count: drivers.length,
             data: { drivers }
         });
     } catch (error) {
-        console.error('Get drivers error:', error);
+        console.error('❌ Get drivers error:', error);
         res.status(500).json({
             success: false,
             message: 'Server error fetching drivers',

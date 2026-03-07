@@ -98,6 +98,21 @@ export default function AssignmentModal({
     setShowConfirmation(true);
   };
 
+  const handleQuickFill = () => {
+    // Temporary: Auto-fill form with first available options for testing
+    if (availableDrivers.length > 0 && routes.length > 0) {
+      const firstDriver = availableDrivers[0];
+      const firstRoute = routes[0];
+      setFormData({
+        driverId: firstDriver._id || firstDriver.id,
+        route: firstRoute._id || firstRoute.routeNumber,
+        date: new Date().toISOString().split("T")[0],
+        notes: "Test assignment - Quick Fill",
+      });
+      setErrors({});
+    }
+  };
+
   const handleConfirm = async () => {
     setIsSubmitting(true);
     try {
@@ -131,12 +146,27 @@ export default function AssignmentModal({
       >
         {/* Header */}
         <div
-          className="p-6 border-b"
+          className="p-6 border-b flex items-center justify-between"
           style={{ borderColor: BORDER_COLOR, backgroundColor: HEADER_BG }}     
         >
           <h2 className="text-xl font-semibold" style={{ color: ACCENT_COLOR }}>
             Assign Route to Driver
           </h2>
+          {/* Temporary Quick Fill Button for Testing */}
+          <button
+            type="button"
+            onClick={handleQuickFill}
+            disabled={availableDrivers.length === 0 || routes.length === 0 || loadingRoutes}
+            className="px-3 py-1.5 rounded text-xs font-medium transition"
+            style={{
+              backgroundColor: "#f59e0b",
+              color: "white",
+              opacity: (availableDrivers.length === 0 || routes.length === 0 || loadingRoutes) ? 0.5 : 1,
+            }}
+            title="Quick fill with test data"
+          >
+            ⚡ Quick Fill (Test)
+          </button>
         </div>
 
         {/* Body */}

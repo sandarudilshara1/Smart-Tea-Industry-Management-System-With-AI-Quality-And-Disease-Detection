@@ -31,15 +31,18 @@ exports.getAllRoutes = async (req, res) => {
 
         const total = await Route.countDocuments(query);
 
+        console.log(`📊 GET /api/routes/factory/${factoryId} - Found ${routes.length} routes`);
+
         res.status(200).json({
             success: true,
             content: routes,
+            data: { routes }, // Also include for consistency
             totalElements: total,
             totalPages: Math.ceil(total / parseInt(limit)),
             currentPage: parseInt(page)
         });
     } catch (error) {
-        console.error('Error fetching routes:', error);
+        console.error('❌ Error fetching routes:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching routes',

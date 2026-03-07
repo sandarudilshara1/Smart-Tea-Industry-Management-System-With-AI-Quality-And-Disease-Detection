@@ -79,6 +79,32 @@ export default function DriverModal({ isOpen, onClose, onSubmit, driver = null }
     }
   };
 
+  const handleQuickFill = () => {
+    // Temporary: Auto-fill form with test data for quick testing
+    const timestamp = Date.now().toString().slice(-4);
+    const futureDate = new Date();
+    futureDate.setFullYear(futureDate.getFullYear() + 2);
+    
+    setFormData({
+      name: `Test Driver ${timestamp}`,
+      email: `driver${timestamp}@test.com`,
+      nic: `${timestamp}123456V`,
+      phone: `077${timestamp}${Math.floor(Math.random() * 1000)}`,
+      address: `${timestamp} Test Street, Colombo`,
+      licenseNo: `DL${timestamp}`,
+      licenseExpiry: futureDate.toISOString().split('T')[0],
+      vehicleNo: `CAB-${timestamp}`,
+      experience: Math.floor(Math.random() * 10) + 1,
+      emergencyContact: { 
+        name: `Emergency Contact ${timestamp}`, 
+        phone: `071${timestamp}555`, 
+        relationship: "Spouse" 
+      },
+      status: "Available",
+    });
+    setErrors({});
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -127,12 +153,29 @@ export default function DriverModal({ isOpen, onClose, onSubmit, driver = null }
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-black transition"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Temporary Quick Fill Button for Testing */}
+            {!driver && (
+              <button
+                type="button"
+                onClick={handleQuickFill}
+                className="px-3 py-1.5 rounded text-xs font-medium transition"
+                style={{
+                  backgroundColor: "#f59e0b",
+                  color: "white",
+                }}
+                title="Quick fill with test data"
+              >
+                ⚡ Quick Fill
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-black transition"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Form */}
