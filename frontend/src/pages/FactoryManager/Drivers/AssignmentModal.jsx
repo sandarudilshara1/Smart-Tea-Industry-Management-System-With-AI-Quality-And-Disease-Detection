@@ -4,8 +4,9 @@ import {
   MapPin,
   Calendar,
   AlertTriangle,
+  Loader,
 } from "lucide-react";
-import { availableRoutes } from "./driverData";
+import axios from "../../../api/axios";
 
 // Design tokens
 const ACCENT_COLOR = "#165E52";
@@ -30,12 +31,17 @@ export default function AssignmentModal({
   const [errors, setErrors] = useState({});
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [routes, setRoutes] = useState([]);
+  const [loadingRoutes, setLoadingRoutes] = useState(false);
 
   useEffect(() => {
+    if (isOpen) {
+      fetchRoutes();
+    }
     if (preSelectedDriver) {
       setFormData((prev) => ({
         ...prev,
-        driverId: preSelectedDriver.id,
+        driverId: preSelectedDriver._id || preSelectedDriver.id,
       }));
     } else {
       setFormData({
@@ -50,9 +56,24 @@ export default function AssignmentModal({
     return () => (document.body.style.overflow = "unset");
   }, [preSelectedDriver, isOpen]);
 
+  const fetchRoutes = async () => {
+    try {
+      setLoadingRoutes(true);
+      const response = await axios.get('/routes/factory/1');
+      if (response.data.success) {
+        setRoutes(response.data.data.routes || []);
+      }
+    } catch (error) {
+      console.error('Error fetching routes:', error);
+      setRoutes([]);
+    } finally {
+      setLoadingRoutes(false);
+    }
+  };
+
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.driverId) newErrors.driverId = "Please select a driver";
+    if (!formData.driverId) newErrors.driverId = "Please select a driver";      
     if (!formData.route) newErrors.route = "Please select a route";
     return newErrors;
   };
@@ -80,11 +101,16 @@ export default function AssignmentModal({
   const handleConfirm = async () => {
     setIsSubmitting(true);
     try {
-      const selectedDriver = availableDrivers.find((d) => d.id === formData.driverId);
+      const selectedDriver = availableDrivers.find((d) => (d._id || d.id) === formData.driverId);
+      const selectedRoute = routes.find((r) => (r._id || r.routeNumber) === formData.route);
       const payload = {
-        ...formData,
-        driverName: selectedDriver?.name,
-        vehicle: selectedDriver?.assignedVehicle,
+        driverId: formData.driverId,
+        route: {
+          id: selectedRoute?._id || formData.route,
+          name: selectedRoute?.routeName || formData.route,
+        },
+        date: formData.date,
+        notes: formData.notes,
       };
       await onSubmit(payload);
       onClose();
@@ -100,13 +126,13 @@ export default function AssignmentModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-[1000] backdrop-blur-sm bg-black/30 overflow-hidden">
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border"     
         style={{ borderColor: BORDER_COLOR }}
       >
         {/* Header */}
         <div
           className="p-6 border-b"
-          style={{ borderColor: BORDER_COLOR, backgroundColor: HEADER_BG }}
+          style={{ borderColor: BORDER_COLOR, backgroundColor: HEADER_BG }}     
         >
           <h2 className="text-xl font-semibold" style={{ color: ACCENT_COLOR }}>
             Assign Route to Driver
@@ -118,31 +144,31 @@ export default function AssignmentModal({
           <div className="p-6 space-y-6">
             {/* Driver */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">  
                 Select Driver <span className="text-red-500">*</span>
               </label>
               <select
                 className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:outline-none"
                 style={{ borderColor: BORDER_COLOR }}
                 value={formData.driverId}
-                onChange={(e) => handleInputChange("driverId", e.target.value)}
+                onChange={(e) => handleInputChange("driverId", e.target.value)} 
                 disabled={Boolean(preSelectedDriver)}
               >
                 <option value="">Choose driver...</option>
                 {availableDrivers.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name} — {d.assignedVehicle} (Quota: {d.bagQuota})
+                  <option key={d._id || d.id} value={d._id || d.id}>
+                    {d.name} — {d.vehicleNo || d.assignedVehicle || 'No vehicle'}
                   </option>
                 ))}
               </select>
               {errors.driverId && (
-                <p className="text-sm text-red-500">{errors.driverId}</p>
+                <p className="text-sm text-red-500">{errors.driverId}</p>       
               )}
             </div>
 
             {/* Route */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">  
                 Select Route <span className="text-red-500">*</span>
               </label>
               <div className="relative">
@@ -151,15 +177,19 @@ export default function AssignmentModal({
                   className="w-full pl-10 border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:outline-none bg-white"
                   style={{ borderColor: BORDER_COLOR }}
                   value={formData.route}
-                  onChange={(e) => handleInputChange("route", e.target.value)}
+                  onChange={(e) => handleInputChange("route", e.target.value)}  
+                  disabled={loadingRoutes}
                 >
-                  <option value="">Choose route...</option>
-                  {availableRoutes.map((route) => (
-                    <option key={route} value={route}>
-                      {route}
+                  <option value="">{loadingRoutes ? 'Loading routes...' : 'Choose route...'}</option>
+                  {routes.map((route) => (
+                    <option key={route._id || route.routeNumber} value={route._id || route.routeNumber}>
+                      {route.routeName} ({route.routeNumber}) - {route.area}
                     </option>
                   ))}
                 </select>
+                {loadingRoutes && (
+                  <Loader className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-gray-400" size={16} />
+                )}
               </div>
               {errors.route && (
                 <p className="text-sm text-red-500">{errors.route}</p>
@@ -168,7 +198,7 @@ export default function AssignmentModal({
 
             {/* Date */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">  
                 Assignment Date
               </label>
               <div className="relative">
@@ -178,7 +208,7 @@ export default function AssignmentModal({
                   className="pl-10 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:outline-none"
                   style={{ borderColor: BORDER_COLOR }}
                   value={formData.date}
-                  onChange={(e) => handleInputChange("date", e.target.value)}
+                  onChange={(e) => handleInputChange("date", e.target.value)}   
                   min={new Date().toISOString().split("T")[0]}
                 />
               </div>
@@ -186,7 +216,7 @@ export default function AssignmentModal({
 
             {/* Notes */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">  
                 Additional Notes
               </label>
               <textarea
@@ -195,7 +225,7 @@ export default function AssignmentModal({
                 rows={3}
                 placeholder="Optional notes..."
                 value={formData.notes}
-                onChange={(e) => handleInputChange("notes", e.target.value)}
+                onChange={(e) => handleInputChange("notes", e.target.value)}    
               />
             </div>
           </div>
@@ -203,12 +233,12 @@ export default function AssignmentModal({
           {/* Footer Buttons */}
           <div
             className="flex gap-3 justify-end p-6 border-t"
-            style={{ borderColor: BORDER_COLOR, backgroundColor: HEADER_BG }}
+            style={{ borderColor: BORDER_COLOR, backgroundColor: HEADER_BG }}   
           >
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 rounded-lg text-sm font-medium transition"
+              className="px-6 py-2 rounded-lg text-sm font-medium transition"   
               style={{
                 backgroundColor: "transparent",
                 color: ACCENT_COLOR,
@@ -231,17 +261,17 @@ export default function AssignmentModal({
         </form>
       </div>
 
-      {/* Confirmation Dialog Modal Style 💬 */}
+      {/* Confirmation Dialog Modal */}
       {showConfirmation && (
         <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/30 backdrop-blur-sm">
           <div
-            className="bg-white rounded-2xl w-full max-w-md shadow-2xl border"
+            className="bg-white rounded-2xl w-full max-w-md shadow-2xl border"  
             style={{ borderColor: BORDER_COLOR }}
           >
             {/* Header */}
             <div
               className="p-6 border-b flex items-center space-x-3"
-              style={{ borderColor: BORDER_COLOR, backgroundColor: HEADER_BG }}
+              style={{ borderColor: BORDER_COLOR, backgroundColor: HEADER_BG }} 
             >
               <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-100">
                 <AlertTriangle className="w-5 h-5 text-blue-600" />
@@ -257,11 +287,10 @@ export default function AssignmentModal({
                 Are you sure you want to assign{" "}
                 <strong>
                   {
-                    availableDrivers.find((d) => d.id === formData.driverId)
-                      ?.name
+                    availableDrivers.find((d) => (d._id || d.id) === formData.driverId)?.name
                   }
                 </strong>{" "}
-                to the route <strong>{formData.route}</strong> on{" "}
+                to the route <strong>{routes.find((r) => (r._id || r.routeNumber) === formData.route)?.routeName || formData.route}</strong> on{" "}
                 <strong>{formData.date}</strong>?
               </p>
               {/* Buttons */}
