@@ -357,5 +357,6 @@ export default function AddManagersInterface() {
         </div>
       </div>
     </div>
+  </div>
   );
 }
