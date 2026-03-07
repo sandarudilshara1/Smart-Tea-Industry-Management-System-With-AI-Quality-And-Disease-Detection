@@ -86,6 +86,9 @@ app.use('/api/routes', require('./routes/routes'));
 app.use('/api/tea-rates', require('./routes/teaRates'));
 app.use('/api/tea-leaf-entries', require('./routes/teaLeafEntries'));
 
+// Tea Flavor Quality Routes
+app.use('/api/tea-flavor-quality', require('./routes/teaFlavorQuality'));
+
 // Future API Routes
 // app.use('/api/users', require('./routes/users'));
 // app.use('/api/inventory', require('./routes/inventory'));
