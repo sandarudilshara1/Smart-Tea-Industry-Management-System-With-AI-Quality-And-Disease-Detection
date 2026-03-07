@@ -16,28 +16,27 @@ async function checkAndFixIndexes() {
             console.log(`  - ${index.name}:`, JSON.stringify(index.key));
         });
 
-        // Check for licenseNo index
-        const hasLicenseNoIndex = indexes.some(idx => 
-            idx.key.licenseNo !== undefined
-        );
+        // Drop legacy unique indexes on licenseNo/licenseNumber
+        const legacyLicenseIndexes = indexes.filter((idx) => {
+            const hasLicenseField = idx.key.licenseNo !== undefined || idx.key.licenseNumber !== undefined;
+            return hasLicenseField && idx.unique;
+        });
 
-        if (hasLicenseNoIndex) {
-            console.log('\n⚠️  Found licenseNo unique index - dropping it...');
-            
-            // Find the exact index name
-            const licenseIndex = indexes.find(idx => idx.key.licenseNo !== undefined);
-            await collection.dropIndex(licenseIndex.name);
-            
-            console.log(`✅ Successfully dropped index: ${licenseIndex.name}`);
-            
-            // Verify it's gone
+        if (legacyLicenseIndexes.length > 0) {
+            console.log('\n⚠️  Found legacy unique license index(es) - dropping...');
+
+            for (const index of legacyLicenseIndexes) {
+                await collection.dropIndex(index.name);
+                console.log(`✅ Successfully dropped index: ${index.name}`);
+            }
+
             const newIndexes = await collection.indexes();
             console.log('\n📋 Indexes after removal:');
             newIndexes.forEach(index => {
                 console.log(`  - ${index.name}:`, JSON.stringify(index.key));
             });
         } else {
-            console.log('\n✅ No licenseNo unique index found - everything is good!');
+            console.log('\n✅ No legacy unique license index found - everything is good!');
         }
 
         console.log('\n🎉 Done! License number validation is removed.');

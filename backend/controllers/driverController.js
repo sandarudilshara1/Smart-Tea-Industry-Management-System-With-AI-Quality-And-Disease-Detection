@@ -7,12 +7,15 @@ const User = require('../models/User');
 exports.createDriver = async (req, res) => {
     try {
         const { 
-            userId, name, email, phone, licenseNo, licenseExpiry,
+            userId, name, email, phone, licenseNo, licenseNumber, licenseExpiry,
             vehicleNo, nic, address, status, experience, emergencyContact, factoryId
         } = req.body;
 
+        const normalizedLicenseNo = (licenseNo || licenseNumber || '').trim();
+        const normalizedEmail = (email || '').toLowerCase().trim();
+
         // Validation
-        if (!name || !email || !phone || !licenseNo || !nic || !address) {
+        if (!name || !normalizedEmail || !phone || !normalizedLicenseNo || !nic || !address) {
             return res.status(400).json({
                 success: false,
                 message: 'Please provide all required fields'
@@ -20,7 +23,7 @@ exports.createDriver = async (req, res) => {
         }
 
         // Check if driver with email already exists
-        const existingDriver = await Driver.findOne({ email: email.toLowerCase() });
+        const existingDriver = await Driver.findOne({ email: normalizedEmail });
         if (existingDriver) {
             return res.status(400).json({
                 success: false,
@@ -30,11 +33,11 @@ exports.createDriver = async (req, res) => {
 
         // Create driver
         const driver = await Driver.create({
-            userId: userId || req.user.userId, // Use provided userId or logged-in user's ID
+            userId: userId || undefined, // userId is optional
             name,
-            email: email.toLowerCase(),
+            email: normalizedEmail,
             phone,
-            licenseNo,
+            licenseNo: normalizedLicenseNo,
             licenseExpiry,
             vehicleNo,
             nic,
@@ -67,7 +70,9 @@ exports.createDriver = async (req, res) => {
         // Handle duplicate key errors
         if (error.code === 11000) {
             const field = Object.keys(error.keyPattern)[0];
-            const fieldName = field === 'email' ? 'email address' : field;
+            const fieldName = field === 'email'
+                ? 'email address'
+                : (field === 'licenseNo' || field === 'licenseNumber' ? 'license number' : field);
             return res.status(400).json({
                 success: false,
                 message: `A driver with this ${fieldName} already exists. Please use a different ${fieldName}.`
@@ -153,9 +158,11 @@ exports.getDriverById = async (req, res) => {
 exports.updateDriver = async (req, res) => {
     try {
         const { 
-            name, phone, licenseNo, licenseExpiry, vehicleNo,
+            name, phone, licenseNo, licenseNumber, licenseExpiry, vehicleNo,
             address, status, experience, emergencyContact, assignedRoutes
         } = req.body;
+
+        const normalizedLicenseNo = (licenseNo || licenseNumber || '').trim();
 
         const driver = await Driver.findById(req.params.id);
 
@@ -169,7 +176,7 @@ exports.updateDriver = async (req, res) => {
         // Update fields
         if (name) driver.name = name;
         if (phone) driver.phone = phone;
-        if (licenseNo) driver.licenseNo = licenseNo;
+        if (normalizedLicenseNo) driver.licenseNo = normalizedLicenseNo;
         if (licenseExpiry) driver.licenseExpiry = licenseExpiry;
         if (vehicleNo) driver.vehicleNo = vehicleNo;
         if (address) driver.address = address;
@@ -187,6 +194,18 @@ exports.updateDriver = async (req, res) => {
         });
     } catch (error) {
         console.error('Update driver error:', error);
+
+        if (error.code === 11000) {
+            const field = Object.keys(error.keyPattern)[0];
+            const fieldName = field === 'email'
+                ? 'email address'
+                : (field === 'licenseNo' || field === 'licenseNumber' ? 'license number' : field);
+            return res.status(400).json({
+                success: false,
+                message: `A driver with this ${fieldName} already exists. Please use a different ${fieldName}.`
+            });
+        }
+
         res.status(500).json({
             success: false,
             message: 'Server error updating driver',

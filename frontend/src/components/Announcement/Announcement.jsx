@@ -3,8 +3,7 @@ import {
     Download,
     Paperclip,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import { getAllAnnouncements } from "../../api/announcement";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -12,7 +11,6 @@ const BUTTON_COLOR = "#172526";
 const ACCENT_COLOR = "#165e52";
 
 export default function AnnouncementComponent() {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [announcements, setAnnouncements] = useState([]);
   const [notification, setNotification] = useState(null);
@@ -99,7 +97,7 @@ export default function AnnouncementComponent() {
   // Add new action removed per UI update
 
   // compute visible announcements based on user's factory
-  const visibleAnnouncements = (() => {
+  const visibleAnnouncements = useMemo(() => {
     const factoryId = user?.factoryId;
     const factoryName = user?.factoryName;
     if (!factoryId && !factoryName) return announcements || [];
@@ -118,7 +116,7 @@ export default function AnnouncementComponent() {
       const s = String(facs);
       return (factoryId && s.includes(String(factoryId))) || (factoryName && s.includes(String(factoryName)));
     });
-  })();
+  }, [announcements, user?.factoryId, user?.factoryName]);
 
   const Notification = () => {
     if (!notification) return null;
@@ -159,7 +157,11 @@ export default function AnnouncementComponent() {
             </div>
           ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-            {visibleAnnouncements.map((announcement) => (
+            {visibleAnnouncements.map((announcement) => {
+              const formattedFactories = formatFactories(announcement.factories);
+              const factoryCount = formattedFactories === "-" ? 0 : formattedFactories.split(", ").length;
+
+              return (
               <div key={announcement._id || announcement.id} className="bg-white rounded-xl shadow-md border border-gray-200 transition hover:shadow-xl hover:border-[#165e52] overflow-hidden">
                 <div className="bg-gradient-to-r from-[#f0f9f8] to-white p-4 border-b border-gray-100">
                   <div className="flex items-center justify-between mb-2">
@@ -168,7 +170,7 @@ export default function AnnouncementComponent() {
                       {announcement.topic}
                     </span>
                     <span className="text-xs text-gray-500 font-medium bg-gray-100 px-3 py-1 rounded-full">
-                      {formatFactories(announcement.factories).split(", ").length} {formatFactories(announcement.factories).split(", ").length === 1 ? "Factory" : "Factories"}
+                      {factoryCount} {factoryCount === 1 ? "Factory" : "Factories"}
                     </span>
                   </div>
 
@@ -176,7 +178,7 @@ export default function AnnouncementComponent() {
                 <div className="p-6">
                   <div className="mb-3">
                     <h3 className="text-xl font-bold text-gray-900 mb-1">{announcement.subject || <span className="text-gray-400">No Subject</span>}</h3>
-                    <p className="text-xs text-gray-500">Assigned to: {formatFactories(announcement.factories)}</p>
+                    <p className="text-xs text-gray-500">Assigned to: {formattedFactories}</p>
                   </div>
 
                   <div className="mb-4">
@@ -215,7 +217,8 @@ export default function AnnouncementComponent() {
                   )}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
           )}
         </div>

@@ -21,15 +21,18 @@ const dropLicenseIndex = async () => {
             console.log(`  - ${index.name}: ${JSON.stringify(index.key)}`);
         });
         
-        // Drop the licenseNo unique index if it exists
-        try {
-            await collection.dropIndex('licenseNo_1');
-            console.log('\n✓ Successfully dropped licenseNo_1 unique index');
-        } catch (error) {
-            if (error.code === 27) {
-                console.log('\n  Index licenseNo_1 does not exist (already removed)');
-            } else {
-                throw error;
+        // Drop legacy unique indexes that may block driver creation
+        const candidateIndexes = ['licenseNo_1', 'licenseNumber_1', 'userId_1'];
+        for (const indexName of candidateIndexes) {
+            try {
+                await collection.dropIndex(indexName);
+                console.log(`\n✓ Successfully dropped ${indexName} unique index`);
+            } catch (error) {
+                if (error.code === 27) {
+                    console.log(`\n  Index ${indexName} does not exist (already removed)`);
+                } else {
+                    throw error;
+                }
             }
         }
         
@@ -42,6 +45,7 @@ const dropLicenseIndex = async () => {
         
         console.log('\n✓ Database update complete!');
         console.log('You can now add drivers with duplicate license numbers.');
+        console.log('Multiple drivers can also share the same userId (or have no userId).');
         
     } catch (error) {
         console.error('Error:', error);
