@@ -7,6 +7,22 @@ const PaymentManagerDashboard = () => {
   return (
     <div className="payment-manager-dashboard p-6">
       <h1 className="text-3xl font-bold text-gray-800 mb-6">Payment Manager Dashboard</h1>
+      <div className="mb-6 flex flex-wrap gap-3">
+        <button
+          type="button"
+          onClick={() => navigate('/payment-manager/dashboard')}
+          className="px-4 py-2 rounded-md text-sm font-medium bg-[#01251F] text-white"
+        >
+          Payment Manager Dashboard
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate('/payment-manager/payments')}
+          className="px-4 py-2 rounded-md text-sm font-medium bg-[#e1f4ef] text-[#165E52] hover:bg-[#cfece6]"
+        >
+          Payment Management
+        </button>
+      </div>
       <div className="dashboard-content">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
           <div 

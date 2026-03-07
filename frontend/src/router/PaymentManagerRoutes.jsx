@@ -16,7 +16,7 @@ export default [
     path="/payment-manager"
     element={
       <Layout>
-        <PaymentManagerDashboard />
+        <PaymentManagement />
       </Layout>
     }
   />,
@@ -77,6 +77,15 @@ export default [
   <Route
     key="payment-manager-payments"
     path="/payment-manager/payments"
+    element={
+      <Layout>
+        <PaymentManagement />
+      </Layout>
+    }
+  />,
+  <Route
+    key="payment-manager-payment"
+    path="/payment-manager/payment"
     element={
       <Layout>
         <PaymentManagement />

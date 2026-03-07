@@ -5,6 +5,7 @@ import PaymentFilters from "./PaymentFilters";
 import PaymentModal from "./PaymentModal";
 import SummaryCards from "./SummaryCards";
 import MainContent from "./MainContent";
+import TeaSupplyChart from "../../../components/charts/TeaSupplyChart";
 import {
   routes,
   suppliers,
@@ -291,6 +292,29 @@ export default function PaymentManagement() {
     });
   };
 
+  const chartData = useMemo(() => {
+    if (currentView !== "routes") return null;
+
+    const labels = filteredData.slice(0, 8).map((route) => route.routeNumber || route.id);
+    const values = filteredData.slice(0, 8).map((route) => Number(route.totalAmount || 0));
+
+    if (!labels.length) return null;
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: "Payment Amount (Rs.)",
+          data: values,
+          backgroundColor: "#165E52",
+          borderColor: "#165E52",
+          borderWidth: 2,
+          tension: 0.35,
+        },
+      ],
+    };
+  }, [currentView, filteredData]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <PaymentHeader
@@ -308,6 +332,21 @@ export default function PaymentManagement() {
         getAvailableMonths={getAvailableMonths}
       />
       <div className="max-w-7xl mx-auto px-6 py-6">
+        {/* Payment analytics section */}
+        {currentView !== "bill" && (
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <h2 className="text-xl font-semibold text-[#165E52]">Payment Analytics</h2>
+              <p className="text-sm text-gray-600">
+                {monthNames[selectedMonth]} {selectedYear} overview
+              </p>
+            </div>
+            <div className="h-[320px]">
+              <TeaSupplyChart data={chartData || undefined} period="monthly" />
+            </div>
+          </div>
+        )}
+
         {/* Summary Cards - show before filters for routes and suppliers views */}
         {currentView !== "bill" && (
           <SummaryCards currentView={currentView} summary={summary} />
