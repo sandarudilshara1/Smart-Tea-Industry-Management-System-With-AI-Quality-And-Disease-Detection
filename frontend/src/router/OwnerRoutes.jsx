@@ -6,6 +6,7 @@ import UpdateAnnouncement from "../pages/Owner/Annoucement/updateAnnouncement";
 import OwnerAnnoucement from "../pages/Owner/Annoucement/viewAnnoucement";
 import OwnerAnnouncementManage from "../pages/Owner/Announcement/Announcement";
 import OwnerDashboard from "../pages/Owner/dashboard";
+import AddEmployee from "../pages/Owner/Employers/AddEmployee";
 import EmployerManagement from "../pages/Owner/Employers/EmployerManagement";
 import FertilizerCompany from "../pages/Owner/FertilizerCompany/FertilizerCompany";
 import AddFertilizerCompany from "../pages/Owner/FertilizerCompany/AddFertilizerCompany";
@@ -255,6 +256,24 @@ export default [
         <Layout>
           {" "}
           <EmployerManagement />{" "}
+        </Layout>
+      }
+    />
+    <Route
+      path="/owner/employers/add"
+      element={
+        <Layout>
+          {" "}
+          <AddEmployee />{" "}
+        </Layout>
+      }
+    />
+    <Route
+      path="/owner/employers/edit"
+      element={
+        <Layout>
+          {" "}
+          <AddEmployee />{" "}
         </Layout>
       }
     />

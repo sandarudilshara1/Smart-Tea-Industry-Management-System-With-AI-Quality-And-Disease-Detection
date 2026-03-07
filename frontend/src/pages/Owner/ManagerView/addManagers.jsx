@@ -1,4 +1,3 @@
-import axios from "axios";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +7,6 @@ import { register } from "../../../api/auth";
 const ACCENT_COLOR = "#165E52";
 const BTN_COLOR = "#01251F";
 const BORDER_COLOR = "#cfece6";
-const HEADER_BG = "#e1f4ef";
 const INPUT_BG = "#ffffff";
 
 const roles = [
@@ -109,22 +107,14 @@ export default function AddManagersInterface() {
   };
 
   return (
-    <div className="min-h-screen p-4">
-      <div
-        className="max-w-6xl mx-auto rounded-2xl border shadow-2xl overflow-hidden bg-white"
-        style={{ borderColor: BORDER_COLOR }}
-      >
-        {/* Header */}
-        <div
-          className="px-8 py-6 border-b"
-          style={{ backgroundColor: HEADER_BG, borderColor: BORDER_COLOR }}
-        >
-          <div className="flex justify-between items-center">
-            <h2 className="text-3xl font-bold text-gray-900" 
-            // style={{ color: ACCENT_COLOR }}
-            >
-              Add Manager
-            </h2>
+    <div className="min-h-screen bg-gray-100">
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Add Manager</h1>
+              <p className="text-gray-600 mt-1">Owner Dashboard - Register and Assign Manager Access</p>
+            </div>
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate(-1)}
@@ -136,19 +126,21 @@ export default function AddManagersInterface() {
               </button>
               <button
                 onClick={handleSave}
-                className="px-8 py-2 rounded-lg text-white font-medium shadow-md transition-colors"
+                className="px-6 py-2 rounded-lg text-white font-medium shadow transition-colors"
                 style={{ backgroundColor: BTN_COLOR }}
                 type="button"
               >
-                Save & Give Access
+                Save Manager
               </button>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Form Section */}
-        <div className="px-8 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-lg shadow-sm">
+          <div className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
             {/* Left Column */}
             <div className="space-y-6">
@@ -360,10 +352,10 @@ export default function AddManagersInterface() {
                   )}
                 </div>
               </div>
-            </div> {/* ✅ CLOSED Right Column */}
-          </div> {/* ✅ CLOSE Grid */}
-        </div> {/* ✅ CLOSE Form Section */}
-      </div> {/* ✅ CLOSE Form Container */}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
