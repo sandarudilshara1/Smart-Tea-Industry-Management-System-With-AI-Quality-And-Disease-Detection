@@ -91,6 +91,8 @@ exports.getCompanyCategories = async (req, res) => {
 // @route   POST /api/fertilizer-companies
 // @access  Private (Owner only)
 exports.createCompany = async (req, res) => {
+        console.log('Received create company request:', req.body);
+        
     try {
         const {
             name,
@@ -138,6 +140,8 @@ exports.createCompany = async (req, res) => {
         });
 
         res.status(201).json({
+            success: true,
+            message: 'Company created successfully',
             id: company._id.toString(),
             name: company.name,
             address: company.address,
@@ -204,6 +208,8 @@ exports.updateCompany = async (req, res) => {
         await company.save();
 
         res.status(200).json({
+            success: true,
+            message: 'Company updated successfully',
             id: company._id.toString(),
             name: company.name,
             address: company.address,

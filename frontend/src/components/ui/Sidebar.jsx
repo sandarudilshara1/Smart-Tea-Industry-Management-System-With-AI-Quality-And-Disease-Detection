@@ -141,7 +141,7 @@ const sidebarLinks = {
     { name: "Employer Management", path: "/owner/employers", icon: Users },
     {
       name: "Fertilizer Company",
-      path: "/owner/fertilizer-company",
+      path: "/owner/fertilizer-companies",
       icon: Package,
     },
     { name: "Reports", path: "/owner/reports", icon: BarChart3 },

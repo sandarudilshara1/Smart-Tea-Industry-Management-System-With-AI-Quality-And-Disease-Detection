@@ -8,6 +8,7 @@ import OwnerAnnouncementManage from "../pages/Owner/Announcement/Announcement";
 import OwnerDashboard from "../pages/Owner/dashboard";
 import EmployerManagement from "../pages/Owner/Employers/EmployerManagement";
 import FertilizerCompany from "../pages/Owner/FertilizerCompany/FertilizerCompany";
+import AddFertilizerCompany from "../pages/Owner/FertilizerCompany/AddFertilizerCompany";
 import LoanRates from "../pages/Owner/Rates/Rates";
 import AddManagers from "../pages/Owner/ManagerView/addManagers";
 import GiveAccess from "../pages/Owner/ManagerView/giveaccess";
@@ -209,6 +210,33 @@ export default [
         <Layout>
           {" "}
           <FertilizerCompany />{" "}
+        </Layout>
+      }
+    />
+    <Route
+      path="/owner/fertilizer-companies"
+      element={
+        <Layout>
+          {" "}
+          <FertilizerCompany />{" "}
+        </Layout>
+      }
+    />
+    <Route
+      path="/owner/fertilizer-companies/add"
+      element={
+        <Layout>
+          {" "}
+          <AddFertilizerCompany />{" "}
+        </Layout>
+      }
+    />
+    <Route
+      path="/owner/fertilizer-companies/edit"
+      element={
+        <Layout>
+          {" "}
+          <AddFertilizerCompany />{" "}
         </Layout>
       }
     />
