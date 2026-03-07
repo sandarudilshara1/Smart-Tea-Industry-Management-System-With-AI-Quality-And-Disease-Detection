@@ -1,8 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Upload, Camera, X, AlertCircle, CheckCircle, Clock, ChevronDown, ArrowLeft, Download, Filter, Search, Calendar, Eye, FileText } from 'lucide-react';
 import jsPDF from 'jspdf';
+import { useAuth } from '../contexts/AuthContext';
+import * as diseaseAPI from '../api/diseaseDetection';
 
 const TeaDiseaseDetection = () => {
+  const { user } = useAuth();
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -11,6 +14,19 @@ const TeaDiseaseDetection = () => {
   const [selectedReport, setSelectedReport] = useState(null);
   const [filterDisease, setFilterDisease] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [uploadMethod, setUploadMethod] = useState('upload');
+  const [isSaving, setIsSaving] = useState(false);
+  
+  // Backend data
+  const [allDetections, setAllDetections] = useState([]);
+  const [statistics, setStatistics] = useState({
+    totalScans: 0,
+    diseasesFound: 0,
+    healthyLeaves: 0,
+    avgConfidence: 0
+  });
+  const [loading, setLoading] = useState(false);
+  
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
@@ -65,23 +81,81 @@ const TeaDiseaseDetection = () => {
     }
   };
 
-  const allDetections = [
-    { id: 1, disease: 'BB', confidence: 94.2, date: '2025-11-23', time: '14:30', status: 'treated', analyzedBy: 'John Silva', image: '/assets/leaf.webp' },
-    { id: 2, disease: 'GL', confidence: 98.7, date: '2025-11-23', time: '13:15', status: 'healthy', analyzedBy: 'Maria Perera', image: '/assets/leaf.webp' },
-    { id: 3, disease: 'RR', confidence: 87.5, date: '2025-11-23', time: '11:45', status: 'pending', analyzedBy: 'Kumar Fernando', image: '/assets/leaf.webp' },
-    { id: 4, disease: 'RSM', confidence: 91.3, date: '2025-11-23', time: '10:20', status: 'treated', analyzedBy: 'Saman Dias', image: '/assets/leaf.webp' },
-    { id: 5, disease: 'BB', confidence: 89.8, date: '2025-11-22', time: '16:45', status: 'treated', analyzedBy: 'John Silva', image: '/assets/leaf.webp' },
-    { id: 6, disease: 'GL', confidence: 96.2, date: '2025-11-22', time: '15:30', status: 'healthy', analyzedBy: 'Maria Perera', image: '/assets/leaf.webp' },
-    { id: 7, disease: 'RR', confidence: 92.1, date: '2025-11-22', time: '14:20', status: 'pending', analyzedBy: 'Kumar Fernando', image: '/assets/leaf.webp' },
-    { id: 8, disease: 'RSM', confidence: 88.5, date: '2025-11-22', time: '11:10', status: 'treated', analyzedBy: 'Saman Dias', image: '/assets/leaf.webp' },
-    { id: 9, disease: 'BB', confidence: 93.7, date: '2025-11-21', time: '09:15', status: 'treated', analyzedBy: 'John Silva', image: '/assets/leaf.webp' },
-    { id: 10, disease: 'GL', confidence: 97.4, date: '2025-11-21', time: '08:30', status: 'healthy', analyzedBy: 'Maria Perera', image: '/assets/leaf.webp' },
-  ];
+  // Fetch detections from backend
+  useEffect(() => {
+    fetchDetections();
+    fetchStatistics();
+  }, []);
 
-  const handleFileSelect = (event) => {
+  const fetchDetections = async () => {
+    try {
+      setLoading(true);
+      const response = await diseaseAPI.getAllDetections({ limit: 50 });
+      if (response.success) {
+        // Transform backend data to match frontend format
+        const transformedData = response.data.map(detection => ({
+          id: detection._id,
+          disease: detection.diseaseType,
+          confidence: detection.confidence,
+          date: new Date(detection.createdAt).toLocaleDateString(),
+          time: new Date(detection.createdAt).toLocaleTimeString(),
+          status: detection.status,
+          analyzedBy: detection.analyzedBy.name,
+          image: detection.imagePath || '/assets/leaf.webp'
+        }));
+        setAllDetections(transformedData);
+      }
+    } catch (error) {
+      console.error('Error fetching detections:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStatistics = async () => {
+    try {
+      // Fetch both daily and overall statistics
+      const [dailyResponse, overallResponse] = await Promise.all([
+        diseaseAPI.getDailyStatistics(),
+        diseaseAPI.getStatistics()
+      ]);
+      
+      // Use daily stats if available, otherwise use overall stats
+      if (dailyResponse.success && dailyResponse.data.daily) {
+        const daily = dailyResponse.data.daily;
+        setStatistics({
+          totalScans: daily.totalScans || 0,
+          diseasesFound: daily.diseasesFound || 0,
+          healthyLeaves: daily.healthyLeaves || 0,
+          avgConfidence: daily.avgConfidence || 0
+        });
+      } else if (overallResponse.success && overallResponse.data) {
+        // Fallback to overall statistics if no daily data
+        const overall = overallResponse.data;
+        setStatistics({
+          totalScans: overall.total || 0,
+          diseasesFound: overall.diseased || 0,
+          healthyLeaves: overall.healthy || 0,
+          avgConfidence: overall.byDisease?.reduce((sum, d) => sum + (d.avgConfidence || 0), 0) / (overall.byDisease?.length || 1) || 0
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching statistics:', error);
+      // Set to 0 on error
+      setStatistics({
+        totalScans: 0,
+        diseasesFound: 0,
+        healthyLeaves: 0,
+        avgConfidence: 0
+      });
+    }
+  };
+
+  const handleFileSelect = (event, method = 'upload') => {
     const file = event.target.files[0];
-    if (file && file.type.startsWith('image/')) {
+    if (file && file.type.startsWith('image/')){
       setSelectedImage(file);
+      setUploadMethod(method);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
@@ -90,24 +164,88 @@ const TeaDiseaseDetection = () => {
     }
   };
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (!selectedImage) return;
     
     setIsAnalyzing(true);
+    const startTime = Date.now();
     
-    // Simulate AI analysis
-    setTimeout(() => {
-      const diseases = ['BB', 'RR', 'RSM', 'GL'];
-      const randomDisease = diseases[Math.floor(Math.random() * diseases.length)];
-      const confidence = 85 + Math.random() * 13;
+    try {
+      // Simulate AI analysis (in production, call ML service)
+      const aiResult = await diseaseAPI.simulateAIAnalysis(selectedImage);
+      const processingTime = Date.now() - startTime;
       
       setAnalysisResult({
-        disease: randomDisease,
-        confidence: confidence.toFixed(1),
-        timestamp: new Date().toISOString()
+        ...aiResult,
+        disease: aiResult.diseaseType, // Add disease field for compatibility
+        timestamp: new Date().toISOString(),
+        processingTime
       });
+    } catch (error) {
+      console.error('Analysis error:', error);
+      alert('Error analyzing image. Please try again.');
+    } finally {
       setIsAnalyzing(false);
-    }, 3000);
+    }
+  };
+
+  const saveDetectionToBackend = async () => {
+    if (!analysisResult) return;
+    
+    setIsSaving(true);
+    try {
+      const detectionData = {
+        diseaseType: analysisResult.diseaseType,
+        confidence: analysisResult.confidence,
+        imagePath: imagePreview, // In production, upload to cloud storage
+        imageUploadMethod: uploadMethod,
+        processingTime: analysisResult.processingTime
+      };
+
+      const response = await diseaseAPI.createDetection(detectionData);
+      
+      if (response.success) {
+        alert('Detection saved successfully!');
+        // Refresh detections list
+        await fetchDetections();
+        await fetchStatistics();
+        clearImage();
+      }
+    } catch (error) {
+      console.error('Error saving detection:', error);
+      alert('Error saving detection. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleMarkAsTreated = async (detectionId) => {
+    try {
+      const response = await diseaseAPI.markAsTreated(detectionId);
+      if (response.success) {
+        alert('Detection marked as treated!');
+        await fetchDetections();
+      }
+    } catch (error) {
+      console.error('Error marking as treated:', error);
+      alert('Error updating detection status.');
+    }
+  };
+
+  const handleCreateTreatmentPlan = async (detectionId) => {
+    const planDetails = prompt('Enter treatment plan details:');
+    if (!planDetails) return;
+
+    try {
+      const response = await diseaseAPI.createTreatmentPlan(detectionId, planDetails);
+      if (response.success) {
+        alert('Treatment plan created successfully!');
+        await fetchDetections();
+      }
+    } catch (error) {
+      console.error('Error creating treatment plan:', error);
+      alert('Error creating treatment plan.');
+    }
   };
 
   const clearImage = () => {
@@ -1109,10 +1247,16 @@ const TeaDiseaseDetection = () => {
                 </div>
 
                 <div className="flex gap-4 mt-6">
-                  <button className="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold">
-                    Save Report
+                  <button 
+                    onClick={() => handleMarkAsTreated(selectedReport.id)}
+                    className="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                  >
+                    Mark as Treated
                   </button>
-                  <button className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+                  <button 
+                    onClick={() => handleCreateTreatmentPlan(selectedReport.id)}
+                    className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                  >
                     Create Treatment Plan
                   </button>
                   <button 
@@ -1271,7 +1415,7 @@ const TeaDiseaseDetection = () => {
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
-                onChange={handleFileSelect}
+                onChange={(e) => handleFileSelect(e, 'upload')}
                 className="hidden"
               />
               <input
@@ -1279,7 +1423,7 @@ const TeaDiseaseDetection = () => {
                 type="file"
                 accept="image/*"
                 capture="environment"
-                onChange={handleFileSelect}
+                onChange={(e) => handleFileSelect(e, 'camera')}
                 className="hidden"
               />
             </div>
@@ -1352,11 +1496,18 @@ const TeaDiseaseDetection = () => {
                 </div>
 
                 <div className="flex gap-4 mt-6">
-                  <button className="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold">
-                    Save Report
+                  <button 
+                    onClick={saveDetectionToBackend}
+                    disabled={isSaving}
+                    className="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-semibold"
+                  >
+                    {isSaving ? 'Saving...' : 'Save Detection'}
                   </button>
-                  <button className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold">
-                    Create Treatment Plan
+                  <button 
+                    onClick={() => downloadReport({ ...analysisResult, id: 'new', analyzedBy: user?.name || 'Current User', date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString(), status: 'pending' })}
+                    className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                  >
+                    Download Report
                   </button>
                   <button 
                     onClick={clearImage}
@@ -1375,19 +1526,19 @@ const TeaDiseaseDetection = () => {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Today's Scans</span>
-                  <span className="font-bold text-gray-900">24</span>
+                  <span className="font-bold text-gray-900">{statistics.totalScans || 0}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Diseases Found</span>
-                  <span className="font-bold text-red-600">8</span>
+                  <span className="font-bold text-red-600">{statistics.diseasesFound || 0}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Healthy Leaves</span>
-                  <span className="font-bold text-green-600">16</span>
+                  <span className="font-bold text-green-600">{statistics.healthyLeaves || 0}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Avg Confidence</span>
-                  <span className="font-bold text-gray-900">92.4%</span>
+                  <span className="font-bold text-gray-900">{statistics.avgConfidence ? statistics.avgConfidence.toFixed(1) : '0.0'}%</span>
                 </div>
               </div>
             </div>

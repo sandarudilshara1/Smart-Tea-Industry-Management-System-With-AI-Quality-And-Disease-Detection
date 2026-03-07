@@ -76,6 +76,7 @@ app.use('/api/manager-info', require('./routes/managers'));
 app.use('/api/fertilizer-companies', require('./routes/fertilizerCompanies'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/vehicles', require('./routes/vehicles'));
+app.use('/api/disease-detections', require('./routes/diseaseDetections'));
 
 // Payment System Routes
 app.use('/api/payments', require('./routes/payments'));
