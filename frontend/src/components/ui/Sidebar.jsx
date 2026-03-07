@@ -136,7 +136,7 @@ const sidebarLinks = {
     { name: "Tea Disease Detection", path: "/owner/tea-disease", icon: BadgeAlert },
     { name: "Tea Quality", path: "/owner/tea-quality", icon: Package },
     { name: "Drivers", path: "/owner/drivers", icon: Truck },
-    { name: "Payments", path: "/owner/payments", icon: DollarSign },
+    { name: "Payment Manager", path: "/payment-manager", icon: DollarSign },
     { name: "Manager Works", path: "/owner/managers", icon: UserCheck },
     { name: "Employer Management", path: "/owner/employers", icon: Users },
     {
@@ -145,6 +145,13 @@ const sidebarLinks = {
       icon: Package,
     },
     { name: "Reports", path: "/owner/reports", icon: BarChart3 },
+  ],
+  payment_manager: [
+    { name: "Dashboard", path: "/payment-manager", icon: Home },
+    { name: "Advances", path: "/payment-manager/advances", icon: DollarSign },
+    { name: "Loans", path: "/payment-manager/loans", icon: BarChart3 },
+    { name: "Payments", path: "/payment-manager/payments", icon: DollarSign },
+    { name: "Tea Rates", path: "/payment-manager/tea-rates", icon: Package },
   ],
 };
 

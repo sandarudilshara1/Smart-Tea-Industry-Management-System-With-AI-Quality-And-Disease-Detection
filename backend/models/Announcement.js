@@ -56,5 +56,8 @@ const announcementSchema = new mongoose.Schema({
 announcementSchema.index({ createdBy: 1, createdAt: -1 });
 announcementSchema.index({ factories: 1 });
 announcementSchema.index({ topic: 1 });
+announcementSchema.index({ isActive: 1, createdAt: -1 });
+announcementSchema.index({ isActive: 1, factories: 1, createdAt: -1 });
+announcementSchema.index({ isActive: 1, topic: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Announcement', announcementSchema);

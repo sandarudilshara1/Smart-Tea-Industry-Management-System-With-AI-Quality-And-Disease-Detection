@@ -33,10 +33,8 @@ const Navbar = () => {
   const fetchAnnouncementCount = async () => {
     try {
       const response = await getAllAnnouncements();
-      console.log('Navbar - Announcements response:', response);
       // Backend returns { success, data: { announcements: [...] } }
       const announcements = response?.data?.announcements || response?.announcements || [];
-      console.log('Navbar - Announcements count:', announcements.length);
       setAnnouncementCount(announcements.length);
     } catch (error) {
       console.error('Error fetching announcement count:', error);
@@ -57,8 +55,6 @@ const Navbar = () => {
   const closeDropdowns = () => {
     setShowNotifications(false);
     setShowProfile(false);
-    // Refresh announcement count when closing dropdown
-    fetchAnnouncementCount();
   };
 
   return (

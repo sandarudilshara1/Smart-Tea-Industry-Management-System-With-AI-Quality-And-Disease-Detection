@@ -77,11 +77,17 @@ app.use('/api/fertilizer-companies', require('./routes/fertilizerCompanies'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/vehicles', require('./routes/vehicles'));
 
+// Payment System Routes
+app.use('/api/payments', require('./routes/payments'));
+app.use('/api/advances', require('./routes/advances'));
+app.use('/api/suppliers', require('./routes/suppliers'));
+app.use('/api/routes', require('./routes/routes'));
+app.use('/api/tea-rates', require('./routes/teaRates'));
+app.use('/api/tea-leaf-entries', require('./routes/teaLeafEntries'));
+
 // Future API Routes
 // app.use('/api/users', require('./routes/users'));
 // app.use('/api/inventory', require('./routes/inventory'));
-// app.use('/api/payments', require('./routes/payments'));
-// app.use('/api/suppliers', require('./routes/suppliers'));
 // app.use('/api/fertilizer', require('./routes/fertilizer'));
 
 // 404 handler - must be after all routes

@@ -18,10 +18,8 @@ const NotificationDropdown = ({ onClose }) => {
     try {
       setLoading(true);
       const response = await getAllAnnouncements();
-      console.log('Announcements API response:', response);
       // Backend returns { success, data: { announcements: [...] } }
       const allAnnouncements = response?.data?.announcements || response?.announcements || [];
-      console.log('Parsed announcements:', allAnnouncements);
       // Take only first 3 announcements
       const latestAnnouncements = allAnnouncements.slice(0, 3);
       setAnnouncements(latestAnnouncements);
@@ -36,7 +34,6 @@ const NotificationDropdown = ({ onClose }) => {
   const getAnnouncementsRoute = () => {
     // Determine route based on user role
     const role = user?.role?.toLowerCase();
-    console.log('User role for routing:', role);
     switch (role) {
       case 'transport_manager':
         return '/transportManager/announcements';

@@ -52,10 +52,9 @@ export default function AppRouter() {
         {user?.role === "owner" && OwnerRoutes}
         {user?.role === "factory_manager" && FactoryManagerRoutes}
         {user?.role === "transport_manager" && TransportManagerRoutes}
-        {user?.role === "payment_manager" && PaymentManagerRoutes}
+        {/* Payment Manager routes - Only accessible by Owner and Payment Manager */}
+        {(user?.role === "payment_manager" || user?.role === "owner") && PaymentManagerRoutes}
         
-        {/* Add PaymentManager routes for development/testing - remove in production */}
-        {PaymentManagerRoutes}
         {/* Expose TransportManager routes for development/testing so pages are visible
           Remove or guard these in production if you want strict role-based access */}
         {TransportManagerRoutes}

@@ -73,8 +73,9 @@ exports.getAllAnnouncements = async (req, res) => {
         }
 
         const announcements = await Announcement.find(query)
-            .populate('createdBy', 'firstName lastName email role')
-            .sort({ createdAt: -1 });
+            .select('topic subject content factories attachments createdAt updatedAt')
+            .sort({ createdAt: -1 })
+            .lean();
 
         res.status(200).json({
             success: true,
@@ -245,8 +246,9 @@ exports.getAnnouncementsByTopic = async (req, res) => {
         }
 
         const announcements = await Announcement.find(query)
-            .populate('createdBy', 'firstName lastName email')
-            .sort({ createdAt: -1 });
+            .select('topic subject content factories attachments createdAt updatedAt')
+            .sort({ createdAt: -1 })
+            .lean();
 
         res.status(200).json({
             success: true,
