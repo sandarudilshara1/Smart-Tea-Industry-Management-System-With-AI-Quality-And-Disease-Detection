@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import * as diseaseAPI from '../../api/diseaseDetection';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -197,6 +198,62 @@ const diseaseData = {
 };
 
 export default function Dashboard() {
+  const [diseaseStats, setDiseaseStats] = useState({
+    totalScans: 0,
+    diseasesFound: 0,
+    healthyLeaves: 0,
+    avgConfidence: 0
+  });
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  useEffect(() => {
+    fetchDiseaseStatistics();
+  }, []);
+
+  const fetchDiseaseStatistics = async () => {
+    try {
+      setLoadingStats(true);
+      console.log('📊 Dashboard: Fetching disease detection statistics...');
+      
+      // Fetch both daily and overall statistics
+      const [dailyResponse, overallResponse] = await Promise.all([
+        diseaseAPI.getDailyStatistics(),
+        diseaseAPI.getStatistics()
+      ]);
+      
+      console.log('Dashboard daily stats:', dailyResponse);
+      console.log('Dashboard overall stats:', overallResponse);
+      
+      // Use daily stats if available, otherwise use overall stats
+      if (dailyResponse.success && dailyResponse.data.daily && dailyResponse.data.daily.totalScans > 0) {
+        const daily = dailyResponse.data.daily;
+        console.log('✅ Dashboard using daily statistics:', daily);
+        setDiseaseStats({
+          totalScans: daily.totalScans || 0,
+          diseasesFound: daily.diseasesFound || 0,
+          healthyLeaves: daily.healthyLeaves || 0,
+          avgConfidence: daily.avgConfidence || 0
+        });
+      } else if (overallResponse.success && overallResponse.data) {
+        // Fallback to overall statistics if no daily data
+        const overall = overallResponse.data;
+        console.log('✅ Dashboard using overall statistics:', overall);
+        setDiseaseStats({
+          totalScans: overall.total || 0,
+          diseasesFound: overall.diseased || 0,
+          healthyLeaves: overall.healthy || 0,
+          avgConfidence: overall.byDisease?.reduce((sum, d) => sum + (d.avgConfidence || 0), 0) / (overall.byDisease?.length || 1) || 0
+        });
+      } else {
+        console.log('ℹ️ Dashboard: No statistics data available');
+      }
+    } catch (error) {
+      console.error('❌ Dashboard error fetching disease statistics:', error);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -383,7 +440,13 @@ export default function Dashboard() {
             <div className="bg-white p-6 rounded-lg shadow-md border border-black transition duration-200 hover:shadow-lg hover:border-[#cfece6] flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-black">Today's Scans</p>
-                <p className="text-2xl font-bold text-black">24</p>
+                <p className="text-2xl font-bold text-black">
+                  {loadingStats ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    diseaseStats.totalScans
+                  )}
+                </p>
               </div>
               <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#F0FDF4' }}>
                 <TrendingUp size={28} style={{ color: ACCENT_COLOR }} />
@@ -392,7 +455,13 @@ export default function Dashboard() {
             <div className="bg-white p-6 rounded-lg shadow-md border border-black transition duration-200 hover:shadow-lg hover:border-[#cfece6] flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-black">Diseases Found</p>
-                <p className="text-2xl font-bold text-black">8</p>
+                <p className="text-2xl font-bold text-black">
+                  {loadingStats ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    diseaseStats.diseasesFound
+                  )}
+                </p>
               </div>
               <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FEF2F2' }}>
                 <AlertTriangle size={28} className="text-red-600" />
@@ -401,7 +470,13 @@ export default function Dashboard() {
             <div className="bg-white p-6 rounded-lg shadow-md border border-black transition duration-200 hover:shadow-lg hover:border-[#cfece6] flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-black">Healthy Leaves</p>
-                <p className="text-2xl font-bold text-black">16</p>
+                <p className="text-2xl font-bold text-black">
+                  {loadingStats ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    diseaseStats.healthyLeaves
+                  )}
+                </p>
               </div>
               <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#F0FDF4' }}>
                 <CheckCircle size={28} style={{ color: ACCENT_COLOR }} />
@@ -410,7 +485,13 @@ export default function Dashboard() {
             <div className="bg-white p-6 rounded-lg shadow-md border border-black transition duration-200 hover:shadow-lg hover:border-[#cfece6] flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-black">Avg Confidence</p>
-                <p className="text-2xl font-bold text-black">92.4%</p>
+                <p className="text-2xl font-bold text-black">
+                  {loadingStats ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    diseaseStats.avgConfidence > 0 ? `${diseaseStats.avgConfidence.toFixed(1)}%` : '0%'
+                  )}
+                </p>
               </div>
               <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center">
                 <Award size={28} style={{ color: ACCENT_COLOR }} />

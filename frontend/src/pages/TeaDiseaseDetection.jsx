@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Camera, X, AlertCircle, CheckCircle, Clock, ChevronDown, ArrowLeft, Download, Filter, Search, Calendar, Eye, FileText } from 'lucide-react';
+import { Upload, Camera, X, AlertCircle, CheckCircle, Clock, ChevronDown, ArrowLeft, Download, Filter, Search, Calendar, Eye, FileText, Trash } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { useAuth } from '../contexts/AuthContext';
 import * as diseaseAPI from '../api/diseaseDetection';
@@ -25,6 +25,7 @@ const TeaDiseaseDetection = () => {
     healthyLeaves: 0,
     avgConfidence: 0
   });
+  const [statsType, setStatsType] = useState('daily'); // 'daily' or 'overall'
   const [loading, setLoading] = useState(false);
   
   const fileInputRef = useRef(null);
@@ -90,7 +91,10 @@ const TeaDiseaseDetection = () => {
   const fetchDetections = async () => {
     try {
       setLoading(true);
+      console.log('📋 Fetching disease detections...');
       const response = await diseaseAPI.getAllDetections({ limit: 50 });
+      console.log('Detections response:', response);
+      
       if (response.success) {
         // Transform backend data to match frontend format
         const transformedData = response.data.map(detection => ({
@@ -103,10 +107,11 @@ const TeaDiseaseDetection = () => {
           analyzedBy: detection.analyzedBy.name,
           image: detection.imagePath || '/assets/leaf.webp'
         }));
+        console.log(`✅ Loaded ${transformedData.length} detections`);
         setAllDetections(transformedData);
       }
     } catch (error) {
-      console.error('Error fetching detections:', error);
+      console.error('❌ Error fetching detections:', error);
     } finally {
       setLoading(false);
     }
@@ -114,15 +119,22 @@ const TeaDiseaseDetection = () => {
 
   const fetchStatistics = async () => {
     try {
+      console.log('📊 Fetching disease detection statistics...');
+      
       // Fetch both daily and overall statistics
       const [dailyResponse, overallResponse] = await Promise.all([
         diseaseAPI.getDailyStatistics(),
         diseaseAPI.getStatistics()
       ]);
       
+      console.log('Daily stats response:', dailyResponse);
+      console.log('Overall stats response:', overallResponse);
+      
       // Use daily stats if available, otherwise use overall stats
-      if (dailyResponse.success && dailyResponse.data.daily) {
+      if (dailyResponse.success && dailyResponse.data.daily && dailyResponse.data.daily.totalScans > 0) {
         const daily = dailyResponse.data.daily;
+        console.log('✅ Using daily statistics:', daily);
+        setStatsType('daily');
         setStatistics({
           totalScans: daily.totalScans || 0,
           diseasesFound: daily.diseasesFound || 0,
@@ -132,22 +144,63 @@ const TeaDiseaseDetection = () => {
       } else if (overallResponse.success && overallResponse.data) {
         // Fallback to overall statistics if no daily data
         const overall = overallResponse.data;
+        console.log('✅ Using overall statistics:', overall);
+        setStatsType('overall');
         setStatistics({
           totalScans: overall.total || 0,
           diseasesFound: overall.diseased || 0,
           healthyLeaves: overall.healthy || 0,
           avgConfidence: overall.byDisease?.reduce((sum, d) => sum + (d.avgConfidence || 0), 0) / (overall.byDisease?.length || 1) || 0
         });
+      } else {
+        console.log('ℹ️ No statistics data available');
+        setStatsType('daily');
+        setStatistics({
+          totalScans: 0,
+          diseasesFound: 0,
+          healthyLeaves: 0,
+          avgConfidence: 0
+        });
       }
     } catch (error) {
-      console.error('Error fetching statistics:', error);
+      console.error('❌ Error fetching statistics:', error);
       // Set to 0 on error
+      setStatsType('daily');
       setStatistics({
         totalScans: 0,
         diseasesFound: 0,
         healthyLeaves: 0,
         avgConfidence: 0
       });
+    }
+  };
+
+  const handleDeleteDetection = async (detection) => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete this detection record?\n\n` +
+      `Report ID: ${detection.id}\n` +
+      `Disease: ${diseaseInfo[detection.disease]?.name || detection.disease}\n` +
+      `Date: ${detection.date} ${detection.time}\n\n` +
+      `This action cannot be undone.`
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      console.log('🗑️ Deleting detection:', detection.id);
+      const response = await diseaseAPI.deleteDetection(detection.id);
+      
+      if (response.success) {
+        console.log('✅ Detection deleted successfully');
+        // Refresh the detections list
+        await fetchDetections();
+        await fetchStatistics();
+        // Show success message
+        alert('Detection record deleted successfully!');
+      }
+    } catch (error) {
+      console.error('❌ Error deleting detection:', error);
+      alert(error.response?.data?.message || 'Failed to delete detection record. Please try again.');
     }
   };
 
@@ -1136,6 +1189,13 @@ const TeaDiseaseDetection = () => {
                           >
                             <Download className="w-4 h-4" />
                           </button>
+                          <button
+                            onClick={() => handleDeleteDetection(detection)}
+                            className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded transition-colors"
+                            title="Delete"
+                          >
+                            <Trash className="w-4 h-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -1522,10 +1582,15 @@ const TeaDiseaseDetection = () => {
 
           <div className="space-y-6">
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Detection Statistics</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-gray-900">Detection Statistics</h3>
+                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                  {statsType === 'daily' ? "Today's Data" : 'All Time'}
+                </span>
+              </div>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Today's Scans</span>
+                  <span className="text-gray-600">{statsType === 'daily' ? "Today's Scans" : 'Total Scans'}</span>
                   <span className="font-bold text-gray-900">{statistics.totalScans || 0}</span>
                 </div>
                 <div className="flex justify-between items-center">
