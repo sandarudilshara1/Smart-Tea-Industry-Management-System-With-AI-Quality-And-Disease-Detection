@@ -94,24 +94,36 @@ const CompanyForm = ({ company, categories, onSave, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-800">
-              {company ? "Edit Fertilizer Company" : "Add New Fertilizer Company"}
-            </h2>
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-              <X size={20} />
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-[#165E52] to-[#1a7566] px-6 py-5 border-b border-gray-100">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                <Plus className="w-6 h-6 text-white" />
+              </div>
+              <h2 className="text-xl font-bold text-white">
+                {company ? "Edit Fertilizer Company" : "Add New Fertilizer Company"}
+              </h2>
+            </div>
+            <button 
+              onClick={onClose} 
+              className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-all duration-200"
+            >
+              <X size={22} />
             </button>
           </div>
+        </div>
+
+        {/* Form Content */}
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
           <form onSubmit={handleSubmit}>
-            <div className="space-y-4">
-              {/* ...inputs as before... */}
+            <div className="space-y-5">
               {/* Company Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="name">
-                  Company Name *
+                <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="name">
+                  Company Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -119,14 +131,15 @@ const CompanyForm = ({ company, categories, onSave, onClose }) => {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#165E52] focus:border-[#165E52] transition-all duration-200 bg-gray-50 hover:bg-white"
+                  placeholder="Enter company name"
                   required
                 />
               </div>
               {/* Address */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="address">
-                  Address *
+                <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="address">
+                  Address <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -134,14 +147,15 @@ const CompanyForm = ({ company, categories, onSave, onClose }) => {
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#165E52] focus:border-[#165E52] transition-all duration-200 bg-gray-50 hover:bg-white"
+                  placeholder="Enter complete address"
                   required
                 />
               </div>
               {/* Contact Person */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="contactPerson">
-                  Contact Person *
+                <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="contactPerson">
+                  Contact Person <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -149,14 +163,15 @@ const CompanyForm = ({ company, categories, onSave, onClose }) => {
                   name="contactPerson"
                   value={formData.contactPerson}
                   onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#165E52] focus:border-[#165E52] transition-all duration-200 bg-gray-50 hover:bg-white"
+                  placeholder="Enter contact person name"
                   required
                 />
               </div>
               {/* Contact Number */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="contactNumber">
-                  Contact Number *
+                <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="contactNumber">
+                  Contact Number <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="tel"
@@ -164,14 +179,15 @@ const CompanyForm = ({ company, categories, onSave, onClose }) => {
                   name="contactNumber"
                   value={formData.contactNumber}
                   onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#165E52] focus:border-[#165E52] transition-all duration-200 bg-gray-50 hover:bg-white"
+                  placeholder="+94 XX XXX XXXX"
                   required
                 />
               </div>
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="email">
-                  Email *
+                <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="email">
+                  Email <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
@@ -179,40 +195,48 @@ const CompanyForm = ({ company, categories, onSave, onClose }) => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#165E52] focus:border-[#165E52] transition-all duration-200 bg-gray-50 hover:bg-white"
+                  placeholder="company@example.com"
                   required
                 />
               </div>
               {/* Categories */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Fertilizer Categories *
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border border-gray-200">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Fertilizer Categories <span className="text-red-500">*</span>
                 </label>
-                <div className="flex flex-wrap gap-2 mb-3">
+                
+                {/* Selected Categories Display */}
+                <div className="flex flex-wrap gap-2 mb-4 min-h-[40px] p-3 bg-white rounded-lg border border-gray-200">
                   {formData.categories.map((category, idx) => (
-                    <div key={idx} className="bg-green-100 px-3 py-1 rounded-full flex items-center">
-                      <span className="text-sm text-green-800">{category}</span>
+                    <div key={idx} className="bg-gradient-to-r from-[#165E52] to-[#1a7566] px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm">
+                      <span className="text-sm font-medium text-white">{category}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveCategory(category)}
-                        className="ml-2 text-green-600 hover:text-green-800"
+                        className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-0.5 transition-all duration-200"
                       >
-                        <X size={16} />
+                        <X size={14} />
                       </button>
                     </div>
                   ))}
                   {formData.categories.length === 0 && (
-                    <p className="text-sm text-gray-500 italic">No categories selected</p>
+                    <p className="text-sm text-gray-400 italic">No categories selected yet</p>
                   )}
                 </div>
-                <div className="flex gap-2 mb-3">
+                
+                {/* Select Existing Category */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-2">
+                    Select from existing categories
+                  </label>
                   <select
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#165E52] focus:border-[#165E52] transition-all duration-200 bg-white"
                     onChange={handleCategorySelect}
                     value="select"
                   >
                     <option value="select" disabled>
-                      Select existing category
+                      Choose a category
                     </option>
                     {categories
                       .filter((cat) => !formData.categories.includes(cat))
@@ -223,45 +247,67 @@ const CompanyForm = ({ company, categories, onSave, onClose }) => {
                       ))}
                   </select>
                 </div>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    name="newCategory"
-                    value={formData.newCategory}
-                    onChange={handleInputChange}
-                    placeholder="Add new category"
-                    className="flex-grow p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddNewCategory}
-                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
-                    disabled={!formData.newCategory.trim()}
-                  >
-                    <Plus size={20} />
-                  </button>
+                
+                {/* Add New Category */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-2">
+                    Or add a new category
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      name="newCategory"
+                      value={formData.newCategory}
+                      onChange={handleInputChange}
+                      placeholder="Type new category name"
+                      className="flex-grow px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#165E52] focus:border-[#165E52] transition-all duration-200 bg-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddNewCategory}
+                      className="bg-gradient-to-r from-[#165E52] to-[#1a7566] text-white px-5 py-3 rounded-lg hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      disabled={!formData.newCategory.trim()}
+                    >
+                      <Plus size={20} />
+                      <span className="font-medium">Add</span>
+                    </button>
+                  </div>
                 </div>
+                
                 {formData.categories.length === 0 && (
-                  <p className="text-sm text-red-500 mt-1">
+                  <p className="text-sm text-red-500 mt-3 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
                     Please add at least one fertilizer category
                   </p>
                 )}
               </div>
             </div>
-            <div className="mt-6 flex justify-end space-x-3">
+            
+            {/* Footer Actions */}
+            <div className="mt-6 pt-5 border-t border-gray-200 flex justify-end gap-3">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                className="px-6 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-3 bg-gradient-to-r from-[#165E52] to-[#1a7566] text-white rounded-lg font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2"
                 disabled={formData.categories.length === 0}
               >
-                {company ? "Update" : "Save"}
+                {company ? (
+                  <>
+                    <Edit size={18} />
+                    <span>Update Company</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus size={18} />
+                    <span>Add Company</span>
+                  </>
+                )}
               </button>
             </div>
           </form>
@@ -514,124 +560,169 @@ const FertilizerCompany = () => {
   };
 
   return (
-    <div className="p-6">
-      {/* ...rest of the UI as before... */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">
-          Fertilizer Companies
-        </h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-green-50 to-gray-50 p-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Fertilizer Companies
+          </h1>
+          <p className="text-gray-600">Manage fertilizer suppliers and their product categories</p>
+        </div>
         <button
-          className="flex items-center gap-2 bg-green-700 hover:bg-green-800 text-white py-2 px-4 rounded-lg transition-colors"
+          className="flex items-center gap-2 bg-gradient-to-r from-[#165E52] to-[#1a7566] hover:shadow-xl text-white py-3 px-6 rounded-xl transition-all duration-200 font-medium"
           onClick={() => handleOpenModal()}
         >
           <Plus size={20} />
-          Add Company
+          <span>Add New Company</span>
         </button>
       </div>
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-700 mb-2">
-            Total Companies
-          </h2>
-          <p className="text-3xl font-bold text-green-700">
-            {companies.length}
-          </p>
+        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
+                Total Companies
+              </h2>
+              <p className="text-4xl font-bold text-[#165E52]">
+                {companies.length}
+              </p>
+            </div>
+            <div className="w-16 h-16 bg-gradient-to-br from-[#165E52] to-[#1a7566] rounded-2xl flex items-center justify-center shadow-lg">
+              <Plus className="w-8 h-8 text-white" />
+            </div>
+          </div>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-700 mb-2">
-            Total Fertilizer Types
-          </h2>
-          <p className="text-3xl font-bold text-green-700">
-            {totalFertilizers}
-          </p>
+        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
+                Total Fertilizer Types
+              </h2>
+              <p className="text-4xl font-bold text-[#165E52]">
+                {totalFertilizers}
+              </p>
+            </div>
+            <div className="w-16 h-16 bg-gradient-to-br from-[#165E52] to-[#1a7566] rounded-2xl flex items-center justify-center shadow-lg">
+              <span className="text-2xl font-bold text-white">#</span>
+            </div>
+          </div>
         </div>
       </div>
       {/* Companies Table */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Company Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Contact Person
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Contact Number
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Categories
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {companies.map((company) => (
-              <tr key={company.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
-                    {company.name}
-                  </div>
-                  <div className="text-sm text-gray-500">{company.address}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {company.contactPerson}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {company.contactNumber}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {company.email}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex flex-wrap gap-1">
-                    {company.categories.map((category, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800"
-                      >
-                        {category}
-                      </span>
-                    ))}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div className="flex space-x-2">
-                    <button
-                      className="text-indigo-600 hover:text-indigo-900"
-                      onClick={() => handleOpenModal(company)}
-                    >
-                      <Edit size={18} />
-                    </button>
-                    <button
-                      className="text-red-600 hover:text-red-900"
-                      onClick={() => handleDeleteCompany(company.id)}
-                    >
-                      <Trash size={18} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {companies.length === 0 && (
+      <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
               <tr>
-                <td
-                  colSpan="6"
-                  className="px-6 py-4 text-center text-sm text-gray-500"
-                >
-                  No companies found. Add a company to get started.
-                </td>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  Company Details
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  Contact Person
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  Contact Info
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  Categories
+                </th>
+                <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-100">
+              {companies.map((company) => (
+                <tr key={company.id} className="hover:bg-gray-50 transition-colors duration-150">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-10 w-10">
+                        <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-[#165E52] to-[#1a7566] flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">
+                            {company.name.charAt(0)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-semibold text-gray-900">
+                          {company.name}
+                        </div>
+                        <div className="text-sm text-gray-500 flex items-center gap-1">
+                          <span className="inline-block w-1 h-1 bg-gray-400 rounded-full"></span>
+                          {company.address}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-medium text-gray-900">{company.contactPerson}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-900">{company.contactNumber}</div>
+                    <div className="text-sm text-gray-500">{company.email}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-wrap gap-1.5">
+                      {company.categories.slice(0, 3).map((category, index) => (
+                        <span
+                          key={index}
+                          className="px-2.5 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-[#165E52] to-[#1a7566] text-white"
+                        >
+                          {category}
+                        </span>
+                      ))}
+                      {company.categories.length > 3 && (
+                        <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600">
+                          +{company.categories.length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex justify-center gap-2">
+                      <button
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                        onClick={() => handleOpenModal(company)}
+                        title="Edit Company"
+                      >
+                        <Edit size={18} />
+                      </button>
+                      <button
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                        onClick={() => {
+                          if (window.confirm(`Are you sure you want to delete ${company.name}?`)) {
+                            handleDeleteCompany(company.id);
+                          }
+                        }}
+                        title="Delete Company"
+                      >
+                        <Trash size={18} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {companies.length === 0 && (
+                <tr>
+                  <td
+                    colSpan="5"
+                    className="px-6 py-12 text-center"
+                  >
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                        <Plus className="w-8 h-8 text-gray-400" />
+                      </div>
+                      <p className="text-gray-500 font-medium mb-2">No companies found</p>
+                      <p className="text-sm text-gray-400">Add a company to get started</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
       {/* Company Form Modal */}
       {isModalOpen && (
