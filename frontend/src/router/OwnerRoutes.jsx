@@ -49,11 +49,29 @@ export default [
       }
     />
     <Route
+      path="/owner/announcement"
+      element={
+        <Layout>
+          {" "}
+          <OwnerAnnoucement />{" "}
+        </Layout>
+      }
+    />
+    <Route
       path="/owner/annoucement"
       element={
         <Layout>
           {" "}
           <OwnerAnnoucement />{" "}
+        </Layout>
+      }
+    />
+    <Route
+      path="/owner/announcement/manage"
+      element={
+        <Layout>
+          {" "}
+          <OwnerAnnouncementManage />{" "}
         </Layout>
       }
     />
@@ -85,12 +103,31 @@ export default [
       }
     />
     <Route
+      path="/owner/managerview/addmanagers"
+      element={
+        <Layout>
+          {" "}
+          <AddManagers />
+          {"  "}
+        </Layout>
+      }
+    />
+    <Route
       path="/Owner/ManagerView/addManagers"
       element={
         <Layout>
           {" "}
           <AddManagers />
           {"  "}
+        </Layout>
+      }
+    />
+    <Route
+      path="/owner/managerview/giveaccess"
+      element={
+        <Layout>
+          {" "}
+          <GiveAccess />{" "}
         </Layout>
       }
     />
@@ -104,11 +141,29 @@ export default [
       }
     />
     <Route
+      path="/owner/announcement/add"
+      element={
+        <Layout>
+          {" "}
+          <AddAnnouncement />{" "}
+        </Layout>
+      }
+    />
+    <Route
       path="/owner/annoucement/add"
       element={
         <Layout>
           {" "}
           <AddAnnouncement />{" "}
+        </Layout>
+      }
+    />
+    <Route
+      path="/owner/announcement/update"
+      element={
+        <Layout>
+          {" "}
+          <UpdateAnnouncement />{" "}
         </Layout>
       }
     />

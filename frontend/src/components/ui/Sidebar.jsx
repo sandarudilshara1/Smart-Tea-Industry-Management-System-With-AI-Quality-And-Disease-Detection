@@ -59,7 +59,7 @@ const sidebarLinks = {
     },
   ],
   inventory_manager: [
-    { name: "Dashboard", path: "/inventoryManager/Dashboard", icon: Home },
+    { name: "Dashboard", path: "/inventoryManager/dashboard", icon: Home },
     { name: "Leaf Weight", path: "/inventoryManager/leaf_weight", icon: Truck },
     {
       name: "Bag Weight",
@@ -74,7 +74,7 @@ const sidebarLinks = {
     { name: "History", path: "/inventoryManager/history", icon: Award },
   ],
   fertilizer_manager: [
-    { name: "Dashboard", path: "/fertilizerManager/Dashboard", icon: Home },
+    { name: "Dashboard", path: "/fertilizerManager/dashboard", icon: Home },
     { name: "Stock", path: "/fertilizerManager/stocks", icon: Truck },
     { name: "Request", path: "/fertilizerManager/request", icon: Package },
     {
@@ -131,8 +131,8 @@ const sidebarLinks = {
     },
   ],
   owner: [
-    { name: "Dashboard", path: "/owner/Dashboard", icon: Home },
-    { name: "Annoucement", path: "/owner/annoucement", icon: Bell },
+    { name: "Dashboard", path: "/owner/dashboard", icon: Home },
+    { name: "Announcement", path: "/owner/announcement", icon: Bell },
     { name: "Tea Disease Detection", path: "/owner/tea-disease", icon: BadgeAlert },
     { name: "Tea Quality", path: "/owner/tea-quality", icon: Package },
     { name: "Drivers", path: "/owner/drivers", icon: Truck },

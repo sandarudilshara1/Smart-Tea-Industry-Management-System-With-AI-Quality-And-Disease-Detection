@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { Bell } from "lucide-react";
 import NotificationDropdown from "./NotificationDropdown";
 import ProfileDropdown from "./ProfileDropdown";
 import UserAvatar from "./UserAvatar";
+import { getAllAnnouncements } from "../../api/announcement";
 
 const ACCENT_COLOR = "#01251F";
 const FONT_FAMILY = "Inter, Segoe UI, Arial, sans-serif"; // More professional and modern
@@ -23,6 +24,25 @@ const Navbar = () => {
   const { user } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [announcementCount, setAnnouncementCount] = useState(0);
+
+  useEffect(() => {
+    fetchAnnouncementCount();
+  }, []);
+
+  const fetchAnnouncementCount = async () => {
+    try {
+      const response = await getAllAnnouncements();
+      console.log('Navbar - Announcements response:', response);
+      // Backend returns { success, data: { announcements: [...] } }
+      const announcements = response?.data?.announcements || response?.announcements || [];
+      console.log('Navbar - Announcements count:', announcements.length);
+      setAnnouncementCount(announcements.length);
+    } catch (error) {
+      console.error('Error fetching announcement count:', error);
+      setAnnouncementCount(0);
+    }
+  };
 
   const toggleNotifications = () => {
     setShowNotifications(!showNotifications);
@@ -37,6 +57,8 @@ const Navbar = () => {
   const closeDropdowns = () => {
     setShowNotifications(false);
     setShowProfile(false);
+    // Refresh announcement count when closing dropdown
+    fetchAnnouncementCount();
   };
 
   return (
@@ -64,10 +86,12 @@ const Navbar = () => {
               aria-label="Notifications"
             >
               <Bell className="w-5 h-5" />
-              {/* Notification badge */}
-              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold drop-shadow">
-                3
-              </span>
+              {/* Notification badge - shows count if > 0 */}
+              {announcementCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold drop-shadow">
+                  {announcementCount > 9 ? '9+' : announcementCount}
+                </span>
+              )}
             </button>
             {showNotifications && (
               <NotificationDropdown onClose={closeDropdowns} />

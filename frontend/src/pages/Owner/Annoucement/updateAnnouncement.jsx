@@ -8,6 +8,9 @@ const BTN_COLOR = "#01251F";
 const BORDER_COLOR = "#cfece6";
 const HEADER_BG = "#e1f4ef";
 const INPUT_BG = "#ffffff";
+const MAX_FILE_SIZE_MB = 3;
+const MAX_TOTAL_SIZE_MB = 7;
+const MAX_FILES = 5;
 
 export default function UpdateAnnouncement() {
   const navigate = useNavigate();
@@ -71,6 +74,37 @@ export default function UpdateAnnouncement() {
     const files = Array.from(event.target.files);
     if (files.length === 0) return;
 
+    if (form.attachments.length + files.length > MAX_FILES) {
+      alert(`You can upload up to ${MAX_FILES} files only.`);
+      event.target.value = "";
+      return;
+    }
+
+    const oversizedFile = files.find(
+      (file) => file.size > MAX_FILE_SIZE_MB * 1024 * 1024
+    );
+    if (oversizedFile) {
+      alert(
+        `File \"${oversizedFile.name}\" is too large. Max allowed per file is ${MAX_FILE_SIZE_MB} MB.`
+      );
+      event.target.value = "";
+      return;
+    }
+
+    const currentTotalBytes = form.attachments.reduce((sum, att) => {
+      const parsedSizeMb = parseFloat(String(att.size || "0"));
+      return sum + (Number.isFinite(parsedSizeMb) ? parsedSizeMb * 1024 * 1024 : 0);
+    }, 0);
+    const incomingBytes = files.reduce((sum, file) => sum + file.size, 0);
+
+    if (currentTotalBytes + incomingBytes > MAX_TOTAL_SIZE_MB * 1024 * 1024) {
+      alert(
+        `Total attachment size is too large. Keep total under ${MAX_TOTAL_SIZE_MB} MB.`
+      );
+      event.target.value = "";
+      return;
+    }
+
     // Convert each file to base64 data URL
     const filePromises = files.map((file) => {
       return new Promise((resolve) => {
@@ -93,6 +127,8 @@ export default function UpdateAnnouncement() {
       ...prev,
       attachments: [...prev.attachments, ...newAttachments],
     }));
+
+    event.target.value = "";
   };
 
   const handleRemoveAttachment = (attachmentId) => {
@@ -141,7 +177,14 @@ export default function UpdateAnnouncement() {
       }
     } catch (error) {
       console.error("Error updating announcement:", error?.response || error?.message || error);
-      alert("Failed to update announcement: " + (error?.response?.data?.message || error?.message || "Unknown error"));
+      const status = error?.response?.status;
+      if (status === 413) {
+        alert(
+          "Failed to update announcement: attachments are too large. Reduce file sizes and try again."
+        );
+      } else {
+        alert("Failed to update announcement: " + (error?.response?.data?.message || error?.message || "Unknown error"));
+      }
     }
   };
 
@@ -359,8 +402,8 @@ export default function UpdateAnnouncement() {
                   >
                     Attach Files
                   </label>
-                  <div className="space-y-4">
-                    <div className="flex items-center">
+                  <div className="space-y-4 rounded-xl border border-[#cfece6] bg-[#f7fcfa] p-4 sm:p-5">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <input
                         type="file"
                         multiple
@@ -371,24 +414,38 @@ export default function UpdateAnnouncement() {
                       />
                       <label
                         htmlFor="fileUpload"
-                        className="flex items-center space-x-2 bg-[#01251f] hover:bg-[#165e52] text-white px-4 py-2 rounded-lg cursor-pointer select-none transition-colors"
+                        className="inline-flex w-fit items-center space-x-2 rounded-lg bg-[#01251f] px-4 py-2.5 text-white shadow-sm transition-colors hover:bg-[#165e52] cursor-pointer"
                       >
                         <Paperclip className="w-4 h-4" />
                         <span>Choose Files</span>
                       </label>
-                      <span className="ml-3 text-sm text-gray-500">
-                        Supported: PDF, DOC, DOCX, JPG, PNG, TXT, XLSX
-                      </span>
+
+                      <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-600">
+                        <span className="rounded-full bg-white px-3 py-1 border border-[#d9ebe5]">
+                          Max {MAX_FILE_SIZE_MB}MB per file
+                        </span>
+                        <span className="rounded-full bg-white px-3 py-1 border border-[#d9ebe5]">
+                          {MAX_TOTAL_SIZE_MB}MB total
+                        </span>
+                        <span className="rounded-full bg-white px-3 py-1 border border-[#d9ebe5]">
+                          Up to {MAX_FILES} files
+                        </span>
+                      </div>
                     </div>
+
+                    <p className="text-xs sm:text-sm text-gray-500">
+                      Supported formats: PDF, DOC, DOCX, JPG, PNG, TXT, XLSX
+                    </p>
+
                     {form.attachments.length > 0 && (
                       <div className="space-y-2">
                         <p className="text-sm font-medium text-gray-700">
-                          Selected Files:
+                          Selected Files ({form.attachments.length})
                         </p>
                         {form.attachments.map((attachment) => (
                           <div
                             key={attachment.id}
-                            className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50"
+                            className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-white"
                           >
                             <div className="flex items-center space-x-3">
                               <Paperclip className="w-4 h-4 text-gray-500" />

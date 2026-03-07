@@ -156,7 +156,7 @@ export default function ManagerDashboard() {
           </div>
           <button
             onClick={() =>
-              (window.location.href = "/Owner/ManagerView/addManagers")
+              (window.location.href = "/owner/managerview/addmanagers")
             }
             className="bg-[#01251F] hover:bg-[#014c3b] text-white px-5 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
           >

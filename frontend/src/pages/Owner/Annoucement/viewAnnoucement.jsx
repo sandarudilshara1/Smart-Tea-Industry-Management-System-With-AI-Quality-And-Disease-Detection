@@ -129,12 +129,12 @@ export default function GreenLeafDashboard() {
       //   showNotification("Error updating announcement", "error");
       //   console.error("Error updating announcement:", error);
       // }
-      navigate("/owner/annoucement/update", { state: { announcement } });
+      navigate("/owner/announcement/update", { state: { announcement } });
     }
   };
 
   const handleAddNew = () => {
-    navigate("/owner/annoucement/add");
+    navigate("/owner/announcement/add");
   };
 
   const handleDownloadAttachment = (attachment) => {
