@@ -18,8 +18,10 @@ import {
   deleteRoute as deleteRouteAPI,
 } from "../../../api/route";
 import { getAllDrivers } from "../../../api/driver";
+import { useAuth } from "../../../contexts/AuthContext";
 
 export default function RouteManagement() {
+  const { user } = useAuth();
   const [currentView, setCurrentView] = useState("routes");
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [routes, setRoutes] = useState([]);
@@ -31,7 +33,7 @@ export default function RouteManagement() {
   const [availableDrivers, setAvailableDrivers] = useState([]);
   const [availableVehicles, setAvailableVehicles] = useState([]);
   
-  const factoryId = 1; // TODO: Get from auth context
+  const factoryId = user?.id || user?._id || null;
 
   const [filters, setFilters] = useState({
     search: "",
@@ -44,14 +46,19 @@ export default function RouteManagement() {
 
   // Fetch routes and drivers on mount
   useEffect(() => {
+    if (!factoryId) return;
     fetchRoutes();
     fetchDrivers();
-  }, []);
+  }, [factoryId]);
 
   const fetchRoutes = async () => {
     try {
       setLoading(true);
       setError(null);
+      if (!factoryId) {
+        setRoutes([]);
+        return;
+      }
       const response = await getAllRoutes(factoryId);
       console.log('📊 Routes API response:', response);
       if (response.success && response.content) {
@@ -153,6 +160,10 @@ export default function RouteManagement() {
 
   const handleSubmitRoute = async (routeData) => {
     try {
+      if (!factoryId) {
+        throw new Error("Factory user context is missing. Please login again.");
+      }
+
       const payload = {
         ...routeData,
         factoryId,
@@ -424,7 +435,7 @@ export default function RouteManagement() {
                 </button>
               </div>
 
-              {routeSuppliers[selectedRoute.id]?.length > 0 ? (
+              {(selectedRoute.suppliers || []).length > 0 ? (
                 <>
                   <div className="bg-[#01251F] text-white">
                     <div className="grid grid-cols-5 gap-4 p-4 font-medium text-sm">

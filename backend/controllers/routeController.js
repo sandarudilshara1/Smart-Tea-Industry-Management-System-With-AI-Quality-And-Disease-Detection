@@ -1,5 +1,6 @@
 const Route = require('../models/Route');
 const Supplier = require('../models/Supplier');
+const mongoose = require('mongoose');
 
 // Get all routes for a factory
 exports.getAllRoutes = async (req, res) => {
@@ -7,7 +8,16 @@ exports.getAllRoutes = async (req, res) => {
         const { factoryId } = req.params;
         const { page = 0, limit = 10, search, status } = req.query;
 
-        const query = { factoryId };
+        const resolvedFactoryId = factoryId === 'me' ? req.user?.userId : factoryId;
+
+        if (!resolvedFactoryId || !mongoose.Types.ObjectId.isValid(resolvedFactoryId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid factoryId'
+            });
+        }
+
+        const query = { factoryId: resolvedFactoryId };
         
         if (status) query.status = status;
         
@@ -31,7 +41,7 @@ exports.getAllRoutes = async (req, res) => {
 
         const total = await Route.countDocuments(query);
 
-        console.log(`📊 GET /api/routes/factory/${factoryId} - Found ${routes.length} routes`);
+        console.log(`📊 GET /api/routes/factory/${resolvedFactoryId} - Found ${routes.length} routes`);
 
         res.status(200).json({
             success: true,
@@ -91,7 +101,16 @@ exports.getRouteById = async (req, res) => {
 // Create a new route
 exports.createRoute = async (req, res) => {
     try {
-        const routeData = req.body;
+        const routeData = { ...req.body };
+
+        const resolvedFactoryId = routeData.factoryId || req.user?.userId;
+        if (!resolvedFactoryId || !mongoose.Types.ObjectId.isValid(resolvedFactoryId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Valid factoryId is required'
+            });
+        }
+        routeData.factoryId = resolvedFactoryId;
 
         // Check if route number already exists
         const existingRoute = await Route.findOne({ routeNumber: routeData.routeNumber });
@@ -104,6 +123,8 @@ exports.createRoute = async (req, res) => {
 
         const route = new Route(routeData);
         await route.save();
+
+        console.log(`✅ POST /api/routes - Created route: ${route.routeName} (${route.routeNumber})`);
 
         res.status(201).json({
             success: true,
