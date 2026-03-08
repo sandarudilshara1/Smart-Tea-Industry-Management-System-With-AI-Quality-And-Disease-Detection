@@ -9,6 +9,11 @@ import ActiveLoans from "../pages/PaymentManager/Loans/ActiveLoans";
 import TeaRateAdjustment from "../pages/PaymentManager/TeaRate/TeaRateAdjustment";
 import PaymentManagement from "../pages/PaymentManager/Payments/PaymentManagement";
 import SimplePaymentSystem from "../pages/PaymentManager/SimplePaymentSystem";
+import PaymentProcessingDashboard from "../pages/PaymentManager/PaymentProceed";
+import MonthlyPaymentProcessing from "../pages/PaymentManager/PaymentProceed/MonthlyPaymentProcessing";
+import PaymentDisbursement from "../pages/PaymentManager/PaymentProceed/PaymentDisbursement";
+import AdhocPaymentProcessing from "../pages/PaymentManager/PaymentProceed/AdhocPaymentProcessing";
+import CashDisbursementTerminal from "../pages/PaymentManager/PaymentProceed/CashDisbursementTerminal";
 
 export default [
   <Route
@@ -89,6 +94,51 @@ export default [
     element={
       <Layout>
         <PaymentManagement />
+      </Layout>
+    }
+  />,
+  <Route
+    key="payment-manager-proceed"
+    path="/payment-manager/proceed"
+    element={
+      <Layout>
+        <PaymentProcessingDashboard />
+      </Layout>
+    }
+  />,
+  <Route
+    key="payment-manager-proceed-monthly"
+    path="/payment-manager/proceed/monthly"
+    element={
+      <Layout>
+        <MonthlyPaymentProcessing />
+      </Layout>
+    }
+  />,
+  <Route
+    key="payment-manager-proceed-disbursement"
+    path="/payment-manager/proceed/disbursement"
+    element={
+      <Layout>
+        <PaymentDisbursement />
+      </Layout>
+    }
+  />,
+  <Route
+    key="payment-manager-proceed-adhoc"
+    path="/payment-manager/proceed/adhoc"
+    element={
+      <Layout>
+        <AdhocPaymentProcessing />
+      </Layout>
+    }
+  />,
+  <Route
+    key="payment-manager-proceed-cash-terminal"
+    path="/payment-manager/proceed/cash-terminal/:routeId"
+    element={
+      <Layout>
+        <CashDisbursementTerminal />
       </Layout>
     }
   />,

@@ -5,6 +5,8 @@ const Advance = require('../models/Advance');
 const TeaRate = require('../models/TeaRate');
 const BankBatch = require('../models/BankBatch');
 
+const getActorUserId = (req) => req?.user?.userId || req?.user?.id || req?.user?._id;
+
 // Calculate monthly payments for suppliers
 exports.calculateMonthlyPayments = async (req, res) => {
     try {
@@ -195,12 +197,20 @@ exports.getMonthlyPaymentsForApproval = async (req, res) => {
 // Approve monthly payments
 exports.approveMonthlyPayments = async (req, res) => {
     try {
-        const { paymentIds, approvedBy } = req.body;
+        const { paymentIds } = req.body;
+        const approvedBy = getActorUserId(req);
 
         if (!paymentIds || paymentIds.length === 0) {
             return res.status(400).json({
                 success: false,
                 message: 'Payment IDs are required'
+            });
+        }
+
+        if (!approvedBy) {
+            return res.status(401).json({
+                success: false,
+                message: 'Authenticated user is required to approve payments'
             });
         }
 
@@ -296,7 +306,15 @@ exports.getPendingAdhocPayments = async (req, res) => {
 exports.approveAdhocPayment = async (req, res) => {
     try {
         const { paymentId } = req.params;
-        const { approvedBy, notes } = req.body;
+        const { notes } = req.body;
+        const approvedBy = getActorUserId(req);
+
+        if (!approvedBy) {
+            return res.status(401).json({
+                success: false,
+                message: 'Authenticated user is required to approve payments'
+            });
+        }
 
         const payment = await Payment.findById(paymentId);
         if (!payment) {
@@ -370,12 +388,27 @@ exports.getBankPaymentsQueue = async (req, res) => {
 // Generate bank CSV
 exports.generateBankCsv = async (req, res) => {
     try {
-        const { factoryId, paymentIds, generatedBy } = req.body;
+        const { factoryId, paymentIds } = req.body;
+        const generatedBy = getActorUserId(req);
+
+        if (!factoryId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Factory ID is required'
+            });
+        }
 
         if (!paymentIds || paymentIds.length === 0) {
             return res.status(400).json({
                 success: false,
                 message: 'Payment IDs are required'
+            });
+        }
+
+        if (!generatedBy) {
+            return res.status(401).json({
+                success: false,
+                message: 'Authenticated user is required to generate CSV'
             });
         }
 
@@ -595,12 +628,20 @@ exports.getCashPaymentsByRoute = async (req, res) => {
 // Disburse cash
 exports.disburseCash = async (req, res) => {
     try {
-        const { paymentIds, disbursedBy, receiptNumbers } = req.body;
+        const { paymentIds, receiptNumbers } = req.body;
+        const disbursedBy = getActorUserId(req);
 
         if (!paymentIds || paymentIds.length === 0) {
             return res.status(400).json({
                 success: false,
                 message: 'Payment IDs are required'
+            });
+        }
+
+        if (!disbursedBy) {
+            return res.status(401).json({
+                success: false,
+                message: 'Authenticated user is required to disburse cash payments'
             });
         }
 

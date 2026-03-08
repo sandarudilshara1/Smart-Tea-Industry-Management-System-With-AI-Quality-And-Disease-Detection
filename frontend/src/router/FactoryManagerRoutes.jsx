@@ -120,6 +120,14 @@ const FactoryManagerRoutes = (
       }
     />
     <Route
+      path="/factoryManager/payment/proceed/cash-terminal/:routeId"
+      element={
+        <Layout>
+          <CashDisbursementTerminal />
+        </Layout>
+      }
+    />
+    <Route
       path="/factoryManager/payment/teaRate"
       element={
         <Layout>

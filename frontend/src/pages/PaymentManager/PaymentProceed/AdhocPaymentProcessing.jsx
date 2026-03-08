@@ -10,7 +10,10 @@ import {
 import {
   getPendingAdhocPayments,
   approveAdhocPayment,
+  generateBankCsv,
+  downloadBankCsv,
 } from "../../../api/paymentManager";
+import { useAuth } from "../../../contexts/AuthContext";
 
 // Color constants to match existing theme
 const ACCENT_COLOR = "#165e52";
@@ -20,26 +23,51 @@ const BG_LIGHT_GREEN = "#e1f4ef";
 
 const AdhocPaymentProcessing = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [bankPayments, setBankPayments] = useState([]);
   const [cashPayments, setCashPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedPayments, setSelectedPayments] = useState([]);
+  const [processingCsv, setProcessingCsv] = useState(false);
+
+  const factoryId = user?.factoryId || "1";
+  const approverId = user?.userId || user?.id || user?._id;
+
+  const paymentMethodValue = (payment) =>
+    String(payment?.paymentMethod || "").toLowerCase();
+
+  const paymentAmount = (payment) =>
+    payment?.amount ?? payment?.finalAmount ?? payment?.grossAmount ?? 0;
+
+  const paymentId = (payment) => payment?.id || payment?._id;
+  const supplierName = (payment) =>
+    payment?.supplierName || payment?.supplierId?.name || "Unknown Supplier";
+  const supplierCode = (payment) =>
+    payment?.supplierCode || payment?.supplierId?.supplierCode || "N/A";
+  const routeLabel = (payment) =>
+    payment?.routeCode ||
+    payment?.routeId?.routeId ||
+    payment?.routeId?.name ||
+    payment?.routeId ||
+    "N/A";
+
+  const proceedBasePath =
+    user?.role === "payment_manager"
+      ? "/payment-manager/proceed"
+      : "/factoryManager/payment/proceed";
 
   // Fetch pending adhoc payments
   useEffect(() => {
     const fetchAdhocPayments = async () => {
       try {
         setLoading(true);
-        const response = await getPendingAdhocPayments({ factoryId: "1" });
+        const response = await getPendingAdhocPayments({ factoryId });
+        const payments = response?.content || [];
 
         // Separate bank and cash payments
-        const bank = response.filter(
-          (payment) => payment.paymentMethod === "BANK"
-        );
-        const cash = response.filter(
-          (payment) => payment.paymentMethod === "CASH"
-        );
+        const bank = payments.filter((payment) => paymentMethodValue(payment) === "bank");
+        const cash = payments.filter((payment) => paymentMethodValue(payment) === "cash");
 
         setBankPayments(bank);
         setCashPayments(cash);
@@ -53,24 +81,20 @@ const AdhocPaymentProcessing = () => {
     };
 
     fetchAdhocPayments();
-  }, []);
+  }, [factoryId]);
 
   // Handle payment approval
   const handleApprovePayment = async (paymentId) => {
     try {
-      await approveAdhocPayment({
-        paymentId,
-        approvedBy: "user123", // TODO: Get from user context
+      await approveAdhocPayment(paymentId, {
+        approvedBy: approverId,
       });
 
       // Refresh the payments list
-      const response = await getPendingAdhocPayments({ factoryId: "1" });
-      const bank = response.filter(
-        (payment) => payment.paymentMethod === "BANK"
-      );
-      const cash = response.filter(
-        (payment) => payment.paymentMethod === "CASH"
-      );
+      const response = await getPendingAdhocPayments({ factoryId });
+      const payments = response?.content || [];
+      const bank = payments.filter((payment) => paymentMethodValue(payment) === "bank");
+      const cash = payments.filter((payment) => paymentMethodValue(payment) === "cash");
 
       setBankPayments(bank);
       setCashPayments(cash);
@@ -83,12 +107,43 @@ const AdhocPaymentProcessing = () => {
 
   // Handle CSV generation for selected bank payments
   const handleGenerateCsv = () => {
-    if (selectedPayments.length === 0) {
-      alert("Please select at least one payment to generate CSV.");
-      return;
-    }
-    // TODO: Implement CSV generation for selected payments
-    alert(`Generating CSV for ${selectedPayments.length} selected payments`);
+    if (selectedPayments.length === 0 || processingCsv) return;
+
+    const run = async () => {
+      try {
+        setProcessingCsv(true);
+        const batch = await generateBankCsv({
+          factoryId,
+          paymentIds: selectedPayments,
+          generatedBy: approverId,
+        });
+
+        const batchId = batch?.data?.batchId;
+        if (!batchId) {
+          throw new Error("Batch ID is missing from CSV generation response");
+        }
+
+        const blob = await downloadBankCsv(batchId);
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `adhoc-bank-payments-${batchId}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+
+        alert(`CSV generated for ${selectedPayments.length} selected payments`);
+        setSelectedPayments([]);
+      } catch (err) {
+        console.error("CSV generation failed:", err);
+        alert("Failed to generate CSV. Please try again.");
+      } finally {
+        setProcessingCsv(false);
+      }
+    };
+
+    run();
   };
 
   // Handle payment selection
@@ -115,7 +170,7 @@ const AdhocPaymentProcessing = () => {
         <div className="max-w-7xl mx-auto px-6 py-6 flex items-start justify-between">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => navigate("/factoryManager/payment/proceed")}
+              onClick={() => navigate(proceedBasePath)}
               className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition duration-200"
             >
               <ArrowLeft size={20} />
@@ -190,24 +245,24 @@ const AdhocPaymentProcessing = () => {
                 <div className="space-y-4 mb-6">
                   {bankPayments.map((payment, index) => (
                     <div
-                      key={payment.id || index}
+                      key={paymentId(payment) || index}
                       className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition duration-200"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <input
                             type="checkbox"
-                            checked={selectedPayments.includes(payment.id)}
-                            onChange={() => handlePaymentSelect(payment.id)}
+                            checked={selectedPayments.includes(paymentId(payment))}
+                            onChange={() => handlePaymentSelect(paymentId(payment))}
                             className="w-4 h-4"
                             style={{ accentColor: ACCENT_COLOR }}
                           />
                           <div>
                             <h4 className="font-bold text-gray-900 mb-1">
-                              {payment.supplierName}
+                              {supplierName(payment)}
                             </h4>
                             <p className="text-sm text-gray-600 mb-2">
-                              {payment.supplierId} • {payment.routeId}
+                              {supplierCode(payment)} • {routeLabel(payment)}
                             </p>
                             <div className="flex items-center gap-2">
                               <span
@@ -231,7 +286,7 @@ const AdhocPaymentProcessing = () => {
                         <div className="text-right">
                           <p className="text-2xl font-bold text-gray-900 mb-1">
                             Rs.{" "}
-                            {payment.amount?.toLocaleString("en-IN", {
+                            {paymentAmount(payment)?.toLocaleString("en-IN", {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
                             }) || "0.00"}
@@ -240,7 +295,7 @@ const AdhocPaymentProcessing = () => {
                             className={`${getMethodColor()}`}
                             style={{ color: ACCENT_COLOR }}
                           >
-                            {payment.paymentMethod === "BANK"
+                            {paymentMethodValue(payment) === "bank"
                               ? "Bank Transfer"
                               : "Cash Collection"}
                           </p>
@@ -253,13 +308,13 @@ const AdhocPaymentProcessing = () => {
                   className="w-full mb-3 px-6 py-3 text-white rounded-lg font-medium transition duration-200 flex items-center justify-center gap-2"
                   style={{ backgroundColor: BUTTON_COLOR }}
                   onClick={handleGenerateCsv}
-                  disabled={selectedPayments.length === 0}
+                  disabled={selectedPayments.length === 0 || processingCsv}
                 >
                   <Download size={20} />
-                  Generate CSV for Selected (Rs.{" "}
+                  {processingCsv ? "Generating CSV..." : "Generate CSV for Selected"} (Rs.{" "}
                   {bankPayments
-                    .filter((p) => selectedPayments.includes(p.id))
-                    .reduce((sum, p) => sum + p.amount, 0)
+                    .filter((p) => selectedPayments.includes(paymentId(p)))
+                    .reduce((sum, p) => sum + paymentAmount(p), 0)
                     .toLocaleString("en-IN", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
@@ -302,7 +357,7 @@ const AdhocPaymentProcessing = () => {
                 <div className="space-y-4 mb-4">
                   {cashPayments.map((payment, index) => (
                     <div
-                      key={payment.id || index}
+                      key={paymentId(payment) || index}
                       className="border rounded-lg p-4"
                       style={{
                         backgroundColor: BG_LIGHT_GREEN,
@@ -312,10 +367,10 @@ const AdhocPaymentProcessing = () => {
                       <div className="flex items-center justify-between mb-4">
                         <div>
                           <h4 className="font-bold text-gray-900 mb-1">
-                            {payment.supplierName}
+                            {supplierName(payment)}
                           </h4>
                           <p className="text-sm text-gray-600 mb-2">
-                            {payment.supplierId} • {payment.routeId}
+                            {supplierCode(payment)} • {routeLabel(payment)}
                           </p>
                           <div className="flex items-center gap-2">
                             <span
@@ -338,7 +393,7 @@ const AdhocPaymentProcessing = () => {
                         <div className="text-right">
                           <p className="text-2xl font-bold text-gray-900 mb-1">
                             Rs.{" "}
-                            {payment.amount?.toLocaleString("en-IN", {
+                            {paymentAmount(payment)?.toLocaleString("en-IN", {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
                             }) || "0.00"}
@@ -347,7 +402,7 @@ const AdhocPaymentProcessing = () => {
                             className={`${getMethodColor()}`}
                             style={{ color: ACCENT_COLOR }}
                           >
-                            {payment.paymentMethod === "BANK"
+                            {paymentMethodValue(payment) === "bank"
                               ? "Bank Transfer"
                               : "Cash Collection"}
                           </p>
@@ -356,7 +411,7 @@ const AdhocPaymentProcessing = () => {
                       <button
                         className="w-full px-4 py-2 text-white rounded-lg font-medium transition duration-200 flex items-center justify-center gap-2"
                         style={{ backgroundColor: BUTTON_COLOR }}
-                        onClick={() => handleApprovePayment(payment.id)}
+                        onClick={() => handleApprovePayment(paymentId(payment))}
                       >
                         <CheckCircle size={16} />
                         Add to Collection Queue

@@ -19,6 +19,8 @@ export default function Auth() {
   const navigate = useNavigate();
   const { setUser } = useAuth();
 
+  const normalizeRole = (role) => String(role || "").trim().toLowerCase();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -31,6 +33,7 @@ export default function Auth() {
       
       if (response.success) {
         const { token, user } = response.data;
+        const role = normalizeRole(user.role);
         
         // Save token to localStorage
         localStorage.setItem("authToken", token);
@@ -40,7 +43,7 @@ export default function Auth() {
         const userData = {
           userId: user.id,
           email: user.email,
-          role: user.role,
+          role,
           firstName: user.firstName,
           lastName: user.lastName,
           phone: user.phone,
@@ -52,37 +55,20 @@ export default function Auth() {
         
         setUser(userData);
         setLoading(false);
-        
-        // Navigate based on role
-        const role = user.role;
-        switch (role) {
-          case "supplier":
-            navigate("/supplier/dashboard");
-            break;
-          case "driver":
-            navigate("/driver/dashboard");
-            break;
-          case "factory_manager":
-            navigate("/factoryManager/dashboard");
-            break;
-          case "inventory_manager":
-            navigate("/inventoryManager/dashboard");
-            break;
-          case "fertilizer_manager":
-            navigate("/fertilizerManager/dashboard");
-            break;
-          case "estate_manager":
-            navigate("/estateManager/dashboard");
-            break;
-          case "transport_manager":
-            navigate("/transportManager/dashboard");
-            break;
-          case "owner":
-            navigate("/owner/dashboard");
-            break;
-          default:
-            navigate("/");
-        }
+
+        const roleRouteMap = {
+          supplier: "/supplier/dashboard",
+          driver: "/driver/dashboard",
+          factory_manager: "/factoryManager/dashboard",
+          inventory_manager: "/inventoryManager/dashboard",
+          fertilizer_manager: "/fertilizerManager/dashboard",
+          estate_manager: "/estateManager/dashboard",
+          transport_manager: "/transportManager/dashboard",
+          owner: "/owner/dashboard",
+          payment_manager: "/payment-manager/dashboard",
+        };
+
+        navigate(roleRouteMap[role] || "/landing");
       } else {
         setLoading(false);
         setError(response.message || "Login failed");
@@ -90,24 +76,6 @@ export default function Auth() {
     } catch (error) {
       setLoading(false);
       console.error("Login error:", error);
-      
-      // In development, allow a fallback so the dev workflow isn't blocked
-      if (import.meta.env?.DEV) {
-        const devUser = { 
-          userId: "dev",
-          username: email || "dev", 
-          role: "owner",
-          email: email || "dev@example.com",
-          firstName: "Dev",
-          lastName: "User"
-        };
-        setUser(devUser);
-        localStorage.setItem("userId", devUser.userId);
-        localStorage.setItem("authToken", "dev-token");
-        // Navigate to the OWNER dashboard by default in dev
-        navigate("/owner/dashboard");
-        return;
-      }
 
       setError(error?.response?.data?.message || "Invalid credentials. Please try again.");
     }

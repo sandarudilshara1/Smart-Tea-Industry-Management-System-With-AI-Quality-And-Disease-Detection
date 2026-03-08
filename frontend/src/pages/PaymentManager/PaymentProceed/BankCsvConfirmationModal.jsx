@@ -28,12 +28,22 @@ const BankCsvConfirmationModal = ({
     try {
       setDownloading(true);
       // First call the onConfirm callback (which generates the CSV)
-      await onConfirm();
+      const batchId = await onConfirm();
+
+      if (!batchId) {
+        throw new Error("Batch ID is missing from CSV generation response");
+      }
 
       // Then download the CSV file
-      // TODO: Get batchId from the generateBankCsv response
-      const batchId = "BATCH-001"; // This should come from the API response
-      await downloadBankCsv({ batchId });
+      const csvBlob = await downloadBankCsv(batchId);
+      const url = window.URL.createObjectURL(csvBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `bank-payments-${batchId}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
 
       onClose();
     } catch (err) {

@@ -14,6 +14,7 @@ import {
   generateBankCsv,
   getCashPaymentsQueue,
 } from "../../../api/paymentManager";
+import { useAuth } from "../../../contexts/AuthContext";
 
 // Color constants to match existing theme
 const ACCENT_COLOR = "#165e52";
@@ -23,24 +24,75 @@ const BG_LIGHT_GREEN = "#e1f4ef";
 
 const PaymentDisbursement = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [showCsvModal, setShowCsvModal] = useState(false);
   const [bankPayments, setBankPayments] = useState([]);
   const [cashRoutes, setCashRoutes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const proceedBasePath =
+    user?.role === "payment_manager"
+      ? "/payment-manager/proceed"
+      : "/factoryManager/payment/proceed";
+
+  const getFactoryId = () => user?.factoryId || "1";
+  const actorUserId = user?.userId || user?.id || user?._id;
+
+  const normalizeAmount = (payment) =>
+    payment?.amount ?? payment?.finalAmount ?? payment?.grossAmount ?? 0;
+
+  const normalizePaymentId = (payment) => payment?.id || payment?._id;
+
+  const normalizeRouteId = (payment) => {
+    const route = payment?.routeId;
+    if (!route) return "Unknown Route";
+    if (typeof route === "string") return route;
+    return route.routeId || route._id || "Unknown Route";
+  };
+
+  const normalizeRouteName = (payment) => {
+    const route = payment?.routeId;
+    if (!route || typeof route === "string") return "Unknown Route";
+    return route.routeName || route.name || route.routeId || "Unknown Route";
+  };
+
+  const groupCashRoutes = (payments = []) => {
+    const grouped = new Map();
+
+    payments.forEach((payment) => {
+      const key = normalizeRouteId(payment);
+      const amount = normalizeAmount(payment);
+      if (!grouped.has(key)) {
+        grouped.set(key, {
+          routeId: key,
+          routeName: normalizeRouteName(payment),
+          paymentCount: 0,
+          totalAmount: 0,
+        });
+      }
+
+      const current = grouped.get(key);
+      current.paymentCount += 1;
+      current.totalAmount += amount;
+    });
+
+    return Array.from(grouped.values());
+  };
+
   // Fetch bank and cash payment queues
   useEffect(() => {
     const fetchPaymentQueues = async () => {
       try {
         setLoading(true);
+        const factoryId = getFactoryId();
         const [bankData, cashData] = await Promise.all([
-          getBankPaymentsQueue({ factoryId: "1" }),
-          getCashPaymentsQueue({ factoryId: "1" }),
+          getBankPaymentsQueue({ factoryId }),
+          getCashPaymentsQueue({ factoryId }),
         ]);
 
-        setBankPayments(bankData);
-        setCashRoutes(Object.values(cashData)); // Convert object to array
+        setBankPayments(bankData?.content || []);
+        setCashRoutes(groupCashRoutes(cashData?.content || []));
         setError(null);
       } catch (err) {
         console.error("Error fetching payment queues:", err);
@@ -51,29 +103,42 @@ const PaymentDisbursement = () => {
     };
 
     fetchPaymentQueues();
-  }, []);
+  }, [user?.factoryId]);
 
   // Handle CSV generation
   const handleGenerateCsv = async () => {
     try {
-      const paymentIds = bankPayments.map((payment) => payment.id);
+      const paymentIds = bankPayments
+        .map((payment) => normalizePaymentId(payment))
+        .filter(Boolean);
+
+      if (paymentIds.length === 0) {
+        throw new Error("No eligible bank payments selected");
+      }
+
       const csvBatch = await generateBankCsv({
         paymentIds,
-        factoryId: "1",
-        generatedBy: "user123", // TODO: Get from user context
+        factoryId: getFactoryId(),
+        generatedBy: actorUserId,
       });
 
-      alert(`CSV generated successfully! Batch ID: ${csvBatch.id}`);
+      const batchId = csvBatch?.data?.batchId;
+      if (!batchId) {
+        throw new Error("CSV generated but batch ID was not returned");
+      }
+
       setShowCsvModal(false);
 
       // Refresh bank payments queue
       const updatedBankPayments = await getBankPaymentsQueue({
-        factoryId: "1",
+        factoryId: getFactoryId(),
       });
-      setBankPayments(updatedBankPayments);
+
+      setBankPayments(updatedBankPayments?.content || []);
+      return batchId;
     } catch (err) {
       console.error("Error generating CSV:", err);
-      alert("Failed to generate CSV. Please try again.");
+      throw err;
     }
   };
 
@@ -84,7 +149,7 @@ const PaymentDisbursement = () => {
         <div className="max-w-7xl mx-auto px-6 py-6 flex items-start justify-between">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => navigate("/factoryManager/payment/proceed")}
+              onClick={() => navigate(proceedBasePath)}
               className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition duration-200"
             >
               <ArrowLeft size={20} />
@@ -180,13 +245,16 @@ const PaymentDisbursement = () => {
                         <p className="text-sm" style={{ color: ACCENT_COLOR }}>
                           Total: Rs.{" "}
                           {bankPayments
-                            .reduce((sum, payment) => sum + payment.amount, 0)
+                            .reduce(
+                              (sum, payment) => sum + normalizeAmount(payment),
+                              0
+                            )
                             .toLocaleString("en-IN", {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
                             })}{" "}
                           across{" "}
-                          {new Set(bankPayments.map((p) => p.routeId)).size}{" "}
+                          {new Set(bankPayments.map((p) => normalizeRouteId(p))).size}{" "}
                           routes ({bankPayments.length} suppliers)
                         </p>
                       </div>
@@ -262,9 +330,7 @@ const PaymentDisbursement = () => {
                           className="w-full px-4 py-2 text-white rounded-lg font-medium transition duration-200 flex items-center justify-center gap-2"
                           style={{ backgroundColor: BUTTON_COLOR }}
                           onClick={() =>
-                            navigate(
-                              "/factoryManager/payment/proceed/cash-terminal"
-                            )
+                            navigate(`${proceedBasePath}/cash-terminal/${route.routeId}`)
                           }
                         >
                           <CheckCircle size={16} />

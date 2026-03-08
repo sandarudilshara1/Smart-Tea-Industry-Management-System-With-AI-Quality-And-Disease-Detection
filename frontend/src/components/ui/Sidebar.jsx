@@ -3,12 +3,14 @@ import {
   BadgeAlert,
   BarChart3,
   Bell,
+  CheckCircle,
   DollarSign,
   Home,
   ListCheck,
   Package,
   Route,
   Settings,
+  AlertTriangle,
   Truck,
   UserCheck,
   Users,
@@ -151,13 +153,33 @@ const sidebarLinks = {
     { name: "Advances", path: "/payment-manager/advances", icon: DollarSign },
     { name: "Loans", path: "/payment-manager/loans", icon: BarChart3 },
     { name: "Tea Rates", path: "/payment-manager/tea-rates", icon: Package },
+    {
+      name: "Processing",
+      path: "/payment-manager/proceed",
+      icon: ListCheck,
+    },
+    {
+      name: "Monthly Approval",
+      path: "/payment-manager/proceed/monthly",
+      icon: CheckCircle,
+    },
+    {
+      name: "Disbursement",
+      path: "/payment-manager/proceed/disbursement",
+      icon: DollarSign,
+    },
+    {
+      name: "Ad-hoc",
+      path: "/payment-manager/proceed/adhoc",
+      icon: AlertTriangle,
+    },
   ],
 };
 
 export default function Sidebar() {
   const { user } = useAuth();
   const location = useLocation();
-  const role = user?.role;
+  const role = String(user?.role || "").trim().toLowerCase();
   const [paymentsOpen, setPaymentsOpen] = React.useState(false);
 
   // Use sidebarLinks[role] directly; Payments handled in rendering below

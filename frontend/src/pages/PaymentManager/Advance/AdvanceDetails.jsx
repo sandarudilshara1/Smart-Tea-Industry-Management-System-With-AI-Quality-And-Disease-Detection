@@ -22,6 +22,8 @@ export default function AdvanceDetails() {
   const [showRejection, setShowRejection] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [approvedAmount, setApprovedAmount] = useState(0);
+  const [actionError, setActionError] = useState("");
+  const [processingAction, setProcessingAction] = useState(false);
 
   useEffect(() => {
     const fetchAdvanceDetails = async () => {
@@ -89,14 +91,18 @@ export default function AdvanceDetails() {
   const closeApproval = () => {
     setShowApproval(false);
     setApprovedAmount(0);
+    setActionError("");
   };
   const closeRejection = () => {
     setShowRejection(false);
     setRejectionReason("");
+    setActionError("");
   };
 
   // Handlers for confirm actions
   const handleApprove = async () => {
+    setActionError("");
+    setProcessingAction(true);
     const approvalData = {
       approvedByUserId: user?.userId,
       approvedAmount: approvedAmount,
@@ -111,11 +117,18 @@ export default function AdvanceDetails() {
       });
     } catch (error) {
       console.error("Error approving advance:", error);
-      // TODO: Show error message to user
+      setActionError(
+        error?.response?.data?.message ||
+          "Failed to approve the advance request. Please try again."
+      );
+    } finally {
+      setProcessingAction(false);
     }
   };
 
   const handleReject = async () => {
+    setActionError("");
+    setProcessingAction(true);
     try {
       await rejectAdvance(supplier.id, {
         rejectedByUserId: user?.userId,
@@ -129,7 +142,12 @@ export default function AdvanceDetails() {
       });
     } catch (error) {
       console.error("Error rejecting advance:", error);
-      // TODO: Show error message to user
+      setActionError(
+        error?.response?.data?.message ||
+          "Failed to reject the advance request. Please try again."
+      );
+    } finally {
+      setProcessingAction(false);
     }
   };
 
@@ -155,6 +173,11 @@ export default function AdvanceDetails() {
               </button> */}
             </div>
             <div className="p-6">
+              {actionError && (
+                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {actionError}
+                </div>
+              )}
               <div className="mb-6 text-[#0f172a] text-base">
                 <p className="mb-2 font-semibold text-align-center">
                   Approve advance request for Rs. {supplier.requestedAmount}{" "}
@@ -190,14 +213,16 @@ export default function AdvanceDetails() {
               <button
                 className="px-5 py-2 rounded-lg bg-[#f1f5f9] text-[#0f172a] font-semibold hover:bg-[#e2e8f0]"
                 onClick={closeApproval}
+                disabled={processingAction}
               >
                 Cancel
               </button>
               <button
                 className="px-5 py-2 rounded-lg bg-[#10b981] text-white font-semibold hover:bg-[#059669]"
                 onClick={handleApprove}
+                disabled={processingAction}
               >
-                Confirm Approval
+                {processingAction ? "Approving..." : "Confirm Approval"}
               </button>
             </div>
           </div>
@@ -219,6 +244,11 @@ export default function AdvanceDetails() {
               </button>
             </div>
             <div className="p-6">
+              {actionError && (
+                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {actionError}
+                </div>
+              )}
               <p className="mb-4 text-[#64748b]">
                 Are you sure you want to reject this advance request?
               </p>
@@ -238,14 +268,16 @@ export default function AdvanceDetails() {
               <button
                 className="px-5 py-2 rounded-lg bg-[#f1f5f9] text-[#0f172a] font-semibold hover:bg-[#e2e8f0]"
                 onClick={closeRejection}
+                disabled={processingAction}
               >
                 Cancel
               </button>
               <button
                 className="px-5 py-2 rounded-lg bg-[#ef4444] text-white font-semibold hover:bg-[#dc2626]"
                 onClick={handleReject}
+                disabled={processingAction}
               >
-                Confirm Rejection
+                {processingAction ? "Rejecting..." : "Confirm Rejection"}
               </button>
             </div>
           </div>
