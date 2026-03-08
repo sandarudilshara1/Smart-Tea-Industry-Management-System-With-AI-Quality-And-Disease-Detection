@@ -15,11 +15,10 @@ exports.getAllManagers = async (req, res) => {
         ];
 
         const managers = await User.find({
-            role: { $in: managerRoles },
-            isActive: true
+            role: { $in: managerRoles }
         })
-        .select('-password -__v')
-        .sort({ createdAt: -1 });
+            .select('-password -__v')
+            .sort({ createdAt: -1 });
 
         // Transform to match frontend expected format
         const formattedManagers = managers.map(manager => ({
@@ -64,11 +63,10 @@ exports.getManagersByFactory = async (req, res) => {
 
         const managers = await User.find({
             role: { $in: managerRoles },
-            factoryId: parseInt(factoryId),
-            isActive: true
+            factoryId: parseInt(factoryId)
         })
-        .select('-password -__v')
-        .sort({ createdAt: -1 });
+            .select('-password -__v')
+            .sort({ createdAt: -1 });
 
         // Transform to match frontend expected format
         const formattedManagers = managers.map(manager => ({
