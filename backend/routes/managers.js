@@ -3,7 +3,8 @@ const router = express.Router();
 const {
     getAllManagers,
     getManagersByFactory,
-    updateManagerStatus
+    updateManagerStatus,
+    deleteManager
 } = require('../controllers/managerController');
 const { auth, authorize } = require('../middleware/auth');
 
@@ -18,5 +19,8 @@ router.get('/:factoryId', getManagersByFactory);
 
 // PATCH /api/manager-info/:id/status - Update manager status (owner only)
 router.patch('/:id/status', authorize('owner'), updateManagerStatus);
+
+// DELETE /api/manager-info/:id - Delete manager (owner only)
+router.delete('/:id', authorize('owner'), deleteManager);
 
 module.exports = router;

@@ -132,6 +132,55 @@ exports.updateManagerStatus = async (req, res) => {
     }
 };
 
+// @desc    Delete manager (permanent removal)
+// @route   DELETE /api/manager-info/:id
+// @access  Private (Owner only)
+exports.deleteManager = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const manager = await User.findById(id);
+
+        if (!manager) {
+            return res.status(404).json({
+                success: false,
+                message: 'Manager not found'
+            });
+        }
+
+        // Only allow deleting managers
+        const managerRoles = [
+            'factory_manager',
+            'fertilizer_manager',
+            'inventory_manager',
+            'payment_manager',
+            'transport_manager'
+        ];
+
+        if (!managerRoles.includes(manager.role)) {
+            return res.status(403).json({
+                success: false,
+                message: 'Can only delete manager accounts'
+            });
+        }
+
+        await User.findByIdAndDelete(id);
+
+        res.status(200).json({
+            success: true,
+            message: 'Manager deleted successfully',
+            data: { id }
+        });
+    } catch (error) {
+        console.error('Delete manager error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error deleting manager',
+            error: process.env.NODE_ENV === 'development' ? error.message : {}
+        });
+    }
+};
+
 // Helper function to format role for display
 function formatRole(role) {
     const roleMap = {

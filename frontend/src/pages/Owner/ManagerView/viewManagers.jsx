@@ -83,16 +83,16 @@ export default function ManagerDashboard() {
       const response = await api.patch(`/manager-info/${id}/status`, {
         isActive: newStatus
       });
-      
+
       if (response.data.success) {
         // Update local state
         setManagers((prev) =>
           prev.map((manager) =>
             manager.id === id
               ? {
-                  ...manager,
-                  status: newStatus ? "Active" : "Suspended",
-                }
+                ...manager,
+                status: newStatus ? "Active" : "Suspended",
+              }
               : manager
           )
         );
@@ -110,6 +110,23 @@ export default function ManagerDashboard() {
     }
   };
 
+  const handleDeleteManager = async (id) => {
+    if (!window.confirm("Are you sure you want to permanently delete this manager?")) return;
+    try {
+      const response = await api.delete(`/manager-info/${id}`);
+      if (response.data.success) {
+        setManagers((prev) => prev.filter((manager) => manager.id !== id));
+        showNotification("Manager deleted successfully", "success");
+      }
+    } catch (error) {
+      console.error('Error deleting manager:', error);
+      showNotification(
+        error?.response?.data?.message || 'Failed to delete manager',
+        'error'
+      );
+    }
+  };
+
   const getStatusBadge = (status) => {
     const statusStyles = {
       Active: "bg-[#e1f4ef] text-[#165E52]",
@@ -118,9 +135,8 @@ export default function ManagerDashboard() {
     const label = status === "Active" ? "Active" : "Suspended";
     return (
       <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${
-          statusStyles[status] || "bg-gray-100 text-gray-800"
-        }`}
+        className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyles[status] || "bg-gray-100 text-gray-800"
+          }`}
       >
         {label}
       </span>
@@ -177,9 +193,11 @@ export default function ManagerDashboard() {
               aria-label="Filter by Role"
             >
               <option value="">All Roles</option>
-              <option value="Manager">Manager</option>
-              <option value="Supervisor">Supervisor</option>
-              <option value="Admin">Admin</option>
+              <option value="Factory Manager">Factory Manager</option>
+              <option value="Inventory Manager">Inventory Manager</option>
+              <option value="Fertilizer Manager">Fertilizer Manager</option>
+              <option value="Transport Manager">Transport Manager</option>
+              <option value="Payment Manager">Payment Manager</option>
             </select>
 
             {/* Factory Filter */}
@@ -242,14 +260,13 @@ export default function ManagerDashboard() {
                     {getStatusBadge(manager.status)}
                   </div>
                   <div className="text-center">{manager.factory}</div>
-                  <div className="flex justify-center">
+                  <div className="flex justify-center gap-2">
                     <button
                       onClick={() => handleStatusToggle(manager.id, manager.status)}
-                      className={`px-3 py-1 rounded-lg font-medium text-xs transition-colors ${
-                        manager.status === "Active"
-                          ? "bg-red-100 text-red-700 hover:bg-red-200"
-                          : "bg-green-100 text-green-700 hover:bg-green-200"
-                      }`}
+                      className={`px-3 py-1 rounded-lg font-medium text-xs transition-colors ${manager.status === "Active"
+                        ? "bg-red-100 text-red-700 hover:bg-red-200"
+                        : "bg-green-100 text-green-700 hover:bg-green-200"
+                        }`}
                       aria-label={
                         manager.status === "Active"
                           ? "Suspend manager"
@@ -257,6 +274,13 @@ export default function ManagerDashboard() {
                       }
                     >
                       {manager.status === "Active" ? "Suspend" : "Activate"}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteManager(manager.id)}
+                      className="px-3 py-1 rounded-lg font-medium text-xs transition-colors bg-gray-100 text-gray-700 hover:bg-red-500 hover:text-white"
+                      aria-label="Delete manager"
+                    >
+                      Delete
                     </button>
                   </div>
                 </div>

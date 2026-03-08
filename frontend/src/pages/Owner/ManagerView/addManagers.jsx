@@ -13,7 +13,8 @@ const roles = [
   { label: 'Factory Manager', value: 'factory_manager' },
   { label: 'Inventory Manager', value: 'inventory_manager' },
   { label: 'Fertilizer Manager', value: 'fertilizer_manager' },
-  { label: 'Transport Manager', value: 'transport_manager' }
+  { label: 'Transport Manager', value: 'transport_manager' },
+  { label: 'Payment Manager', value: 'payment_manager' }
 ];
 
 const factoryOptions = [
@@ -76,7 +77,7 @@ export default function AddManagersInterface() {
     try {
       // Find the factory name
       const selectedFactory = factoryOptions.find(f => f.id === formData.factory);
-      
+
       const payload = {
         firstName: formData.name.split(' ')[0] || formData.name,
         lastName: formData.name.split(' ').slice(1).join(' ') || '',
@@ -89,14 +90,14 @@ export default function AddManagersInterface() {
         factoryId: formData.factory ? Number(formData.factory) : null,
         factoryName: selectedFactory ? selectedFactory.name : ''
       };
-      
+
       console.log("Data sent to backend:", payload);
 
       const response = await register(payload);
 
       if (response.success) {
-        alert('Manager created successfully!');
-        navigate("/owner/managers");
+        // Navigate to the access grant page
+        navigate("/owner/managerview/giveaccess", { state: { manager: formData } });
       } else {
         alert(response.message || 'Failed to create manager');
       }
@@ -142,214 +143,215 @@ export default function AddManagersInterface() {
           <div className="p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-            {/* Left Column */}
-            <div className="space-y-6">
-              <div className="border-b border-gray-100 pb-4 mb-6">
-                <h3 className="text-lg font-semibold" style={{ color: ACCENT_COLOR }}>
-                  Personal Information
-                </h3>
-              </div>
+              {/* Left Column */}
+              <div className="space-y-6">
+                <div className="border-b border-gray-100 pb-4 mb-6">
+                  <h3 className="text-lg font-semibold" style={{ color: ACCENT_COLOR }}>
+                    Personal Information
+                  </h3>
+                </div>
 
-              {/* Name */}
-              <div>
-                <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
-                  Name :
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="w-full rounded-lg px-4 py-3 border h-12"
-                  style={{
-                    borderColor: BORDER_COLOR,
-                    backgroundColor: INPUT_BG,
-                    color: ACCENT_COLOR,
-                  }}
-                  placeholder="Enter manager name"
-                />
-              </div>
-
-              {/* Address */}
-              <div>
-                <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
-                  Address :
-                </label>
-                <input
-                  type="text"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  className="w-full rounded-lg px-4 py-3 border h-12"
-                  style={{
-                    borderColor: BORDER_COLOR,
-                    backgroundColor: INPUT_BG,
-                    color: ACCENT_COLOR,
-                  }}
-                  placeholder="Enter manager address"
-                />
-              </div>
-
-              {/* NIC */}
-              <div>
-                <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
-                  NIC :
-                </label>
-                <input
-                  type="text"
-                  name="nic"
-                  value={formData.nic}
-                  onChange={handleInputChange}
-                  className="w-full rounded-lg px-4 py-3 border h-12"
-                  style={{
-                    borderColor: BORDER_COLOR,
-                    backgroundColor: INPUT_BG,
-                    color: ACCENT_COLOR,
-                  }}
-                  placeholder="Enter NIC number"
-                />
-              </div>
-
-              {/* Mobile */}
-              <div>
-                <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
-                  Mobile Number :
-                </label>
-                <input
-                  type="tel"
-                  name="mobile"
-                  value={formData.mobile}
-                  onChange={handleInputChange}
-                  className="w-full rounded-lg px-4 py-3 border h-12"
-                  style={{
-                    borderColor: BORDER_COLOR,
-                    backgroundColor: INPUT_BG,
-                    color: ACCENT_COLOR,
-                  }}
-                  placeholder="Enter mobile number"
-                />
-              </div>
-
-              {/* Email */}
-              <div>
-                <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
-                  E-mail :
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="w-full rounded-lg px-4 py-3 border h-12"
-                  style={{
-                    borderColor: BORDER_COLOR,
-                    backgroundColor: INPUT_BG,
-                    color: ACCENT_COLOR,
-                  }}
-                  placeholder="Enter email address"
-                />
-              </div>
-
-              {/* Password */}
-              <div>
-                <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
-                  Password :
-                </label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="w-full rounded-lg px-4 py-3 border h-12"
-                  style={{
-                    borderColor: BORDER_COLOR,
-                    backgroundColor: INPUT_BG,
-                    color: ACCENT_COLOR,
-                  }}
-                  placeholder="Enter password"
-                />
-              </div>
-            </div>
-
-            {/* Right Column */}
-            <div className="space-y-6">
-              <div className="border-b border-gray-100 pb-4 mb-6">
-                <h3 className="text-lg font-semibold" style={{ color: ACCENT_COLOR }}>
-                  Role & Assignment
-                </h3>
-              </div>
-
-              {/* Role Dropdown */}
-              <div>
-                <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
-                  Role :
-                </label>
-                <div className="relative">
+                {/* Name */}
+                <div>
+                  <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
+                    Name :
+                  </label>
                   <input
                     type="text"
-                    readOnly
-                    value={roles.find(r => r.value === formData.role)?.label || ""}
-                    onClick={() => toggleDropdown('role')}
-                    placeholder="Select Role"
-                    className="w-full rounded-lg px-4 py-3 border h-12 cursor-pointer"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg px-4 py-3 border h-12"
                     style={{
                       borderColor: BORDER_COLOR,
                       backgroundColor: INPUT_BG,
                       color: ACCENT_COLOR,
                     }}
+                    placeholder="Enter manager name"
                   />
-                  <ChevronDown size={20} className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none ${dropdowns.role ? 'rotate-180' : ''}`} />
-                  {dropdowns.role && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-green-400 rounded-lg shadow-2xl z-50">
-                      {roles.map((role) => (
-                        <button
-                          key={role.value}
-                          type="button"
-                          onClick={() => selectOption('role', role.value)}
-                          className="w-full px-4 py-3 text-left hover:bg-green-50 focus:bg-green-100 transition-colors"
-                        >
-                          {role.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                </div>
+
+                {/* Address */}
+                <div>
+                  <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
+                    Address :
+                  </label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg px-4 py-3 border h-12"
+                    style={{
+                      borderColor: BORDER_COLOR,
+                      backgroundColor: INPUT_BG,
+                      color: ACCENT_COLOR,
+                    }}
+                    placeholder="Enter manager address"
+                  />
+                </div>
+
+                {/* NIC */}
+                <div>
+                  <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
+                    NIC :
+                  </label>
+                  <input
+                    type="text"
+                    name="nic"
+                    value={formData.nic}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg px-4 py-3 border h-12"
+                    style={{
+                      borderColor: BORDER_COLOR,
+                      backgroundColor: INPUT_BG,
+                      color: ACCENT_COLOR,
+                    }}
+                    placeholder="Enter NIC number"
+                  />
+                </div>
+
+                {/* Mobile */}
+                <div>
+                  <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
+                    Mobile Number :
+                  </label>
+                  <input
+                    type="tel"
+                    name="mobile"
+                    value={formData.mobile}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg px-4 py-3 border h-12"
+                    style={{
+                      borderColor: BORDER_COLOR,
+                      backgroundColor: INPUT_BG,
+                      color: ACCENT_COLOR,
+                    }}
+                    placeholder="Enter mobile number"
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
+                    E-mail :
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg px-4 py-3 border h-12"
+                    style={{
+                      borderColor: BORDER_COLOR,
+                      backgroundColor: INPUT_BG,
+                      color: ACCENT_COLOR,
+                    }}
+                    placeholder="Enter email address"
+                  />
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
+                    Password :
+                  </label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg px-4 py-3 border h-12"
+                    style={{
+                      borderColor: BORDER_COLOR,
+                      backgroundColor: INPUT_BG,
+                      color: ACCENT_COLOR,
+                    }}
+                    placeholder="Enter password"
+                  />
                 </div>
               </div>
 
-              {/* Factory Dropdown */}
-              <div>
-                <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
-                  Factory :
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    readOnly
-                    value={factoryOptions.find(f => f.id === formData.factory)?.name || ""}
-                    onClick={() => toggleDropdown('factory')}
-                    placeholder="Select Factory"
-                    className="w-full rounded-lg px-4 py-3 border h-12 cursor-pointer"
-                    style={{
-                      borderColor: BORDER_COLOR,
-                      backgroundColor: INPUT_BG,
-                      color: ACCENT_COLOR,
-                    }}
-                  />
-                  <ChevronDown size={20} className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none ${dropdowns.factory ? 'rotate-180' : ''}`} />
-                  {dropdowns.factory && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-green-400 rounded-lg shadow-2xl z-50">
-                      {factoryOptions.map((factory) => (
-                        <button
-                          key={factory.id}
-                          type="button"
-                          onClick={() => selectOption('factory', factory.id)}
-                          className="w-full px-4 py-3 text-left hover:bg-green-50 focus:bg-green-100 transition-colors"
-                        >
-                          {factory.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+              {/* Right Column */}
+              <div className="space-y-6">
+                <div className="border-b border-gray-100 pb-4 mb-6">
+                  <h3 className="text-lg font-semibold" style={{ color: ACCENT_COLOR }}>
+                    Role & Assignment
+                  </h3>
+                </div>
+
+                {/* Role Dropdown */}
+                <div>
+                  <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
+                    Role :
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      readOnly
+                      value={roles.find(r => r.value === formData.role)?.label || ""}
+                      onClick={() => toggleDropdown('role')}
+                      placeholder="Select Role"
+                      className="w-full rounded-lg px-4 py-3 border h-12 cursor-pointer"
+                      style={{
+                        borderColor: BORDER_COLOR,
+                        backgroundColor: INPUT_BG,
+                        color: ACCENT_COLOR,
+                      }}
+                    />
+                    <ChevronDown size={20} className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none ${dropdowns.role ? 'rotate-180' : ''}`} />
+                    {dropdowns.role && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-green-400 rounded-lg shadow-2xl z-50">
+                        {roles.map((role) => (
+                          <button
+                            key={role.value}
+                            type="button"
+                            onClick={() => selectOption('role', role.value)}
+                            className="w-full px-4 py-3 text-left hover:bg-green-50 focus:bg-green-100 transition-colors"
+                          >
+                            {role.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Factory Dropdown */}
+                <div>
+                  <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
+                    Factory :
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      readOnly
+                      value={factoryOptions.find(f => f.id === formData.factory)?.name || ""}
+                      onClick={() => toggleDropdown('factory')}
+                      placeholder="Select Factory"
+                      className="w-full rounded-lg px-4 py-3 border h-12 cursor-pointer"
+                      style={{
+                        borderColor: BORDER_COLOR,
+                        backgroundColor: INPUT_BG,
+                        color: ACCENT_COLOR,
+                      }}
+                    />
+                    <ChevronDown size={20} className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none ${dropdowns.factory ? 'rotate-180' : ''}`} />
+                    {dropdowns.factory && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-green-400 rounded-lg shadow-2xl z-50">
+                        {factoryOptions.map((factory) => (
+                          <button
+                            key={factory.id}
+                            type="button"
+                            onClick={() => selectOption('factory', factory.id)}
+                            className="w-full px-4 py-3 text-left hover:bg-green-50 focus:bg-green-100 transition-colors"
+                          >
+                            {factory.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -357,6 +359,5 @@ export default function AddManagersInterface() {
         </div>
       </div>
     </div>
-  </div>
   );
 }
