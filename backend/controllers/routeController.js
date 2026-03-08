@@ -18,9 +18,9 @@ exports.getAllRoutes = async (req, res) => {
         }
 
         const query = { factoryId: resolvedFactoryId };
-        
+
         if (status) query.status = status;
-        
+
         // Search by route name or number
         if (search) {
             query.$or = [
@@ -103,11 +103,18 @@ exports.createRoute = async (req, res) => {
     try {
         const routeData = { ...req.body };
 
+        console.log('📥 POST /api/routes - Request body:', JSON.stringify(routeData, null, 2));
+        console.log('👤 req.user:', req.user);
+
         const resolvedFactoryId = routeData.factoryId || req.user?.userId;
+
+        console.log('🏭 Resolved factoryId:', resolvedFactoryId);
+        console.log('🔍 isValid ObjectId?', mongoose.Types.ObjectId.isValid(resolvedFactoryId));
+
         if (!resolvedFactoryId || !mongoose.Types.ObjectId.isValid(resolvedFactoryId)) {
             return res.status(400).json({
                 success: false,
-                message: 'Valid factoryId is required'
+                message: `Valid factoryId is required. Got: ${resolvedFactoryId}`
             });
         }
         routeData.factoryId = resolvedFactoryId;
@@ -133,6 +140,8 @@ exports.createRoute = async (req, res) => {
             .map(d => String(d || "").trim())
             .filter(d => d);
 
+        console.log('📅 Collection days after processing:', routeData.collectionDays);
+
         // Check if route number already exists
         const existingRoute = await Route.findOne({ routeNumber: routeData.routeNumber });
         if (existingRoute) {
@@ -155,7 +164,7 @@ exports.createRoute = async (req, res) => {
     } catch (error) {
         console.error('❌ Error creating route:', error.message);
         console.error('Stack:', error.stack);
-        
+
         // Specific validation error handling
         if (error.name === 'ValidationError') {
             const messages = Object.values(error.errors).map(e => e.message);
@@ -168,7 +177,7 @@ exports.createRoute = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            message: 'Error creating route',
+            message: error.message || 'Error creating route',
             error: error.message
         });
     }

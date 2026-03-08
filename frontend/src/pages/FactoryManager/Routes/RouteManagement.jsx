@@ -33,7 +33,7 @@ export default function RouteManagement() {
   const [error, setError] = useState(null);
   const [availableDrivers, setAvailableDrivers] = useState([]);
   const [availableVehicles, setAvailableVehicles] = useState([]);
-  
+
   const factoryId = "me";
 
   const [filters, setFilters] = useState({
@@ -167,36 +167,38 @@ export default function RouteManagement() {
   };
 
   const handleSubmitRoute = async (routeData) => {
+    const payload = {
+      ...routeData,
+      routeNumber: String(routeData.routeNumber || "").trim(),
+      routeName: String(routeData.routeName || "").trim(),
+      area: String(routeData.area || "").trim(),
+      description: String(routeData.description || "").trim(),
+      // Ensure collectionDays is a valid array with trimmed strings
+      collectionDays: Array.isArray(routeData.collectionDays)
+        ? routeData.collectionDays.map(d => String(d || "").trim()).filter(d => d)
+        : [],
+    };
+
+    // Remove empty optional ObjectId fields to avoid validation errors
+    if (!payload.driverId || payload.driverId === "") delete payload.driverId;
+    if (!payload.vehicleId || payload.vehicleId === "") delete payload.vehicleId;
+
+    // Validate required fields before sending
+    if (!payload.collectionDays || payload.collectionDays.length === 0) {
+      throw new Error("At least one collection day must be selected");
+    }
+
+    console.log('📤 Sending route payload:', payload);
+
     try {
-      const payload = {
-        ...routeData,
-        routeNumber: String(routeData.routeNumber || "").trim(),
-        routeName: String(routeData.routeName || "").trim(),
-        area: String(routeData.area || "").trim(),
-        description: String(routeData.description || "").trim(),
-        // Ensure collectionDays is a valid array with trimmed strings
-        collectionDays: Array.isArray(routeData.collectionDays)
-          ? routeData.collectionDays.map(d => String(d || "").trim()).filter(d => d)
-          : [],
-      };
-
-      // Remove empty optional ObjectId fields to avoid validation errors
-      if (!payload.driverId || payload.driverId === "") delete payload.driverId;
-      if (!payload.vehicleId || payload.vehicleId === "") delete payload.vehicleId;
-
-      // Validate required fields before sending
-      if (!payload.collectionDays || payload.collectionDays.length === 0) {
-        throw new Error("At least one collection day must be selected");
-      }
-
-      console.log('📤 Sending route payload:', payload);
-
       if (editingRoute) {
         // Update existing route
         const response = await updateRouteAPI(editingRoute._id || editingRoute.id, payload);
         console.log('✅ Route updated:', response);
         if (response.success) {
           await fetchRoutes(); // Refresh list
+        } else {
+          throw new Error(response.message || 'Failed to update route');
         }
       } else {
         // Create new route
@@ -204,16 +206,20 @@ export default function RouteManagement() {
         console.log('✅ Route created:', response);
         if (response.success) {
           await fetchRoutes(); // Refresh list
+        } else {
+          throw new Error(response.message || 'Failed to create route');
         }
       }
       setShowRouteModal(false);
       setEditingRoute(null);
     } catch (err) {
-      console.error('❌ Error saving route:', err);
-      const fallbackMessage = editingRoute
-        ? 'Failed to update route'
-        : 'Error creating route';
-      throw new Error(err?.message || fallbackMessage);
+      console.error('❌ Error saving route. Full error:', err);
+      // err may be: an Error object, or the API error body { success, message, error }
+      const message =
+        err?.message ||
+        err?.error ||
+        (editingRoute ? 'Failed to update route' : 'Error creating route');
+      throw new Error(message);
     }
   };
 
@@ -226,9 +232,8 @@ export default function RouteManagement() {
     };
     return (
       <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${
-          statusStyles[status] || "bg-gray-100 text-gray-800"
-        }`}
+        className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyles[status] || "bg-gray-100 text-gray-800"
+          }`}
       >
         {status}
       </span>
@@ -346,8 +351,8 @@ export default function RouteManagement() {
                   </h3>
                   <p className="text-[#165E52] opacity-80">
                     {filters.search ||
-                    filters.status !== "All" ||
-                    filters.region !== "All"
+                      filters.status !== "All" ||
+                      filters.region !== "All"
                       ? "Try adjusting your filters"
                       : "Create your first route to get started"}
                   </p>
