@@ -16,7 +16,7 @@ const TeaDiseaseDetection = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [uploadMethod, setUploadMethod] = useState('upload');
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // Backend data
   const [allDetections, setAllDetections] = useState([]);
   const [statistics, setStatistics] = useState({
@@ -27,7 +27,7 @@ const TeaDiseaseDetection = () => {
   });
   const [statsType, setStatsType] = useState('daily'); // 'daily' or 'overall'
   const [loading, setLoading] = useState(false);
-  
+
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
@@ -94,7 +94,7 @@ const TeaDiseaseDetection = () => {
       console.log('📋 Fetching disease detections...');
       const response = await diseaseAPI.getAllDetections({ limit: 50 });
       console.log('Detections response:', response);
-      
+
       if (response.success) {
         // Transform backend data to match frontend format
         const transformedData = response.data.map(detection => ({
@@ -120,16 +120,16 @@ const TeaDiseaseDetection = () => {
   const fetchStatistics = async () => {
     try {
       console.log('📊 Fetching disease detection statistics...');
-      
+
       // Fetch both daily and overall statistics
       const [dailyResponse, overallResponse] = await Promise.all([
         diseaseAPI.getDailyStatistics(),
         diseaseAPI.getStatistics()
       ]);
-      
+
       console.log('Daily stats response:', dailyResponse);
       console.log('Overall stats response:', overallResponse);
-      
+
       // Use daily stats if available, otherwise use overall stats
       if (dailyResponse.success && dailyResponse.data.daily && dailyResponse.data.daily.totalScans > 0) {
         const daily = dailyResponse.data.daily;
@@ -189,7 +189,7 @@ const TeaDiseaseDetection = () => {
     try {
       console.log('🗑️ Deleting detection:', detection.id);
       const response = await diseaseAPI.deleteDetection(detection.id);
-      
+
       if (response.success) {
         console.log('✅ Detection deleted successfully');
         // Refresh the detections list
@@ -206,7 +206,7 @@ const TeaDiseaseDetection = () => {
 
   const handleFileSelect = (event, method = 'upload') => {
     const file = event.target.files[0];
-    if (file && file.type.startsWith('image/')){
+    if (file && file.type.startsWith('image/')) {
       setSelectedImage(file);
       setUploadMethod(method);
       const reader = new FileReader();
@@ -219,15 +219,15 @@ const TeaDiseaseDetection = () => {
 
   const handleAnalyze = async () => {
     if (!selectedImage) return;
-    
+
     setIsAnalyzing(true);
     const startTime = Date.now();
-    
+
     try {
       // Simulate AI analysis (in production, call ML service)
       const aiResult = await diseaseAPI.simulateAIAnalysis(selectedImage);
       const processingTime = Date.now() - startTime;
-      
+
       setAnalysisResult({
         ...aiResult,
         disease: aiResult.diseaseType, // Add disease field for compatibility
@@ -244,7 +244,7 @@ const TeaDiseaseDetection = () => {
 
   const saveDetectionToBackend = async () => {
     if (!analysisResult) return;
-    
+
     setIsSaving(true);
     try {
       const detectionData = {
@@ -256,7 +256,7 @@ const TeaDiseaseDetection = () => {
       };
 
       const response = await diseaseAPI.createDetection(detectionData);
-      
+
       if (response.success) {
         alert('Detection saved successfully!');
         // Refresh detections list
@@ -366,7 +366,7 @@ const TeaDiseaseDetection = () => {
     doc.setFont(undefined, 'bold');
     doc.text('Step 1: Image Acquisition', 14, yPos);
     yPos += 6;
-    
+
     doc.setFontSize(10);
     doc.setFont(undefined, 'normal');
     const step1 = doc.splitTextToSize(
@@ -587,22 +587,22 @@ const TeaDiseaseDetection = () => {
 
       // Disease Header Box
       const boxColor = disease.code === 'BB' ? [220, 38, 38] :
-                      disease.code === 'RR' ? [249, 115, 22] :
-                      disease.code === 'RSM' ? [217, 119, 6] : [34, 197, 94];
-      
+        disease.code === 'RR' ? [249, 115, 22] :
+          disease.code === 'RSM' ? [217, 119, 6] : [34, 197, 94];
+
       doc.setFillColor(...boxColor, 0.1);
       doc.rect(14, yPos, pageWidth - 28, 15, 'F');
-      
+
       doc.setFontSize(14);
       doc.setFont(undefined, 'bold');
       doc.setTextColor(...boxColor);
       doc.text(`${disease.code}: ${disease.name}`, 18, yPos + 6);
-      
+
       doc.setFontSize(9);
       doc.setFont(undefined, 'italic');
       doc.setTextColor(100, 100, 100);
       doc.text(disease.scientific, 18, yPos + 11);
-      
+
       yPos += 20;
       doc.setTextColor(0, 0, 0);
 
@@ -725,7 +725,7 @@ const TeaDiseaseDetection = () => {
     doc.rect(14, yPos, pageWidth - 28, 45, 'F');
     doc.setFillColor(251, 146, 60);
     doc.rect(14, yPos, 4, 45, 'F');
-    
+
     doc.setFontSize(12);
     doc.setFont(undefined, 'bold');
     doc.text('System Limitations & Considerations', 22, yPos + 8);
@@ -761,7 +761,7 @@ const TeaDiseaseDetection = () => {
     doc.rect(14, yPos, pageWidth - 28, 40, 'F');
     doc.setFillColor(34, 197, 94);
     doc.rect(14, yPos, 4, 40, 'F');
-    
+
     doc.setFontSize(12);
     doc.setFont(undefined, 'bold');
     doc.text('Key System Benefits', 22, yPos + 8);
@@ -850,8 +850,8 @@ const TeaDiseaseDetection = () => {
 
     // Disease Identification Section
     const diseaseColor = detection.disease === 'BB' ? [220, 38, 38] :
-                        detection.disease === 'RR' ? [249, 115, 22] :
-                        detection.disease === 'RSM' ? [217, 119, 6] : [34, 197, 94];
+      detection.disease === 'RR' ? [249, 115, 22] :
+        detection.disease === 'RSM' ? [217, 119, 6] : [34, 197, 94];
 
     doc.setFillColor(...diseaseColor, 20);
     doc.rect(14, yPos, pageWidth - 28, 45, 'F');
@@ -868,7 +868,7 @@ const TeaDiseaseDetection = () => {
     doc.setFontSize(16);
     doc.setFont(undefined, 'bold');
     doc.text(diseaseData.name, 18, yPos);
-    
+
     doc.setFontSize(10);
     doc.setFont(undefined, 'italic');
     doc.setTextColor(100, 100, 100);
@@ -1015,14 +1015,14 @@ const TeaDiseaseDetection = () => {
 
     doc.setFontSize(9);
     doc.setFont(undefined, 'normal');
-    const recommendation = detection.disease === 'GL' 
+    const recommendation = detection.disease === 'GL'
       ? 'Continue current maintenance practices and monitor regularly for any changes in leaf health.'
       : detection.disease === 'BB'
-      ? 'Immediate fungicide application required. Remove infected material and improve air circulation.'
-      : detection.disease === 'RR'
-      ? 'Apply copper-based treatment and improve drainage. Monitor during high humidity periods.'
-      : 'Implement acaricide treatment immediately. Increase humidity and consider biological control.';
-    
+        ? 'Immediate fungicide application required. Remove infected material and improve air circulation.'
+        : detection.disease === 'RR'
+          ? 'Apply copper-based treatment and improve drainage. Monitor during high humidity periods.'
+          : 'Implement acaricide treatment immediately. Increase humidity and consider biological control.';
+
     const recLines = doc.splitTextToSize(recommendation, pageWidth - 50);
     recLines.forEach(line => {
       doc.text(line, 22, yPos);
@@ -1047,9 +1047,9 @@ const TeaDiseaseDetection = () => {
 
   const filteredDetections = allDetections.filter(detection => {
     const matchesFilter = filterDisease === 'all' || detection.disease === filterDisease;
-    const matchesSearch = detection.id.toString().includes(searchTerm) || 
-                         diseaseInfo[detection.disease].name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         detection.analyzedBy.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = detection.id.toString().includes(searchTerm) ||
+      diseaseInfo[detection.disease].name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      detection.analyzedBy.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
@@ -1063,7 +1063,7 @@ const TeaDiseaseDetection = () => {
           <div className="mb-6">
             <button
               onClick={() => setCurrentView('detection')}
-              className="flex items-center gap-2 text-green-600 hover:text-green-700 mb-4"
+              className="flex items-center gap-2 text-[#165E52] hover:text-[#0f4d42] mb-4 font-medium transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
               Back to Detection
@@ -1081,16 +1081,16 @@ const TeaDiseaseDetection = () => {
                   placeholder="Search by ID, disease, or analyzer..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#165E52] focus:border-transparent"
                 />
               </div>
-              
+
               <div className="relative">
                 <Filter className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
                 <select
                   value={filterDisease}
                   onChange={(e) => setFilterDisease(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#165E52] focus:border-transparent appearance-none"
                 >
                   <option value="all">All Diseases</option>
                   <option value="BB">Brown Blight</option>
@@ -1155,10 +1155,9 @@ const TeaDiseaseDetection = () => {
                           </div>
                           <div className={`ml-2 w-16 bg-gray-200 rounded-full h-2`}>
                             <div
-                              className={`h-2 rounded-full ${
-                                detection.confidence >= 90 ? 'bg-green-500' :
+                              className={`h-2 rounded-full ${detection.confidence >= 90 ? 'bg-green-500' :
                                 detection.confidence >= 80 ? 'bg-yellow-500' : 'bg-red-500'
-                              }`}
+                                }`}
                               style={{ width: `${detection.confidence}%` }}
                             ></div>
                           </div>
@@ -1177,7 +1176,7 @@ const TeaDiseaseDetection = () => {
                         <div className="flex space-x-2">
                           <button
                             onClick={() => viewReportDetail(detection)}
-                            className="text-green-600 hover:text-green-900 p-1 hover:bg-green-50 rounded transition-colors"
+                            className="text-[#165E52] hover:text-[#0f4d42] p-1 hover:bg-[#165E52] hover:bg-opacity-10 rounded transition-colors"
                             title="View Details"
                           >
                             <Eye className="w-4 h-4" />
@@ -1223,7 +1222,7 @@ const TeaDiseaseDetection = () => {
           <div className="mb-6">
             <button
               onClick={() => setCurrentView('history')}
-              className="flex items-center gap-2 text-green-600 hover:text-green-700 mb-4"
+              className="flex items-center gap-2 text-[#165E52] hover:text-[#0f4d42] mb-4 font-medium transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
               Back to History
@@ -1235,7 +1234,7 @@ const TeaDiseaseDetection = () => {
               </div>
               <button
                 onClick={() => downloadReport(selectedReport)}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-[#165E52] text-white rounded-lg hover:bg-[#0f4d42] transition-colors shadow-sm"
               >
                 <Download className="w-5 h-5" />
                 Download PDF
@@ -1292,7 +1291,7 @@ const TeaDiseaseDetection = () => {
                       ))}
                     </ul>
                   </div>
-                  
+
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                     <h3 className="font-semibold text-green-900 mb-2 flex items-center gap-2">
                       <CheckCircle className="w-5 h-5" />
@@ -1307,21 +1306,21 @@ const TeaDiseaseDetection = () => {
                 </div>
 
                 <div className="flex gap-4 mt-6">
-                  <button 
+                  <button
                     onClick={() => handleMarkAsTreated(selectedReport.id)}
-                    className="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                    className="flex-1 py-3 bg-[#165E52] text-white rounded-lg hover:bg-[#0f4d42] transition-colors font-semibold shadow-md"
                   >
                     Mark as Treated
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleCreateTreatmentPlan(selectedReport.id)}
-                    className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                    className="flex-1 py-3 bg-[#01251F] text-white rounded-lg hover:bg-[#014c3b] transition-colors font-semibold shadow-md"
                   >
                     Create Treatment Plan
                   </button>
-                  <button 
+                  <button
                     onClick={clearImage}
-                    className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-semibold"
+                    className="px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold shadow-sm"
                   >
                     New Scan
                   </button>
@@ -1348,11 +1347,10 @@ const TeaDiseaseDetection = () => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Status</p>
-                    <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium mt-1 ${
-                      selectedReport.status === 'treated' ? 'bg-green-100 text-green-700' :
+                    <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium mt-1 ${selectedReport.status === 'treated' ? 'bg-green-100 text-green-700' :
                       selectedReport.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-blue-100 text-blue-700'
-                    }`}>
+                        'bg-blue-100 text-blue-700'
+                      }`}>
                       {selectedReport.status}
                     </div>
                   </div>
@@ -1366,13 +1364,27 @@ const TeaDiseaseDetection = () => {
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h3 className="font-semibold text-gray-900 mb-4">Actions</h3>
                 <div className="space-y-3">
-                  <button className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+                  <button
+                    onClick={() => handleCreateTreatmentPlan(selectedReport.id)}
+                    className="w-full py-2 bg-[#165E52] text-white rounded-lg hover:bg-[#0f4d42] transition-colors text-sm font-medium">
                     Create Treatment Plan
                   </button>
-                  <button className="w-full py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium">
+                  <button
+                    onClick={() => {
+                      const reportText = `Report #${selectedReport.id}\nDisease: ${selectedDiseaseInfo.name}\nConfidence: ${selectedReport.confidence}%\nImpact: ${selectedDiseaseInfo.impact}\nStatus: ${selectedReport.status}`;
+                      if (navigator.share) {
+                        navigator.share({ title: 'Detection Report', text: reportText });
+                      } else {
+                        navigator.clipboard.writeText(reportText);
+                        alert('Report copied to clipboard!');
+                      }
+                    }}
+                    className="w-full py-2 bg-[#01251F] text-white rounded-lg hover:bg-[#014c3b] transition-colors text-sm font-medium">
                     Share Report
                   </button>
-                  <button className="w-full py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium">
+                  <button
+                    onClick={() => window.print()}
+                    className="w-full py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 border border-gray-300 transition-colors text-sm font-medium">
                     Print Report
                   </button>
                 </div>
@@ -1395,7 +1407,7 @@ const TeaDiseaseDetection = () => {
             </div>
             <button
               onClick={generateSystemGuidePDF}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg"
+              className="flex items-center gap-2 px-4 py-2 bg-[#165E52] text-white rounded-lg hover:bg-[#0f4d42] transition-all shadow-md hover:shadow-lg"
             >
               <FileText className="w-5 h-5" />
               <span className="font-semibold">Download System Guide</span>
@@ -1407,10 +1419,10 @@ const TeaDiseaseDetection = () => {
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Image Upload</h2>
-              
+
               {!imagePreview ? (
                 <div className="space-y-4">
-                  <div 
+                  <div
                     onClick={() => fileInputRef.current?.click()}
                     className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-green-500 cursor-pointer transition-colors"
                   >
@@ -1418,18 +1430,18 @@ const TeaDiseaseDetection = () => {
                     <p className="text-gray-600 mb-2">Click to upload or drag and drop</p>
                     <p className="text-sm text-gray-500">PNG, JPG, JPEG up to 10MB</p>
                   </div>
-                  
+
                   <div className="flex gap-4">
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#165E52] text-white rounded-lg hover:bg-[#0f4d42] transition-colors shadow-sm"
                     >
                       <Upload className="w-5 h-5" />
                       Choose File
                     </button>
                     <button
                       onClick={() => cameraInputRef.current?.click()}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#01251F] text-white rounded-lg hover:bg-[#014c3b] transition-colors shadow-sm"
                     >
                       <Camera className="w-5 h-5" />
                       Take Photo
@@ -1439,9 +1451,9 @@ const TeaDiseaseDetection = () => {
               ) : (
                 <div className="space-y-4">
                   <div className="relative">
-                    <img 
-                      src={imagePreview} 
-                      alt="Selected leaf" 
+                    <img
+                      src={imagePreview}
+                      alt="Selected leaf"
                       className="w-full h-96 object-cover rounded-lg"
                     />
                     <button
@@ -1451,12 +1463,12 @@ const TeaDiseaseDetection = () => {
                       <X className="w-5 h-5" />
                     </button>
                   </div>
-                  
+
                   {!analysisResult && (
                     <button
                       onClick={handleAnalyze}
                       disabled={isAnalyzing}
-                      className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-semibold"
+                      className="w-full py-3 bg-[#165E52] text-white rounded-lg hover:bg-[#0f4d42] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-semibold shadow-md"
                     >
                       {isAnalyzing ? (
                         <span className="flex items-center justify-center gap-2">
@@ -1470,7 +1482,7 @@ const TeaDiseaseDetection = () => {
                   )}
                 </div>
               )}
-              
+
               <input
                 ref={fileInputRef}
                 type="file"
@@ -1491,7 +1503,7 @@ const TeaDiseaseDetection = () => {
             {analysisResult && currentDisease && (
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Analysis Results</h2>
-                
+
                 <div className={`${currentDisease.color} bg-opacity-10 border-2 ${currentDisease.color.replace('bg-', 'border-')} rounded-lg p-6 mb-6`}>
                   <div className="flex items-start justify-between mb-4">
                     <div>
@@ -1503,7 +1515,7 @@ const TeaDiseaseDetection = () => {
                       <p className="text-sm text-gray-600">Confidence</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2 mb-4">
                     <Clock className="w-5 h-5 text-gray-600" />
                     <div>
@@ -1511,7 +1523,7 @@ const TeaDiseaseDetection = () => {
                       <p className="font-semibold">{new Date(analysisResult.timestamp).toLocaleTimeString()}</p>
                     </div>
                   </div>
-                  
+
                   <div className={`inline-block px-4 py-2 rounded-full text-sm font-semibold ${currentDisease.color} text-white`}>
                     Severity: {currentDisease.severity}
                   </div>
@@ -1541,7 +1553,7 @@ const TeaDiseaseDetection = () => {
                       ))}
                     </ul>
                   </div>
-                  
+
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                     <h3 className="font-semibold text-green-900 mb-2 flex items-center gap-2">
                       <CheckCircle className="w-5 h-5" />
@@ -1556,22 +1568,22 @@ const TeaDiseaseDetection = () => {
                 </div>
 
                 <div className="flex gap-4 mt-6">
-                  <button 
+                  <button
                     onClick={saveDetectionToBackend}
                     disabled={isSaving}
-                    className="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-semibold"
+                    className="flex-1 py-3 bg-[#165E52] text-white rounded-lg hover:bg-[#0f4d42] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-semibold shadow-md"
                   >
                     {isSaving ? 'Saving...' : 'Save Detection'}
                   </button>
-                  <button 
+                  <button
                     onClick={() => downloadReport({ ...analysisResult, id: 'new', analyzedBy: user?.name || 'Current User', date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString(), status: 'pending' })}
-                    className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                    className="flex-1 py-3 bg-[#01251F] text-white rounded-lg hover:bg-[#014c3b] transition-colors font-semibold shadow-md"
                   >
                     Download Report
                   </button>
-                  <button 
+                  <button
                     onClick={clearImage}
-                    className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-semibold"
+                    className="px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold shadow-sm"
                   >
                     New Scan
                   </button>
@@ -1627,9 +1639,9 @@ const TeaDiseaseDetection = () => {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-gray-900">Recent Detections</h3>
-                <button 
+                <button
                   onClick={() => setCurrentView('history')}
-                  className="text-green-600 hover:text-green-700 text-sm font-medium flex items-center gap-1"
+                  className="text-[#165E52] hover:text-[#0f4d42] text-sm font-medium flex items-center gap-1 transition-colors"
                 >
                   View All
                   <ChevronDown className="w-4 h-4 -rotate-90" />
@@ -1637,8 +1649,8 @@ const TeaDiseaseDetection = () => {
               </div>
               <div className="space-y-3">
                 {allDetections.slice(0, 4).map((detection) => (
-                  <div 
-                    key={detection.id} 
+                  <div
+                    key={detection.id}
                     className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
                     onClick={() => viewReportDetail(detection)}
                   >

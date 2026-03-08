@@ -138,7 +138,7 @@ const sidebarLinks = {
     { name: "Tea Disease Detection", path: "/owner/tea-disease", icon: BadgeAlert },
     { name: "Tea Quality", path: "/owner/tea-quality", icon: Package },
     { name: "Drivers", path: "/owner/drivers", icon: Truck },
-    { name: "Payments", path: "/payment-manager/payments", icon: DollarSign },
+    { name: "Payments", path: "/owner/payments", icon: DollarSign },
     { name: "Manager Works", path: "/owner/managers", icon: UserCheck },
     { name: "Employer Management", path: "/owner/employers", icon: Users },
     {
@@ -217,11 +217,10 @@ export default function Sidebar() {
             return (
               <div key={link.name}>
                 <button
-                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 font-medium transition-all duration-200 ${
-                    paymentsOpen
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 font-medium transition-all duration-200 ${paymentsOpen
                       ? "shadow-lg text-white bg-[#104137]"
                       : "text-white/70 hover:bg-[#104137] hover:text-white"
-                  }`}
+                    }`}
                   onClick={() => setPaymentsOpen((open) => !open)}
                   style={{
                     backgroundColor: paymentsOpen ? "#104137" : "transparent",
@@ -242,11 +241,10 @@ export default function Sidebar() {
                         <Link
                           key={child.name}
                           to={child.path}
-                          className={`w-full flex items-center space-x-3 px-4 py-2 rounded-lg mb-1 font-medium transition-all duration-200 ${
-                            isActive
+                          className={`w-full flex items-center space-x-3 px-4 py-2 rounded-lg mb-1 font-medium transition-all duration-200 ${isActive
                               ? "shadow-lg text-white bg-[#104137]"
                               : "text-white/70 hover:bg-[#104137] hover:text-white"
-                          }`}
+                            }`}
                           style={{
                             backgroundColor: isActive
                               ? "#104137"
@@ -271,11 +269,10 @@ export default function Sidebar() {
             <Link
               key={link.name}
               to={link.path}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 font-medium transition-all duration-200 ${
-                isActive
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 font-medium transition-all duration-200 ${isActive
                   ? "shadow-lg text-white"
                   : "text-white/70 hover:bg-[#124c46] hover:text-white"
-              }`}
+                }`}
               style={{
                 backgroundColor: isActive ? "#124c46" : "transparent",
               }}
