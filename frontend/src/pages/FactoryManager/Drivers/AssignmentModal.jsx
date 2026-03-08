@@ -6,7 +6,8 @@ import {
   AlertTriangle,
   Loader,
 } from "lucide-react";
-import axios from "../../../api/axios";
+import { useAuth } from "../../../contexts/AuthContext";
+import { getAllRoutes } from "../../../api/route";
 
 // Design tokens
 const ACCENT_COLOR = "#165E52";
@@ -21,6 +22,8 @@ export default function AssignmentModal({
   availableDrivers = [],
   preSelectedDriver = null,
 }) {
+  const { user } = useAuth();
+  
   const [formData, setFormData] = useState({
     driverId: "",
     route: "",
@@ -59,12 +62,17 @@ export default function AssignmentModal({
   const fetchRoutes = async () => {
     try {
       setLoadingRoutes(true);
-      const response = await axios.get('/routes/factory/1');
-      if (response.data.success) {
-        setRoutes(response.data.data.routes || []);
+      // Use "me" instead of hardcoded factory ID; backend resolves from JWT token
+      const response = await getAllRoutes("me", { status: "Active", limit: 100 });
+      if (response.success && response.content) {
+        console.log('✅ Routes fetched for assignment:', response.content.length);
+        setRoutes(Array.isArray(response.content) ? response.content : []);
+      } else {
+        console.warn('⚠️ Unexpected routes response:', response);
+        setRoutes([]);
       }
     } catch (error) {
-      console.error('Error fetching routes:', error);
+      console.error('❌ Error fetching routes for assignment:', error);
       setRoutes([]);
     } finally {
       setLoadingRoutes(false);
@@ -105,11 +113,14 @@ export default function AssignmentModal({
       const firstRoute = routes[0];
       setFormData({
         driverId: firstDriver._id || firstDriver.id,
-        route: firstRoute._id || firstRoute.routeNumber,
+        route: firstRoute._id, // Always use _id for route
         date: new Date().toISOString().split("T")[0],
         notes: "Test assignment - Quick Fill",
       });
       setErrors({});
+      console.log('⚡ Quick-filled form with first available driver and route');
+    } else {
+      console.warn('⚠️ Cannot quick fill: drivers:', availableDrivers.length, 'routes:', routes.length);
     }
   };
 
@@ -117,20 +128,30 @@ export default function AssignmentModal({
     setIsSubmitting(true);
     try {
       const selectedDriver = availableDrivers.find((d) => (d._id || d.id) === formData.driverId);
-      const selectedRoute = routes.find((r) => (r._id || r.routeNumber) === formData.route);
+      // Route matching: formData.route contains the route _id, so search by _id
+      const selectedRoute = routes.find((r) => r._id === formData.route);
+      
+      if (!selectedRoute) {
+        throw new Error('Selected route not found');
+      }
+
       const payload = {
         driverId: formData.driverId,
         route: {
-          id: selectedRoute?._id || formData.route,
-          name: selectedRoute?.routeName || formData.route,
+          id: selectedRoute._id,
+          name: selectedRoute.routeName,
+          number: selectedRoute.routeNumber,
         },
         date: formData.date,
         notes: formData.notes,
       };
+
+      console.log('📤 Submitting route assignment:', payload);
       await onSubmit(payload);
       onClose();
     } catch (err) {
-      console.error(err);
+      console.error('❌ Error confirming assignment:', err);
+      setErrors({ submit: err.message || 'Failed to confirm assignment' });
     } finally {
       setIsSubmitting(false);
     }
@@ -205,14 +226,16 @@ export default function AssignmentModal({
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                 <select
                   className="w-full pl-10 border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:outline-none bg-white"
-                  style={{ borderColor: BORDER_COLOR }}
+                  style={{ borderColor: errors.route ? '#ef4444' : BORDER_COLOR }}
                   value={formData.route}
                   onChange={(e) => handleInputChange("route", e.target.value)}  
-                  disabled={loadingRoutes}
+                  disabled={loadingRoutes || routes.length === 0}
                 >
-                  <option value="">{loadingRoutes ? 'Loading routes...' : 'Choose route...'}</option>
+                  <option value="">
+                    {loadingRoutes ? '⏳ Loading routes...' : routes.length === 0 ? 'No active routes available' : 'Choose route...'}
+                  </option>
                   {routes.map((route) => (
-                    <option key={route._id || route.routeNumber} value={route._id || route.routeNumber}>
+                    <option key={route._id} value={route._id}>
                       {route.routeName} ({route.routeNumber}) - {route.area}
                     </option>
                   ))}
@@ -258,6 +281,13 @@ export default function AssignmentModal({
                 onChange={(e) => handleInputChange("notes", e.target.value)}    
               />
             </div>
+
+            {/* Error Display */}
+            {errors.submit && (
+              <div className="p-3 rounded-lg bg-red-50 border border-red-200">
+                <p className="text-sm text-red-600">{errors.submit}</p>
+              </div>
+            )}
           </div>
 
           {/* Footer Buttons */}
@@ -320,7 +350,7 @@ export default function AssignmentModal({
                     availableDrivers.find((d) => (d._id || d.id) === formData.driverId)?.name
                   }
                 </strong>{" "}
-                to the route <strong>{routes.find((r) => (r._id || r.routeNumber) === formData.route)?.routeName || formData.route}</strong> on{" "}
+                to the route <strong>{routes.find((r) => r._id === formData.route)?.routeName || 'Unknown'}</strong> on{" "}
                 <strong>{formData.date}</strong>?
               </p>
               {/* Buttons */}

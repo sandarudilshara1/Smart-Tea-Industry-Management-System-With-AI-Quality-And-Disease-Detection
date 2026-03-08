@@ -113,15 +113,32 @@ exports.createRoute = async (req, res) => {
         routeData.factoryId = resolvedFactoryId;
 
         // Optional refs can arrive as empty strings from forms; normalize them.
-        if (!routeData.driverId) delete routeData.driverId;
-        if (!routeData.vehicleId) delete routeData.vehicleId;
+        if (!routeData.driverId || routeData.driverId === "") {
+            delete routeData.driverId;
+        }
+        if (!routeData.vehicleId || routeData.vehicleId === "") {
+            delete routeData.vehicleId;
+        }
+
+        // Validate collectionDays
+        if (!routeData.collectionDays || !Array.isArray(routeData.collectionDays) || routeData.collectionDays.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'At least one collection day must be selected'
+            });
+        }
+
+        // Trim and validate each collection day
+        routeData.collectionDays = routeData.collectionDays
+            .map(d => String(d || "").trim())
+            .filter(d => d);
 
         // Check if route number already exists
         const existingRoute = await Route.findOne({ routeNumber: routeData.routeNumber });
         if (existingRoute) {
             return res.status(400).json({
                 success: false,
-                message: 'Route number already exists'
+                message: `Route number ${routeData.routeNumber} already exists`
             });
         }
 
@@ -136,7 +153,19 @@ exports.createRoute = async (req, res) => {
             data: route
         });
     } catch (error) {
-        console.error('Error creating route:', error);
+        console.error('❌ Error creating route:', error.message);
+        console.error('Stack:', error.stack);
+        
+        // Specific validation error handling
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.errors).map(e => e.message);
+            return res.status(400).json({
+                success: false,
+                message: 'Validation error: ' + messages.join('; '),
+                errors: error.errors
+            });
+        }
+
         res.status(500).json({
             success: false,
             message: 'Error creating route',

@@ -174,10 +174,22 @@ export default function RouteManagement() {
         routeName: String(routeData.routeName || "").trim(),
         area: String(routeData.area || "").trim(),
         description: String(routeData.description || "").trim(),
+        // Ensure collectionDays is a valid array with trimmed strings
+        collectionDays: Array.isArray(routeData.collectionDays)
+          ? routeData.collectionDays.map(d => String(d || "").trim()).filter(d => d)
+          : [],
       };
 
-      if (!payload.driverId) delete payload.driverId;
-      if (!payload.vehicleId) delete payload.vehicleId;
+      // Remove empty optional ObjectId fields to avoid validation errors
+      if (!payload.driverId || payload.driverId === "") delete payload.driverId;
+      if (!payload.vehicleId || payload.vehicleId === "") delete payload.vehicleId;
+
+      // Validate required fields before sending
+      if (!payload.collectionDays || payload.collectionDays.length === 0) {
+        throw new Error("At least one collection day must be selected");
+      }
+
+      console.log('📤 Sending route payload:', payload);
 
       if (editingRoute) {
         // Update existing route
