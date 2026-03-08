@@ -58,6 +58,25 @@ function Overlay({ children, onClose }) {
 }
 
 // ── Add / Edit Driver Modal ────────────────────────────────────────────────────
+function Field({ label, name, type = "text", placeholder, required, children, form, errors, handleChange }) {
+    return (
+        <div>
+            <label className="block mb-1 text-xs font-semibold uppercase tracking-wide" style={{ color: A }}>
+                {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+            </label>
+            {children || (
+                <input type={type} name={name} value={form[name] || ""} onChange={handleChange} placeholder={placeholder}
+                    className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2"
+                    style={{
+                        borderColor: errors[name] ? "#ef4444" : BORDER, color: A,
+                        backgroundColor: "#fff", "--tw-ring-color": A
+                    }} />
+            )}
+            {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
+        </div>
+    );
+}
+
 const EMPTY_FORM = {
     name: "", email: "", phone: "", licenseNo: "", nic: "", address: "",
     vehicleNo: "", licenseExpiry: "", experience: "", status: "Available",
@@ -132,23 +151,6 @@ function DriverModal({ driver, onClose, onSaved }) {
         }
     };
 
-    const Field = ({ label, name, type = "text", placeholder, required, children }) => (
-        <div>
-            <label className="block mb-1 text-xs font-semibold uppercase tracking-wide" style={{ color: A }}>
-                {label}{required && <span className="text-red-500 ml-0.5">*</span>}
-            </label>
-            {children || (
-                <input type={type} name={name} value={form[name]} onChange={handleChange} placeholder={placeholder}
-                    className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2"
-                    style={{
-                        borderColor: errors[name] ? "#ef4444" : BORDER, color: A,
-                        backgroundColor: "#fff", "--tw-ring-color": A
-                    }} />
-            )}
-            {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
-        </div>
-    );
-
     return (
         <Overlay onClose={onClose}>
             <div className="bg-white rounded-2xl shadow-2xl flex flex-col w-full max-w-2xl max-h-[90vh] overflow-hidden"
@@ -170,17 +172,17 @@ function DriverModal({ driver, onClose, onSaved }) {
                 {/* Body */}
                 <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <Field label="Full Name" name="name" placeholder="Kasun Perera" required />
-                        <Field label="Email Address" name="email" type="email" placeholder="driver@example.com" required />
-                        <Field label="Phone Number" name="phone" placeholder="0771234567" required />
-                        <Field label="License Number" name="licenseNo" placeholder="B1234567" required />
-                        <Field label="NIC" name="nic" placeholder="881234567V" required />
-                        <Field label="License Expiry" name="licenseExpiry" type="date" />
+                        <Field form={form} errors={errors} handleChange={handleChange} label="Full Name" name="name" placeholder="Kasun Perera" required />
+                        <Field form={form} errors={errors} handleChange={handleChange} label="Email Address" name="email" type="email" placeholder="driver@example.com" required />
+                        <Field form={form} errors={errors} handleChange={handleChange} label="Phone Number" name="phone" placeholder="0771234567" required />
+                        <Field form={form} errors={errors} handleChange={handleChange} label="License Number" name="licenseNo" placeholder="B1234567" required />
+                        <Field form={form} errors={errors} handleChange={handleChange} label="NIC" name="nic" placeholder="881234567V" required />
+                        <Field form={form} errors={errors} handleChange={handleChange} label="License Expiry" name="licenseExpiry" type="date" />
                         <div className="sm:col-span-2">
-                            <Field label="Address" name="address" placeholder="123 Main Street, Colombo" required />
+                            <Field form={form} errors={errors} handleChange={handleChange} label="Address" name="address" placeholder="123 Main Street, Colombo" required />
                         </div>
-                        <Field label="Vehicle Number" name="vehicleNo" placeholder="WP CD-1234" />
-                        <Field label="Experience (Years)" name="experience" type="number" placeholder="5" />
+                        <Field form={form} errors={errors} handleChange={handleChange} label="Vehicle Number" name="vehicleNo" placeholder="WP CD-1234" />
+                        <Field form={form} errors={errors} handleChange={handleChange} label="Experience (Years)" name="experience" type="number" placeholder="5" />
                         <div className="sm:col-span-2">
                             <label className="block mb-1 text-xs font-semibold uppercase tracking-wide" style={{ color: A }}>Status</label>
                             <select name="status" value={form.status} onChange={handleChange}
@@ -200,9 +202,9 @@ function DriverModal({ driver, onClose, onSaved }) {
                             <Shield size={15} /> Emergency Contact <span className="font-normal opacity-60">(Optional)</span>
                         </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <Field label="Contact Name" name="emergencyContactName" placeholder="Nimal Silva" />
-                            <Field label="Contact Phone" name="emergencyContactPhone" placeholder="0771234567" />
-                            <Field label="Relationship" name="emergencyContactRelationship" placeholder="Spouse / Parent" />
+                            <Field form={form} errors={errors} handleChange={handleChange} label="Contact Name" name="emergencyContactName" placeholder="Nimal Silva" />
+                            <Field form={form} errors={errors} handleChange={handleChange} label="Contact Phone" name="emergencyContactPhone" placeholder="0771234567" />
+                            <Field form={form} errors={errors} handleChange={handleChange} label="Relationship" name="emergencyContactRelationship" placeholder="Spouse / Parent" />
                         </div>
                     </div>
 

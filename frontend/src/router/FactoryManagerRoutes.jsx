@@ -3,7 +3,7 @@ import Layout from "../layouts/Layout";
 
 // Factory Manager Components
 import AnnouncementComponent from "../components/Announcement/Announcement";
-import DriverManagement from "../pages/FactoryManager/Drivers/DriverManagement";
+import DriverManagement from "../pages/TransportManager/Drivers/DriverManagement";
 import FactoryManagerDashboard from "../pages/FactoryManager/dashboard";
 import SupplierRegister from "../pages/FactoryManager/Suppliers/SupplierRegister";
 import FertilizersPage from "../pages/FactoryManager/Fertilizers/FertilizersPage";

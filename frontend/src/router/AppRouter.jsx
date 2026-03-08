@@ -16,7 +16,7 @@ import SignupForm from "../components/SignupForm";
 import ForgotPassword from "../components/ui/ForgotPassword";
 import TeaDiseaseDetection from "../pages/TeaDiseaseDetection";
 import TeaQuality from "../pages/TeaQuality";
-import DriverManagement from "../pages/FactoryManager/Drivers/DriverManagement";
+import DriverManagement from "../pages/TransportManager/Drivers/DriverManagement";
 
 export default function AppRouter() {
   return (
