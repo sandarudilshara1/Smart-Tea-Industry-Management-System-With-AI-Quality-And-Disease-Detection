@@ -2,8 +2,7 @@ import { Route } from "react-router-dom";
 import AnnouncementComponent from "../components/Announcement/Announcement";
 import Layout from "../layouts/Layout";
 import TransportManagerDashboard from "../pages/TransportManager/dashboard";
-import AddDriver from "../pages/TransportManager/Drivers/AddDriver";
-import Drivers from "../pages/TransportManager/Drivers/DriverList";
+import DriverManagement from "../pages/TransportManager/Drivers/DriverManagement";
 import Emergency from "../pages/TransportManager/Emergency/EmergencyList";
 import RouteManagement from "../pages/FactoryManager/Routes/RouteManagement";
 import RoutePlan from "../pages/TransportManager/RoutePlanner/RoutePlan";
@@ -27,16 +26,17 @@ const transportManagerRoutes = [
     path="/transportManager/drivers"
     element={
       <Layout>
-        <Drivers />
+        <DriverManagement />
       </Layout>
     }
   />,
+  /* Legacy add-driver route now redirects to the same management page */
   <Route
     key="add_driver"
     path="/transportManager/drivers/add"
     element={
       <Layout>
-        <AddDriver />
+        <DriverManagement />
       </Layout>
     }
   />,
