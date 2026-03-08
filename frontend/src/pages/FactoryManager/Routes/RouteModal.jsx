@@ -334,7 +334,7 @@ export default function RouteModal({
               <option value="">No Vehicle  Assigned</option>
               {availableVehicles.map((v) => (
                 <option key={v._id || v.id} value={v._id || v.id}>
-                  {v.vehicleNumber || v.vehicleNo} {v.vehicleType ? `- ${v.vehicleType}` : ''}
+                  {v.vehicleNumber || v.vehicleNo} {v.vehicleType ? `- ${v.vehicleType}` : ''} {v.model ? `(${v.model})` : ''}
                 </option>
               ))}
             </select>

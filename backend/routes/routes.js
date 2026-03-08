@@ -6,6 +6,12 @@ const { auth } = require('../middleware/auth');
 // Get all routes for a factory
 router.get('/factory/:factoryId', auth, routeController.getAllRoutes);
 
+// Get route statistics (must be before /:routeId)
+router.get('/:routeId/statistics', auth, routeController.getRouteStatistics);
+
+// Update route supplier count (must be before /:routeId)
+router.put('/:routeId/update-supplier-count', auth, routeController.updateRouteSupplierCount);
+
 // Get route by ID
 router.get('/:routeId', auth, routeController.getRouteById);
 
@@ -17,11 +23,5 @@ router.put('/:routeId', auth, routeController.updateRoute);
 
 // Delete route
 router.delete('/:routeId', auth, routeController.deleteRoute);
-
-// Get route statistics
-router.get('/:routeId/statistics', auth, routeController.getRouteStatistics);
-
-// Update route supplier count
-router.put('/:routeId/update-supplier-count', auth, routeController.updateRouteSupplierCount);
 
 module.exports = router;

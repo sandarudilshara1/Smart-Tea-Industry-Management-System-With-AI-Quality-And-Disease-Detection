@@ -5,8 +5,7 @@ import TransportManagerDashboard from "../pages/TransportManager/dashboard";
 import AddDriver from "../pages/TransportManager/Drivers/AddDriver";
 import Drivers from "../pages/TransportManager/Drivers/DriverList";
 import Emergency from "../pages/TransportManager/Emergency/EmergencyList";
-import CreateRoute from "../pages/TransportManager/Route/CreateRoute";
-import TrackRoutes from "../pages/TransportManager/Route/RouteList";
+import RouteManagement from "../pages/FactoryManager/Routes/RouteManagement";
 import RoutePlan from "../pages/TransportManager/RoutePlanner/RoutePlan";
 import AddVehicle from "../pages/TransportManager/Vehicle/AddVehicle";
 import EditVehicle from "../pages/TransportManager/Vehicle/EditVehicle";
@@ -82,7 +81,7 @@ const transportManagerRoutes = [
     path="/transportManager/routeList"
     element={
       <Layout>
-        <TrackRoutes />
+        <RouteManagement />
       </Layout>
     }
   />,
@@ -91,7 +90,7 @@ const transportManagerRoutes = [
     path="/transportManager/route/add"
     element={
       <Layout>
-        <CreateRoute />
+        <RouteManagement />
       </Layout>
     }
   />,

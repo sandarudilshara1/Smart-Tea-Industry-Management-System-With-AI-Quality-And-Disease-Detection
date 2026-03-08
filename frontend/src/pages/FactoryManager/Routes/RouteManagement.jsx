@@ -18,6 +18,7 @@ import {
   deleteRoute as deleteRouteAPI,
 } from "../../../api/route";
 import { getAllDrivers } from "../../../api/driver";
+import { getAllVehicles } from "../../../api/vehicle";
 import { useAuth } from "../../../contexts/AuthContext";
 
 export default function RouteManagement() {
@@ -33,7 +34,7 @@ export default function RouteManagement() {
   const [availableDrivers, setAvailableDrivers] = useState([]);
   const [availableVehicles, setAvailableVehicles] = useState([]);
   
-  const factoryId = user?.id || user?._id || null;
+  const factoryId = "me";
 
   const [filters, setFilters] = useState({
     search: "",
@@ -46,19 +47,15 @@ export default function RouteManagement() {
 
   // Fetch routes and drivers on mount
   useEffect(() => {
-    if (!factoryId) return;
     fetchRoutes();
     fetchDrivers();
+    fetchVehicles();
   }, [factoryId]);
 
   const fetchRoutes = async () => {
     try {
       setLoading(true);
       setError(null);
-      if (!factoryId) {
-        setRoutes([]);
-        return;
-      }
       const response = await getAllRoutes(factoryId);
       console.log('📊 Routes API response:', response);
       if (response.success && response.content) {
@@ -103,6 +100,17 @@ export default function RouteManagement() {
       }
     } catch (err) {
       console.error('Error fetching drivers:', err);
+    }
+  };
+
+  const fetchVehicles = async () => {
+    try {
+      // Keep only active vehicles to avoid assigning deleted records.
+      const vehicles = await getAllVehicles({ isActive: true });
+      setAvailableVehicles(Array.isArray(vehicles) ? vehicles : []);
+    } catch (err) {
+      console.error('Error fetching vehicles:', err);
+      setAvailableVehicles([]);
     }
   };
 
@@ -160,14 +168,16 @@ export default function RouteManagement() {
 
   const handleSubmitRoute = async (routeData) => {
     try {
-      if (!factoryId) {
-        throw new Error("Factory user context is missing. Please login again.");
-      }
-
       const payload = {
         ...routeData,
-        factoryId,
+        routeNumber: String(routeData.routeNumber || "").trim(),
+        routeName: String(routeData.routeName || "").trim(),
+        area: String(routeData.area || "").trim(),
+        description: String(routeData.description || "").trim(),
       };
+
+      if (!payload.driverId) delete payload.driverId;
+      if (!payload.vehicleId) delete payload.vehicleId;
 
       if (editingRoute) {
         // Update existing route
@@ -188,7 +198,10 @@ export default function RouteManagement() {
       setEditingRoute(null);
     } catch (err) {
       console.error('❌ Error saving route:', err);
-      throw err; // Re-throw to be handled by modal
+      const fallbackMessage = editingRoute
+        ? 'Failed to update route'
+        : 'Error creating route';
+      throw new Error(err?.message || fallbackMessage);
     }
   };
 

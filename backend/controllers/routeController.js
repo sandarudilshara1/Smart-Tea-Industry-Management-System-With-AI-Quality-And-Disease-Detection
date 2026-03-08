@@ -112,6 +112,10 @@ exports.createRoute = async (req, res) => {
         }
         routeData.factoryId = resolvedFactoryId;
 
+        // Optional refs can arrive as empty strings from forms; normalize them.
+        if (!routeData.driverId) delete routeData.driverId;
+        if (!routeData.vehicleId) delete routeData.vehicleId;
+
         // Check if route number already exists
         const existingRoute = await Route.findOne({ routeNumber: routeData.routeNumber });
         if (existingRoute) {
@@ -145,7 +149,11 @@ exports.createRoute = async (req, res) => {
 exports.updateRoute = async (req, res) => {
     try {
         const { routeId } = req.params;
-        const updateData = req.body;
+        const updateData = { ...req.body };
+
+        // Optional refs can arrive as empty strings from forms; normalize them.
+        if (!updateData.driverId) updateData.driverId = undefined;
+        if (!updateData.vehicleId) updateData.vehicleId = undefined;
 
         // If route number is being updated, check for duplicates
         if (updateData.routeNumber) {
@@ -235,6 +243,15 @@ exports.getRouteStatistics = async (req, res) => {
         const { routeId } = req.params;
         const { startDate, endDate } = req.query;
 
+        if (!mongoose.Types.ObjectId.isValid(routeId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid routeId'
+            });
+        }
+
+        const routeObjectId = new mongoose.Types.ObjectId(routeId);
+
         const TeaLeafEntry = require('../models/TeaLeafEntry');
         const Payment = require('../models/Payment');
 
@@ -244,7 +261,7 @@ exports.getRouteStatistics = async (req, res) => {
 
         // Get tea leaf collection statistics
         const teaLeafStats = await TeaLeafEntry.aggregate([
-            { $match: { routeId: require('mongoose').Types.ObjectId(routeId), ...dateFilter } },
+            { $match: { routeId: routeObjectId, ...dateFilter } },
             {
                 $group: {
                     _id: null,
@@ -258,7 +275,7 @@ exports.getRouteStatistics = async (req, res) => {
 
         // Get payment statistics
         const paymentStats = await Payment.aggregate([
-            { $match: { routeId: require('mongoose').Types.ObjectId(routeId), paymentStatus: 'Paid' } },
+            { $match: { routeId: routeObjectId, paymentStatus: 'Paid' } },
             {
                 $group: {
                     _id: null,
