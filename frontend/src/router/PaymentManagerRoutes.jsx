@@ -1,8 +1,8 @@
-import { Route } from "react-router-dom";
+import { Route, Navigate } from "react-router-dom";
 import Layout from "../layouts/Layout";
 
 // Payment Manager Components
-import PaymentManagerDashboard from "../pages/PaymentManager/dashboard";
+import PaymentManagerDashboard from "../pages/PaymentManager/PaymentDashboard";
 import AdvanceManagement from "../pages/PaymentManager/Advance/AdvanceManagement";
 import LoanManagement from "../pages/PaymentManager/Loans/LoanManagement";
 import ActiveLoans from "../pages/PaymentManager/Loans/ActiveLoans";
@@ -19,11 +19,7 @@ export default [
   <Route
     key="payment-manager"
     path="/payment-manager"
-    element={
-      <Layout>
-        <PaymentManagement />
-      </Layout>
-    }
+    element={<Navigate to="/payment-manager/dashboard" replace />}
   />,
   <Route
     key="payment-manager-dashboard"

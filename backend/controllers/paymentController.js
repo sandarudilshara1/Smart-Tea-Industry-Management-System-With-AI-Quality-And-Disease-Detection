@@ -826,14 +826,14 @@ exports.getPaymentHistory = async (req, res) => {
         const { factoryId, page = 0, limit = 10, startDate, endDate, paymentType, status } = req.query;
 
         const query = { factoryId };
-        
+
         if (startDate && endDate) {
             query.calculatedDate = {
                 $gte: new Date(startDate),
                 $lte: new Date(endDate)
             };
         }
-        
+
         if (paymentType) query.paymentType = paymentType;
         if (status) query.paymentStatus = status;
 
@@ -864,3 +864,101 @@ exports.getPaymentHistory = async (req, res) => {
         });
     }
 };
+
+// Get dashboard statistics for payment manager
+exports.getDashboardStats = async (req, res) => {
+    try {
+        const { factoryId, month, year } = req.query;
+
+        const now = new Date();
+        const m = parseInt(month) || now.getMonth() + 1;
+        const y = parseInt(year) || now.getFullYear();
+
+        const periodStart = new Date(y, m - 1, 1);
+        const periodEnd = new Date(y, m, 0, 23, 59, 59);
+
+        const baseQuery = factoryId ? { factoryId } : {};
+
+        // Monthly pending count and sum
+        const [monthlyPending, adhocPending, cashApproved, bankApproved, routeCount, supplierCount] = await Promise.all([
+            Payment.find({ ...baseQuery, paymentType: 'Monthly', paymentStatus: 'Calculated', 'paymentPeriod.month': m, 'paymentPeriod.year': y }),
+            Payment.find({ ...baseQuery, paymentType: 'Adhoc', paymentStatus: 'Calculated' }),
+            Payment.find({ ...baseQuery, paymentMethod: 'Cash', paymentStatus: 'Approved' }),
+            Payment.find({ ...baseQuery, paymentMethod: 'Bank', paymentStatus: 'Approved' }),
+            Payment.distinct('routeId', baseQuery),
+            Payment.distinct('supplierId', baseQuery),
+        ]);
+
+        const adhocBank = adhocPending.filter(p => p.paymentMethod === 'Bank');
+        const adhocCash = adhocPending.filter(p => p.paymentMethod === 'Cash');
+
+        const sum = (arr) => arr.reduce((s, p) => s + (p.finalAmount || 0), 0);
+
+        res.status(200).json({
+            success: true,
+            data: {
+                monthlyPendingCount: monthlyPending.length,
+                monthlyPendingSum: sum(monthlyPending),
+                adhocPendingCount: adhocPending.length,
+                adhocPendingSum: sum(adhocPending),
+                adhocBankCount: adhocBank.length,
+                adhocBankSum: sum(adhocBank),
+                adhocCashCount: adhocCash.length,
+                adhocCashSum: sum(adhocCash),
+                adhocApprovedSum: sum(adhocPending.filter(p => p.paymentStatus === 'Approved')),
+                cashReadySum: sum(cashApproved),
+                bankQueueSum: sum(bankApproved),
+                totalRoutes: routeCount.length,
+                totalSuppliers: supplierCount.length,
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching dashboard stats',
+            error: error.message
+        });
+    }
+};
+
+// Get payment summary
+exports.getPaymentSummary = async (req, res) => {
+    try {
+        const { factoryId, month, year } = req.query;
+        const baseQuery = factoryId ? { factoryId } : {};
+
+        const [total, paid, approved, calculated, cancelled] = await Promise.all([
+            Payment.countDocuments(baseQuery),
+            Payment.countDocuments({ ...baseQuery, paymentStatus: 'Paid' }),
+            Payment.countDocuments({ ...baseQuery, paymentStatus: 'Approved' }),
+            Payment.countDocuments({ ...baseQuery, paymentStatus: 'Calculated' }),
+            Payment.countDocuments({ ...baseQuery, paymentStatus: 'Cancelled' }),
+        ]);
+
+        const totalAmountPaid = await Payment.aggregate([
+            { $match: { ...baseQuery, paymentStatus: 'Paid' } },
+            { $group: { _id: null, total: { $sum: '$finalAmount' } } }
+        ]);
+
+        res.status(200).json({
+            success: true,
+            data: {
+                total,
+                paid,
+                approved,
+                calculated,
+                cancelled,
+                totalAmountPaid: totalAmountPaid[0]?.total || 0,
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching payment summary:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching payment summary',
+            error: error.message
+        });
+    }
+};
+

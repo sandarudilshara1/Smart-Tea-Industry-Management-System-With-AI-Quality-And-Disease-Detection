@@ -45,17 +45,25 @@ const PaymentProcessingDashboard = () => {
           getDashboardStatistics({
             month: currentMonth,
             year: currentYear,
-            factoryId: "1", // TODO: Get from user context
+            factoryId: "1",
           }),
           getCashPaymentsQueue({ factoryId: "1" }),
         ]);
 
         setDashboardStats(stats);
-        setCashRoutes(Object.values(cashData)); // Convert object to array
+        // cashData may be an array or object depending on API response
+        const cashArray = Array.isArray(cashData)
+          ? cashData
+          : typeof cashData === "object" && cashData !== null
+            ? Object.values(cashData)
+            : [];
+        setCashRoutes(cashArray);
         setError(null);
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
         setError("Failed to load dashboard data");
+        setDashboardStats(null);
+        setCashRoutes([]);
       } finally {
         setLoading(false);
       }
@@ -345,9 +353,8 @@ const PaymentProcessingDashboard = () => {
                 >
                   <div className="flex items-center gap-4">
                     <div
-                      className={`p-3 rounded-lg ${
-                        getColorClasses(link.color).split(" ")[0]
-                      } bg-opacity-20`}
+                      className={`p-3 rounded-lg ${getColorClasses(link.color).split(" ")[0]
+                        } bg-opacity-20`}
                     >
                       {link.icon}
                     </div>

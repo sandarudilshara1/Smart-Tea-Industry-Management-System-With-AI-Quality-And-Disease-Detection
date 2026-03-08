@@ -12,6 +12,7 @@ import {
   Settings,
   AlertTriangle,
   Truck,
+  TrendingUp,
   UserCheck,
   Users,
 } from "lucide-react";
@@ -149,8 +150,9 @@ const sidebarLinks = {
     { name: "Reports", path: "/owner/reports", icon: BarChart3 },
   ],
   payment_manager: [
-    { name: "Payments", path: "/payment-manager/payments", icon: Home },
-    { name: "Advances", path: "/payment-manager/advances", icon: DollarSign },
+    { name: "Dashboard", path: "/payment-manager/dashboard", icon: Home },
+    { name: "Payments", path: "/payment-manager/payments", icon: DollarSign },
+    { name: "Advances", path: "/payment-manager/advances", icon: TrendingUp },
     { name: "Loans", path: "/payment-manager/loans", icon: BarChart3 },
     { name: "Tea Rates", path: "/payment-manager/tea-rates", icon: Package },
     {
@@ -218,8 +220,8 @@ export default function Sidebar() {
               <div key={link.name}>
                 <button
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 font-medium transition-all duration-200 ${paymentsOpen
-                      ? "shadow-lg text-white bg-[#104137]"
-                      : "text-white/70 hover:bg-[#104137] hover:text-white"
+                    ? "shadow-lg text-white bg-[#104137]"
+                    : "text-white/70 hover:bg-[#104137] hover:text-white"
                     }`}
                   onClick={() => setPaymentsOpen((open) => !open)}
                   style={{
@@ -242,8 +244,8 @@ export default function Sidebar() {
                           key={child.name}
                           to={child.path}
                           className={`w-full flex items-center space-x-3 px-4 py-2 rounded-lg mb-1 font-medium transition-all duration-200 ${isActive
-                              ? "shadow-lg text-white bg-[#104137]"
-                              : "text-white/70 hover:bg-[#104137] hover:text-white"
+                            ? "shadow-lg text-white bg-[#104137]"
+                            : "text-white/70 hover:bg-[#104137] hover:text-white"
                             }`}
                           style={{
                             backgroundColor: isActive
@@ -270,8 +272,8 @@ export default function Sidebar() {
               key={link.name}
               to={link.path}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 font-medium transition-all duration-200 ${isActive
-                  ? "shadow-lg text-white"
-                  : "text-white/70 hover:bg-[#124c46] hover:text-white"
+                ? "shadow-lg text-white"
+                : "text-white/70 hover:bg-[#124c46] hover:text-white"
                 }`}
               style={{
                 backgroundColor: isActive ? "#124c46" : "transparent",

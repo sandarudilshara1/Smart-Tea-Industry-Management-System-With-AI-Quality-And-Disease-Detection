@@ -104,7 +104,8 @@ export const getBankCsvHistory = async (params) => {
 // 11. Get Cash Payments Queue
 export const getCashPaymentsQueue = async (params) => {
   const res = await axios.get("/payments/cash/queue", { params });
-  return res.data;
+  // Backend returns { success, content: [...] } - return content array or empty object
+  return res.data?.content || res.data || {};
 };
 
 // 12. Get Cash Payments by Route
@@ -158,7 +159,8 @@ export const getPaymentSummary = async (params) => {
 // 20. Get Dashboard Statistics
 export const getDashboardStatistics = async (params) => {
   const res = await axios.get("/payments/dashboard", { params });
-  return res.data;
+  // Backend returns { success, data: {...stats} }
+  return res.data?.data || res.data;
 };
 
 // 21. Update Payment Status

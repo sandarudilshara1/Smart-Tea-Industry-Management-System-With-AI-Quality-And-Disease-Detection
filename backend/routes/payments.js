@@ -28,9 +28,13 @@ router.post('/cash/disburse', auth, authorize(...PAYMENT_WRITE_ROLES), paymentCo
 router.get('/cash/history', auth, paymentController.getCashCollectionHistory);
 
 // General payment routes
+router.get('/dashboard', auth, paymentController.getDashboardStats);
+router.get('/summary', auth, paymentController.getPaymentSummary);
+router.get('/owner-overview', auth, authorize('owner'), paymentController.getOwnerPaymentOverview);
+router.get('/owner-route-summary', auth, authorize('owner'), paymentController.getOwnerRoutePaymentSummary);
 router.get('/history', auth, paymentController.getPaymentHistory);
-router.get('/:paymentId', auth, paymentController.getPaymentById);
 router.get('/supplier/:supplierId', auth, paymentController.getPaymentsBySupplier);
 router.get('/route/:routeId', auth, paymentController.getPaymentsByRoute);
+router.get('/:paymentId', auth, paymentController.getPaymentById);
 
 module.exports = router;
