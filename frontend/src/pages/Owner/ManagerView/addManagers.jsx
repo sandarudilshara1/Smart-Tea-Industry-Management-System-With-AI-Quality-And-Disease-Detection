@@ -1,7 +1,7 @@
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { register } from "../../../api/auth";
+import { createStaff } from "../../../api/auth";
 
 // Design Tokens
 const ACCENT_COLOR = "#165E52";
@@ -12,21 +12,7 @@ const INPUT_BG = "#ffffff";
 const roles = [
   { label: 'Factory Manager', value: 'factory_manager' },
   { label: 'Inventory Manager', value: 'inventory_manager' },
-  { label: 'Fertilizer Manager', value: 'fertilizer_manager' },
   { label: 'Transport Manager', value: 'transport_manager' },
-  { label: 'Payment Manager', value: 'payment_manager' }
-];
-
-const factoryOptions = [
-  { id: "1", name: "Wawlugala Tea Factory" },
-  { id: "2", name: "Miyanawathura Tea Factory" },
-  { id: "3", name: "Andaradeniya Tea Factory" },
-  { id: "4", name: "Batuwangala Tea Factory" },
-  { id: "5", name: "Duli Ella Tea Factory" },
-  { id: "6", name: "Devonia Tea Factory" },
-  { id: "7", name: "Fortune Tea Factory" },
-  { id: "8", name: "Galaxi Tea Factory" },
-  { id: "9", name: "Ruhunu Tea Factory" },
 ];
 
 export default function AddManagersInterface() {
@@ -37,47 +23,41 @@ export default function AddManagersInterface() {
     nic: "",
     mobile: "",
     role: "",
-    factory: "",
     address: ""
   });
 
-  const [dropdowns, setDropdowns] = useState({
-    role: false,
-    factory: false,
-  });
+  const [dropdowns, setDropdowns] = useState({ role: false });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError("");
   };
 
   const toggleDropdown = (dropdown) => {
-    setDropdowns({
-      ...dropdowns,
-      [dropdown]: !dropdowns[dropdown],
-    });
+    setDropdowns({ ...dropdowns, [dropdown]: !dropdowns[dropdown] });
   };
 
   const selectOption = (field, value) => {
-    setFormData({
-      ...formData,
-      [field]: value,
-    });
-    setDropdowns({
-      ...dropdowns,
-      [field]: false,
-    });
+    setFormData({ ...formData, [field]: value });
+    setDropdowns({ ...dropdowns, [field]: false });
+    setError("");
   };
 
   const handleSave = async () => {
-    try {
-      // Find the factory name
-      const selectedFactory = factoryOptions.find(f => f.id === formData.factory);
+    // Basic validation
+    if (!formData.name || !formData.email || !formData.password || !formData.role) {
+      setError("Please fill in all required fields: Name, Email, Password, and Role.");
+      return;
+    }
 
+    setLoading(true);
+    setError("");
+
+    try {
       const payload = {
         firstName: formData.name.split(' ')[0] || formData.name,
         lastName: formData.name.split(' ').slice(1).join(' ') || '',
@@ -87,23 +67,20 @@ export default function AddManagersInterface() {
         nic: formData.nic,
         phone: formData.mobile,
         address: formData.address,
-        factoryId: formData.factory ? Number(formData.factory) : null,
-        factoryName: selectedFactory ? selectedFactory.name : ''
       };
 
-      console.log("Data sent to backend:", payload);
-
-      const response = await register(payload);
+      const response = await createStaff(payload);
 
       if (response.success) {
-        // Navigate to the access grant page
         navigate("/owner/managerview/giveaccess", { state: { manager: formData } });
       } else {
-        alert(response.message || 'Failed to create manager');
+        setError(response.message || 'Failed to create staff account.');
       }
-    } catch (error) {
-      console.error("Error creating manager:", error);
-      alert(error?.response?.data?.message || 'Failed to create manager');
+    } catch (err) {
+      console.error("Error creating staff account:", err);
+      setError(err?.response?.data?.message || 'Failed to create staff account. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -113,8 +90,8 @@ export default function AddManagersInterface() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Add Manager</h1>
-              <p className="text-gray-600 mt-1">Owner Dashboard - Register and Assign Manager Access</p>
+              <h1 className="text-3xl font-bold text-gray-900">Add Staff Account</h1>
+              <p className="text-gray-600 mt-1">Owner Dashboard — Create and assign staff access</p>
             </div>
             <div className="flex items-center gap-4">
               <button
@@ -127,11 +104,12 @@ export default function AddManagersInterface() {
               </button>
               <button
                 onClick={handleSave}
-                className="px-6 py-2 rounded-lg text-white font-medium shadow transition-colors"
+                disabled={loading}
+                className="px-6 py-2 rounded-lg text-white font-medium shadow transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: BTN_COLOR }}
                 type="button"
               >
-                Save Manager
+                {loading ? "Creating..." : "Save Staff"}
               </button>
             </div>
           </div>
@@ -139,11 +117,17 @@ export default function AddManagersInterface() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm font-medium">
+            {error}
+          </div>
+        )}
+
         <div className="bg-white rounded-lg shadow-sm">
           <div className="p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-              {/* Left Column */}
+              {/* Left Column — Personal Info */}
               <div className="space-y-6">
                 <div className="border-b border-gray-100 pb-4 mb-6">
                   <h3 className="text-lg font-semibold" style={{ color: ACCENT_COLOR }}>
@@ -154,7 +138,7 @@ export default function AddManagersInterface() {
                 {/* Name */}
                 <div>
                   <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
-                    Name :
+                    Full Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -162,19 +146,15 @@ export default function AddManagersInterface() {
                     value={formData.name}
                     onChange={handleInputChange}
                     className="w-full rounded-lg px-4 py-3 border h-12"
-                    style={{
-                      borderColor: BORDER_COLOR,
-                      backgroundColor: INPUT_BG,
-                      color: ACCENT_COLOR,
-                    }}
-                    placeholder="Enter manager name"
+                    style={{ borderColor: BORDER_COLOR, backgroundColor: INPUT_BG, color: ACCENT_COLOR }}
+                    placeholder="Enter full name"
                   />
                 </div>
 
                 {/* Address */}
                 <div>
                   <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
-                    Address :
+                    Address
                   </label>
                   <input
                     type="text"
@@ -182,19 +162,15 @@ export default function AddManagersInterface() {
                     value={formData.address}
                     onChange={handleInputChange}
                     className="w-full rounded-lg px-4 py-3 border h-12"
-                    style={{
-                      borderColor: BORDER_COLOR,
-                      backgroundColor: INPUT_BG,
-                      color: ACCENT_COLOR,
-                    }}
-                    placeholder="Enter manager address"
+                    style={{ borderColor: BORDER_COLOR, backgroundColor: INPUT_BG, color: ACCENT_COLOR }}
+                    placeholder="Enter address"
                   />
                 </div>
 
                 {/* NIC */}
                 <div>
                   <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
-                    NIC :
+                    NIC
                   </label>
                   <input
                     type="text"
@@ -202,11 +178,7 @@ export default function AddManagersInterface() {
                     value={formData.nic}
                     onChange={handleInputChange}
                     className="w-full rounded-lg px-4 py-3 border h-12"
-                    style={{
-                      borderColor: BORDER_COLOR,
-                      backgroundColor: INPUT_BG,
-                      color: ACCENT_COLOR,
-                    }}
+                    style={{ borderColor: BORDER_COLOR, backgroundColor: INPUT_BG, color: ACCENT_COLOR }}
                     placeholder="Enter NIC number"
                   />
                 </div>
@@ -214,7 +186,7 @@ export default function AddManagersInterface() {
                 {/* Mobile */}
                 <div>
                   <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
-                    Mobile Number :
+                    Mobile Number
                   </label>
                   <input
                     type="tel"
@@ -222,11 +194,7 @@ export default function AddManagersInterface() {
                     value={formData.mobile}
                     onChange={handleInputChange}
                     className="w-full rounded-lg px-4 py-3 border h-12"
-                    style={{
-                      borderColor: BORDER_COLOR,
-                      backgroundColor: INPUT_BG,
-                      color: ACCENT_COLOR,
-                    }}
+                    style={{ borderColor: BORDER_COLOR, backgroundColor: INPUT_BG, color: ACCENT_COLOR }}
                     placeholder="Enter mobile number"
                   />
                 </div>
@@ -234,7 +202,7 @@ export default function AddManagersInterface() {
                 {/* Email */}
                 <div>
                   <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
-                    E-mail :
+                    E-mail <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
@@ -242,11 +210,7 @@ export default function AddManagersInterface() {
                     value={formData.email}
                     onChange={handleInputChange}
                     className="w-full rounded-lg px-4 py-3 border h-12"
-                    style={{
-                      borderColor: BORDER_COLOR,
-                      backgroundColor: INPUT_BG,
-                      color: ACCENT_COLOR,
-                    }}
+                    style={{ borderColor: BORDER_COLOR, backgroundColor: INPUT_BG, color: ACCENT_COLOR }}
                     placeholder="Enter email address"
                   />
                 </div>
@@ -254,7 +218,7 @@ export default function AddManagersInterface() {
                 {/* Password */}
                 <div>
                   <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
-                    Password :
+                    Password <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="password"
@@ -262,28 +226,24 @@ export default function AddManagersInterface() {
                     value={formData.password}
                     onChange={handleInputChange}
                     className="w-full rounded-lg px-4 py-3 border h-12"
-                    style={{
-                      borderColor: BORDER_COLOR,
-                      backgroundColor: INPUT_BG,
-                      color: ACCENT_COLOR,
-                    }}
-                    placeholder="Enter password"
+                    style={{ borderColor: BORDER_COLOR, backgroundColor: INPUT_BG, color: ACCENT_COLOR }}
+                    placeholder="Set a password (min 6 characters)"
                   />
                 </div>
               </div>
 
-              {/* Right Column */}
+              {/* Right Column — Role Assignment */}
               <div className="space-y-6">
                 <div className="border-b border-gray-100 pb-4 mb-6">
                   <h3 className="text-lg font-semibold" style={{ color: ACCENT_COLOR }}>
-                    Role & Assignment
+                    Role Assignment
                   </h3>
                 </div>
 
                 {/* Role Dropdown */}
                 <div>
                   <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
-                    Role :
+                    Role <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -293,13 +253,9 @@ export default function AddManagersInterface() {
                       onClick={() => toggleDropdown('role')}
                       placeholder="Select Role"
                       className="w-full rounded-lg px-4 py-3 border h-12 cursor-pointer"
-                      style={{
-                        borderColor: BORDER_COLOR,
-                        backgroundColor: INPUT_BG,
-                        color: ACCENT_COLOR,
-                      }}
+                      style={{ borderColor: BORDER_COLOR, backgroundColor: INPUT_BG, color: ACCENT_COLOR }}
                     />
-                    <ChevronDown size={20} className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none ${dropdowns.role ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={20} className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-transform ${dropdowns.role ? 'rotate-180' : ''}`} />
                     {dropdowns.role && (
                       <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-green-400 rounded-lg shadow-2xl z-50">
                         {roles.map((role) => (
@@ -317,43 +273,16 @@ export default function AddManagersInterface() {
                   </div>
                 </div>
 
-                {/* Factory Dropdown */}
-                <div>
-                  <label className="block mb-2 text-sm font-medium" style={{ color: ACCENT_COLOR }}>
-                    Factory :
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      readOnly
-                      value={factoryOptions.find(f => f.id === formData.factory)?.name || ""}
-                      onClick={() => toggleDropdown('factory')}
-                      placeholder="Select Factory"
-                      className="w-full rounded-lg px-4 py-3 border h-12 cursor-pointer"
-                      style={{
-                        borderColor: BORDER_COLOR,
-                        backgroundColor: INPUT_BG,
-                        color: ACCENT_COLOR,
-                      }}
-                    />
-                    <ChevronDown size={20} className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none ${dropdowns.factory ? 'rotate-180' : ''}`} />
-                    {dropdowns.factory && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-green-400 rounded-lg shadow-2xl z-50">
-                        {factoryOptions.map((factory) => (
-                          <button
-                            key={factory.id}
-                            type="button"
-                            onClick={() => selectOption('factory', factory.id)}
-                            className="w-full px-4 py-3 text-left hover:bg-green-50 focus:bg-green-100 transition-colors"
-                          >
-                            {factory.name}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                {/* Info box */}
+                <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+                  <p className="text-sm text-emerald-800 font-medium mb-1">ℹ️ Single-Tenant System</p>
+                  <p className="text-xs text-emerald-700">
+                    This account will be created directly within the system. Staff members can log in
+                    immediately using the email and password you set above.
+                  </p>
                 </div>
               </div>
+
             </div>
           </div>
         </div>

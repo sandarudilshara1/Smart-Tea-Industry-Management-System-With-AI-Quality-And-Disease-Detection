@@ -267,11 +267,7 @@ exports.updateVehicleStatus = async (req, res) => {
             });
         }
 
-        const vehicle = await Vehicle.findByIdAndUpdate(
-            req.params.id,
-            { status },
-            { new: true, runValidators: true }
-        );
+        const vehicle = await Vehicle.findById(req.params.id);
 
         if (!vehicle) {
             return res.status(404).json({
@@ -279,6 +275,26 @@ exports.updateVehicleStatus = async (req, res) => {
                 message: 'Vehicle not found'
             });
         }
+
+        // If making vehicle not in-use, clear assignment to avoid "Available but assigned" inconsistencies.
+        // (Status changes via this endpoint are treated as authoritative.)
+        const shouldClearAssignment = ['Available', 'Maintenance', 'Unavailable'].includes(status);
+        if (shouldClearAssignment && vehicle.driverId) {
+            const prevDriverId = vehicle.driverId;
+
+            // Clear on vehicle document
+            vehicle.driverId = null;
+            vehicle.assignedDriver = null;
+
+            // Clear on driver record only if it points to this vehicle
+            await Driver.findOneAndUpdate(
+                { _id: prevDriverId, vehicleNo: vehicle.vehicleNumber },
+                { $set: { vehicleNo: null } }
+            );
+        }
+
+        vehicle.status = status;
+        await vehicle.save();
 
         res.status(200).json({
             success: true,

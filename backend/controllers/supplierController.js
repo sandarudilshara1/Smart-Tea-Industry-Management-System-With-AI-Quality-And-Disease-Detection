@@ -1,13 +1,104 @@
 const Supplier = require('../models/Supplier');
 const User = require('../models/User');
 
+// Get logged-in supplier profile
+exports.getMySupplierProfile = async (req, res) => {
+    try {
+        const loggedInUserId = req.user.userId;
+        console.log('[getMySupplierProfile] Looking up supplier for userId:', loggedInUserId);
+
+        // 1. Direct match by userId
+        let supplier = await Supplier.findOne({ userId: loggedInUserId })
+            .populate('routeId')
+            .populate('userId', 'name email');
+
+        // 2. Fallback: match by email if direct userId lookup failed
+        if (!supplier) {
+            const loggedInUser = await User.findById(loggedInUserId);
+            console.log('[getMySupplierProfile] Direct lookup failed. Trying email fallback for:', loggedInUser?.email);
+
+            if (loggedInUser && loggedInUser.email) {
+                supplier = await Supplier.findOne({ email: loggedInUser.email });
+
+                if (supplier) {
+                    // Auto-link: update the Supplier document to point to the correct userId
+                    console.log('[getMySupplierProfile] Found supplier by email. Auto-linking userId...');
+                    supplier.userId = loggedInUserId;
+                    await supplier.save();
+
+                    // Re-fetch with population
+                    supplier = await Supplier.findOne({ _id: supplier._id })
+                        .populate('routeId')
+                        .populate('userId', 'name email');
+                }
+            }
+        }
+
+        // 3. Fallback: if no supplier found after all lookups
+        if (!supplier) {
+            console.warn(`[getMySupplierProfile] Profile not found for userId: ${loggedInUserId}`);
+            
+            return res.status(404).json({
+                success: false,
+                message: 'Supplier profile not found for this user. Please contact an administrator to link your account.'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: supplier
+        });
+    } catch (error) {
+        console.error('Error fetching my supplier profile:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching my supplier profile',
+            error: error.message
+        });
+    }
+};
+
+// Link a specific supplier to the logged-in user (temporary utility)
+exports.linkMySupplierProfile = async (req, res) => {
+    try {
+        const { supplierId } = req.body;
+        const loggedInUserId = req.user.userId;
+
+        if (!supplierId) {
+            return res.status(400).json({ success: false, message: 'supplierId is required in request body' });
+        }
+
+        const supplier = await Supplier.findById(supplierId);
+        if (!supplier) {
+            return res.status(404).json({ success: false, message: 'Supplier not found' });
+        }
+
+        supplier.userId = loggedInUserId;
+        await supplier.save();
+
+        const linked = await Supplier.findById(supplier._id)
+            .populate('routeId')
+            .populate('userId', 'name email');
+
+        console.log('[linkMySupplierProfile] Linked supplier', supplier.name, 'to userId', loggedInUserId);
+
+        res.status(200).json({
+            success: true,
+            message: 'Supplier profile linked successfully',
+            data: linked
+        });
+    } catch (error) {
+        console.error('Error linking supplier profile:', error);
+        res.status(500).json({ success: false, message: 'Error linking supplier', error: error.message });
+    }
+};
+
 // Get all suppliers for a factory
 exports.getAllSuppliers = async (req, res) => {
     try {
-        const { factoryId } = req.params;
         const { page = 0, limit = 10, search, status, routeId } = req.query;
 
-        const query = { factoryId };
+        const query = {};
         
         if (status) query.status = status;
         if (routeId) query.routeId = routeId;
@@ -99,8 +190,7 @@ exports.createSupplier = async (req, res) => {
             name: supplierData.name,
             email: supplierData.email,
             password: supplierData.password || 'supplier123', // Default password
-            role: 'supplier',
-            factoryId: supplierData.factoryId
+            role: 'supplier'
         });
         await user.save();
 
@@ -240,9 +330,17 @@ exports.getSupplierStatistics = async (req, res) => {
             date: { $gte: new Date(startDate), $lte: new Date(endDate) }
         } : {};
 
-        // Get tea leaf entry statistics
+        const supplierObjectId = new (require('mongoose').Types.ObjectId)(supplierId);
+
+        // Get tea leaf entry statistics — match only by supplier's own _id
         const teaLeafStats = await TeaLeafEntry.aggregate([
-            { $match: { supplierId: require('mongoose').Types.ObjectId(supplierId), ...dateFilter } },
+            { $match: {
+                $or: [
+                    { supplierId: supplierObjectId },
+                    { supplierId: supplierId }
+                ],
+                ...dateFilter
+            } },
             {
                 $group: {
                     _id: null,
@@ -254,9 +352,15 @@ exports.getSupplierStatistics = async (req, res) => {
             }
         ]);
 
-        // Get payment statistics
+
         const paymentStats = await Payment.aggregate([
-            { $match: { supplierId: require('mongoose').Types.ObjectId(supplierId), paymentStatus: 'Paid' } },
+            { $match: { 
+                $or: [
+                    { supplierId: new (require('mongoose').Types.ObjectId)(supplierId) },
+                    { supplierId: supplierId }
+                ],
+                paymentStatus: 'Paid' 
+            } },
             {
                 $group: {
                     _id: null,
@@ -268,7 +372,13 @@ exports.getSupplierStatistics = async (req, res) => {
 
         // Get advance statistics
         const advanceStats = await Advance.aggregate([
-            { $match: { supplierId: require('mongoose').Types.ObjectId(supplierId), status: 'APPROVED' } },
+            { $match: { 
+                $or: [
+                    { supplierId: new (require('mongoose').Types.ObjectId)(supplierId) },
+                    { supplierId: supplierId }
+                ],
+                status: 'APPROVED' 
+            } },
             {
                 $group: {
                     _id: null,
@@ -283,7 +393,11 @@ exports.getSupplierStatistics = async (req, res) => {
             data: {
                 teaLeaf: teaLeafStats[0] || { totalWeight: 0, totalNetWeight: 0, totalAmount: 0, entryCount: 0 },
                 payments: paymentStats[0] || { totalPaid: 0, paymentCount: 0 },
-                advances: advanceStats[0] || { totalAdvances: 0, advanceCount: 0 }
+                advances: advanceStats[0] || { totalAdvances: 0, advanceCount: 0 },
+                // Consistency: totalAmount from teaLeafStats represents the total accrued earnings
+                totalAccrued: teaLeafStats[0]?.totalAmount || 0,
+                totalPaid: paymentStats[0]?.totalPaid || 0,
+                pendingPayment: (teaLeafStats[0]?.totalAmount || 0) - (paymentStats[0]?.totalPaid || 0)
             }
         });
     } catch (error) {

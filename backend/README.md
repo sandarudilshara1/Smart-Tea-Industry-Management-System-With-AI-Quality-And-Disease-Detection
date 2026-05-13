@@ -72,6 +72,15 @@ http://localhost:5000
 | NODE_ENV | Environment (development/production) | development |
 | JWT_SECRET | Secret key for JWT tokens | - |
 | FRONTEND_URL | Frontend URL for CORS | http://localhost:5173 |
+| SMTP_HOST | SMTP server host (email notifications) | - |
+| SMTP_PORT | SMTP server port | - |
+| SMTP_SECURE | Use TLS (true for 465) | false |
+| SMTP_USER | SMTP username | - |
+| SMTP_PASS | SMTP password / app password | - |
+| SMTP_FROM | From address (optional; defaults to SMTP_USER) | - |
+
+Email sending is implemented via `backend/utils/mailer.js` using `sendEmail({ to, subject, html, text })`.
+If SMTP variables are not configured, emails are skipped safely.
 
 ## Technologies Used
 

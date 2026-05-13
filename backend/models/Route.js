@@ -4,7 +4,7 @@ const routeSchema = new mongoose.Schema({
     factoryId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
+        required: false
     },
     routeNumber: {
         type: String,
@@ -48,7 +48,7 @@ const routeSchema = new mongoose.Schema({
 });
 
 // Indexes
-routeSchema.index({ routeNumber: 1 }, { unique: true });
 routeSchema.index({ factoryId: 1, status: 1 });
+
 
 module.exports = mongoose.model('Route', routeSchema);

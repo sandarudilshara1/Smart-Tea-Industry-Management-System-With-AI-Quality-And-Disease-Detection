@@ -4,10 +4,10 @@ const advanceController = require('../controllers/advanceController');
 const { auth } = require('../middleware/auth');
 
 // Get advances by status with filtering
-router.get('/:factoryId/status', auth, advanceController.getAdvancesByStatus);
+router.get('/status', auth, advanceController.getAdvancesByStatus);
 
 // Get advance status counts
-router.get('/:factoryId/status-counts', auth, advanceController.getAdvanceStatusCounts);
+router.get('/status-counts', auth, advanceController.getAdvanceStatusCounts);
 
 // Get advance details
 router.get('/:advanceId', auth, advanceController.getAdvanceDetails);

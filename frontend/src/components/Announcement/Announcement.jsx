@@ -1,7 +1,7 @@
 import {
-    Award,
-    Download,
-    Paperclip,
+  Award,
+  Download,
+  Paperclip,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { getAllAnnouncements } from "../../api/announcement";
@@ -145,8 +145,8 @@ export default function AnnouncementComponent() {
       </div>
 
       {/* Content */}
-  <div className="max-w-7xl mx-auto px-6 py-8">
-  <div>
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div>
           {visibleAnnouncements.length === 0 ? (
             <div className="text-center py-12">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
@@ -156,70 +156,79 @@ export default function AnnouncementComponent() {
               <p className="text-gray-600">There are no announcements for your factory at this time.</p>
             </div>
           ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-            {visibleAnnouncements.map((announcement) => {
-              const formattedFactories = formatFactories(announcement.factories);
-              const factoryCount = formattedFactories === "-" ? 0 : formattedFactories.split(", ").length;
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+              {visibleAnnouncements.map((announcement) => {
+                const formattedFactories = formatFactories(announcement.factories);
+                const factoryCount = formattedFactories === "-" ? 0 : formattedFactories.split(", ").length;
 
-              return (
-              <div key={announcement._id || announcement.id} className="bg-white rounded-xl shadow-md border border-gray-200 transition hover:shadow-xl hover:border-[#165e52] overflow-hidden">
-                <div className="bg-gradient-to-r from-[#f0f9f8] to-white p-4 border-b border-gray-100">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border-2 border-[#165e52] bg-white text-[#165e52] font-semibold text-sm shadow-sm capitalize">
-                      <span className="w-2 h-2 rounded-full bg-[#165e52] inline-block" />
-                      {announcement.topic}
-                    </span>
-                    <span className="text-xs text-gray-500 font-medium bg-gray-100 px-3 py-1 rounded-full">
-                      {factoryCount} {factoryCount === 1 ? "Factory" : "Factories"}
-                    </span>
-                  </div>
-
-                </div>
-                <div className="p-6">
-                  <div className="mb-3">
-                    <h3 className="text-xl font-bold text-gray-900 mb-1">{announcement.subject || <span className="text-gray-400">No Subject</span>}</h3>
-                    <p className="text-xs text-gray-500">Assigned to: {formattedFactories}</p>
-                  </div>
-
-                  <div className="mb-4">
-                    <p className="text-gray-700 text-sm leading-relaxed">{announcement.content || <span className="text-gray-400">No content available</span>}</p>
-                  </div>
-
-                  {announcement.attachments && announcement.attachments.length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Paperclip className="w-4 h-4 text-[#165e52]" />
-                        <span className="font-semibold text-sm text-gray-900">Attachments ({announcement.attachments.length})</span>
+                return (
+                  <div key={announcement._id || announcement.id} className="bg-white rounded-xl shadow-md border border-gray-200 transition hover:shadow-xl hover:border-[#165e52] overflow-hidden">
+                    <div className="bg-gradient-to-r from-[#f0f9f8] to-white p-4 border-b border-gray-100">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border-2 border-[#165e52] bg-white text-[#165e52] font-semibold text-sm shadow-sm capitalize">
+                          <span className="w-2 h-2 rounded-full bg-[#165e52] inline-block" />
+                          {announcement.topic}
+                        </span>
+                        <span className="text-xs text-gray-500 font-medium bg-gray-100 px-3 py-1 rounded-full">
+                          {factoryCount} {factoryCount === 1 ? "Factory" : "Factories"}
+                        </span>
                       </div>
-                      <div className="space-y-2">
-                        {announcement.attachments.map((attachment) => (
-                          <div key={attachment.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gradient-to-r from-gray-50 to-white hover:from-[#f0f9f8] hover:to-white transition-all">
-                            <div className="flex items-center space-x-3">
-                              <div className="w-8 h-8 rounded-lg bg-[#165e52] bg-opacity-10 flex items-center justify-center">
-                                <Paperclip className="w-4 h-4 text-[#165e52]" />
-                              </div>
-                              <div>
-                                <span className="text-sm font-medium text-gray-900 block">{attachment.name}</span>
-                                <span className="text-xs text-gray-500">{attachment.size}</span>
-                              </div>
-                            </div>
-                            <button 
-                              onClick={() => handleDownload(attachment)} 
-                              className="p-2 text-[#165e52] hover:bg-[#165e52] hover:text-white rounded-lg transition-all"
-                              title="Download file"
-                            >
-                              <Download className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
+
                     </div>
-                  )}
-                </div>
-              </div>
-              );
-            })}
-          </div>
+                    <div className="p-6">
+                      <div className="mb-3">
+                        <h3 className="text-xl font-bold text-gray-900 mb-1">{announcement.subject || <span className="text-gray-400">No Subject</span>}</h3>
+                        <p className="text-xs text-gray-500">Assigned to: {formattedFactories}</p>
+                      </div>
+
+                      <div className="mb-4">
+                        <p className="text-gray-700 text-sm leading-relaxed">{announcement.content || <span className="text-gray-400">No content available</span>}</p>
+                      </div>
+
+                      {announcement.attachments && announcement.attachments.length > 0 && (
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Paperclip className="w-4 h-4 text-[#165e52]" />
+                            <span className="font-semibold text-sm text-gray-900">Attachments ({announcement.attachments.length})</span>
+                          </div>
+                          <div className="space-y-2">
+                            {announcement.attachments.map((attachment, index) => (
+                              <div
+                                key={
+                                  attachment?.id ||
+                                  attachment?._id ||
+                                  (attachment?.name
+                                    ? `${attachment.name}-${index}`
+                                    : `attachment-${index}`)
+                                }
+                                className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gradient-to-r from-gray-50 to-white hover:from-[#f0f9f8] hover:to-white transition-all"
+                              >
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-8 h-8 rounded-lg bg-[#165e52] bg-opacity-10 flex items-center justify-center">
+                                    <Paperclip className="w-4 h-4 text-[#165e52]" />
+                                  </div>
+                                  <div>
+                                    <span className="text-sm font-medium text-gray-900 block">{attachment.name}</span>
+                                    <span className="text-xs text-gray-500">{attachment.size}</span>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => handleDownload(attachment)}
+                                  className="p-2 text-[#165e52] hover:bg-[#165e52] hover:text-white rounded-lg transition-all"
+                                  title="Download file"
+                                >
+                                  <Download className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
 

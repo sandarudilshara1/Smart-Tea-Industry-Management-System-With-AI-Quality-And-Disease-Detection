@@ -10,18 +10,17 @@ const getActorUserId = (req) => req?.user?.userId || req?.user?.id || req?.user?
 // Calculate monthly payments for suppliers
 exports.calculateMonthlyPayments = async (req, res) => {
     try {
-        const { factoryId, month, year, supplierIds } = req.body;
+        const { month, year, supplierIds } = req.body;
 
-        if (!factoryId || !month || !year) {
+        if (!month || !year) {
             return res.status(400).json({
                 success: false,
-                message: 'Factory ID, month, and year are required'
+                message: 'Month and year are required'
             });
         }
 
         // Get active tea rate
         const teaRate = await TeaRate.findOne({
-            factoryId,
             status: 'Active'
         }).sort({ effectiveDate: -1 });
 
@@ -37,7 +36,6 @@ exports.calculateMonthlyPayments = async (req, res) => {
         const endDate = new Date(year, month, 0, 23, 59, 59);
 
         const query = {
-            factoryId,
             date: { $gte: startDate, $lte: endDate },
             status: { $in: ['Recorded', 'Verified'] }
         };
@@ -155,10 +153,9 @@ exports.calculateMonthlyPayments = async (req, res) => {
 // Get monthly payments for approval
 exports.getMonthlyPaymentsForApproval = async (req, res) => {
     try {
-        const { factoryId, month, year, page = 0, limit = 10 } = req.query;
+        const { month, year, page = 0, limit = 10 } = req.query;
 
         const query = {
-            factoryId,
             paymentType: 'Monthly',
             paymentStatus: 'Calculated'
         };
@@ -266,10 +263,9 @@ exports.createAdhocPayment = async (req, res) => {
 // Get pending ad-hoc payments
 exports.getPendingAdhocPayments = async (req, res) => {
     try {
-        const { factoryId, page = 0, limit = 10 } = req.query;
+        const { page = 0, limit = 10 } = req.query;
 
         const query = {
-            factoryId,
             paymentType: 'Adhoc',
             paymentStatus: 'Calculated'
         };
@@ -349,10 +345,9 @@ exports.approveAdhocPayment = async (req, res) => {
 // Get bank payments queue
 exports.getBankPaymentsQueue = async (req, res) => {
     try {
-        const { factoryId, page = 0, limit = 10 } = req.query;
+        const { page = 0, limit = 10 } = req.query;
 
         const query = {
-            factoryId,
             paymentMethod: 'Bank',
             paymentStatus: 'Approved'
         };
@@ -388,15 +383,8 @@ exports.getBankPaymentsQueue = async (req, res) => {
 // Generate bank CSV
 exports.generateBankCsv = async (req, res) => {
     try {
-        const { factoryId, paymentIds } = req.body;
+        const { paymentIds } = req.body;
         const generatedBy = getActorUserId(req);
-
-        if (!factoryId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Factory ID is required'
-            });
-        }
 
         if (!paymentIds || paymentIds.length === 0) {
             return res.status(400).json({
@@ -414,7 +402,6 @@ exports.generateBankCsv = async (req, res) => {
 
         const payments = await Payment.find({
             _id: { $in: paymentIds },
-            factoryId,
             paymentMethod: 'Bank',
             paymentStatus: 'Approved'
         }).populate('supplierId');
@@ -432,7 +419,6 @@ exports.generateBankCsv = async (req, res) => {
 
         // Create bank batch record
         const bankBatch = new BankBatch({
-            factoryId,
             batchNumber,
             generatedBy,
             paymentIds,
@@ -530,17 +516,17 @@ exports.downloadBankCsv = async (req, res) => {
 // Get bank CSV history
 exports.getBankCsvHistory = async (req, res) => {
     try {
-        const { factoryId, page = 0, limit = 10 } = req.query;
+        const { page = 0, limit = 10 } = req.query;
 
         const skip = parseInt(page) * parseInt(limit);
 
-        const batches = await BankBatch.find({ factoryId })
+        const batches = await BankBatch.find({})
             .populate('generatedBy', 'name email')
             .sort({ generatedDate: -1 })
             .skip(skip)
             .limit(parseInt(limit));
 
-        const total = await BankBatch.countDocuments({ factoryId });
+        const total = await BankBatch.countDocuments({});
 
         res.status(200).json({
             success: true,
@@ -562,10 +548,9 @@ exports.getBankCsvHistory = async (req, res) => {
 // Get cash payments queue
 exports.getCashPaymentsQueue = async (req, res) => {
     try {
-        const { factoryId, page = 0, limit = 10 } = req.query;
+        const { page = 0, limit = 10 } = req.query;
 
         const query = {
-            factoryId,
             paymentMethod: 'Cash',
             paymentStatus: 'Approved'
         };
@@ -678,10 +663,9 @@ exports.disburseCash = async (req, res) => {
 // Get cash collection history
 exports.getCashCollectionHistory = async (req, res) => {
     try {
-        const { factoryId, page = 0, limit = 10 } = req.query;
+        const { page = 0, limit = 10 } = req.query;
 
         const query = {
-            factoryId,
             paymentMethod: 'Cash',
             paymentStatus: 'Paid'
         };
@@ -748,41 +732,7 @@ exports.getPaymentById = async (req, res) => {
     }
 };
 
-// Get payments by supplier
-exports.getPaymentsBySupplier = async (req, res) => {
-    try {
-        const { supplierId } = req.params;
-        const { page = 0, limit = 10, status } = req.query;
 
-        const query = { supplierId };
-        if (status) query.paymentStatus = status;
-
-        const skip = parseInt(page) * parseInt(limit);
-
-        const payments = await Payment.find(query)
-            .populate('routeId')
-            .sort({ calculatedDate: -1 })
-            .skip(skip)
-            .limit(parseInt(limit));
-
-        const total = await Payment.countDocuments(query);
-
-        res.status(200).json({
-            success: true,
-            content: payments,
-            totalElements: total,
-            totalPages: Math.ceil(total / limit),
-            currentPage: parseInt(page)
-        });
-    } catch (error) {
-        console.error('Error fetching payments by supplier:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching payments by supplier',
-            error: error.message
-        });
-    }
-};
 
 // Get payments by route
 exports.getPaymentsByRoute = async (req, res) => {
@@ -1002,3 +952,44 @@ exports.getOwnerRoutePaymentSummary = async (req, res) => {
     }
 };
 
+// @desc    Get payments for a specific supplier
+// @route   GET /api/payments/supplier/:supplierId
+// @access  Private
+exports.getPaymentsBySupplier = async (req, res) => {
+    try {
+        const { supplierId } = req.params;
+        const { page = 0, limit = 20 } = req.query;
+
+        const mongoose = require('mongoose');
+        const query = {
+            $or: [
+                { supplierId: new mongoose.Types.ObjectId(supplierId) },
+                { supplierId: supplierId }
+            ]
+        };
+
+        const skip = parseInt(page) * parseInt(limit);
+
+        const payments = await Payment.find(query)
+            .sort({ calculatedDate: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+
+        const total = await Payment.countDocuments(query);
+
+        res.status(200).json({
+            success: true,
+            content: payments,
+            totalElements: total,
+            totalPages: Math.ceil(total / parseInt(limit)),
+            currentPage: parseInt(page)
+        });
+    } catch (error) {
+        console.error('Error fetching payments by supplier:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching payments by supplier',
+            error: error.message
+        });
+    }
+};

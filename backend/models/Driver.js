@@ -42,6 +42,18 @@ const driverSchema = new mongoose.Schema({
         enum: ['Available', 'On Route', 'On Leave', 'Inactive'],
         default: 'Available'
     },
+    currentTrip: {
+        routeId: String,
+        routeName: String,
+        vehicleNo: String,
+        status: { 
+            type: String, 
+            enum: ['Not Started', 'Started', 'Collecting', 'Returning', 'Reached Destination', 'Completed'] 
+        },
+        startTime: Date,
+        lastUpdate: Date,
+        assignedDate: Date
+    },
     assignedRoutes: [{
         routeId: String,
         routeName: String,
@@ -67,7 +79,8 @@ const driverSchema = new mongoose.Schema({
         relationship: String
     },
     factoryId: {
-        type: Number
+        type: Number,
+        required: false
     },
     isActive: {
         type: Boolean,

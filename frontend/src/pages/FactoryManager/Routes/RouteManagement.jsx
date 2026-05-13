@@ -56,7 +56,7 @@ export default function RouteManagement() {
     try {
       setLoading(true);
       setError(null);
-      const response = await getAllRoutes(factoryId);
+      const response = await getAllRoutes();
       console.log('📊 Routes API response:', response);
       if (response.success && response.content) {
         // Map backend fields to frontend format
@@ -273,7 +273,7 @@ export default function RouteManagement() {
 
             <div className="bg-white rounded-lg shadow-sm border border-[#cfece6] overflow-hidden">
               <div className="bg-[#01251F] text-white">
-                <div className="grid grid-cols-8 gap-4 p-4 font-medium text-sm">
+                <div className="grid grid-cols-[1fr_2fr_1.5fr_1fr_1.5fr_1fr_1fr_1fr] gap-4 p-4 font-medium text-sm">
                   <div className="text-left">Route ID</div>
                   <div className="text-left">Route</div>
                   <div className="text-left">Driver</div>
@@ -289,9 +289,9 @@ export default function RouteManagement() {
                 {filteredAndSortedRoutes.map((route) => (
                   <div
                     key={route.id}
-                    className="grid grid-cols-8 gap-4 p-3 items-center hover:bg-gray-100 transition-colors"
+                    className="grid grid-cols-[1fr_2fr_1.5fr_1fr_1.5fr_1fr_1fr_1fr] gap-4 p-3 items-center hover:bg-gray-100 transition-colors"
                   >
-                    <div className="font-mono text-sm text-black">{route.id}</div>
+                    <div className="font-mono text-sm text-black">{route.routeId || route.id?.slice(-6).toUpperCase()}</div>
                     <div>
                       <p className="font-semibold text-black">{route.routeName}</p>
                     </div>

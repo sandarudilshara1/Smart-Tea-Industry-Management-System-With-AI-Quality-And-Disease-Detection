@@ -11,7 +11,8 @@ import {
   Plus,
   Loader,
 } from "lucide-react";
-import { getAllVehicles, deleteVehicle, getVehicleStats } from "../../../api/vehicle";
+import { getAllVehicles, deleteVehicle, getVehicleStats, updateVehicleStatus } from "../../../api/vehicle";
+
 
 const ACCENT_COLOR = "#165E52"; // Title & highlights
 const BUTTON_COLOR = "#172526"; // Buttons
@@ -184,6 +185,21 @@ export default function Vehicle() {
     }
   };
 
+  const handleRecover = async (id) => {
+    try {
+      setLoading(true);
+      await updateVehicleStatus(id, 'Available');
+      showNotification('Vehicle recovered and marked as available');
+      await fetchVehicles();
+      await fetchStats();
+    } catch (error) {
+      console.error('Error recovering vehicle:', error);
+      showNotification('Failed to recover vehicle', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const cancelDelete = () => {
     setConfirmModalOpen(false);
     setVehicleToDelete(null);
@@ -318,6 +334,15 @@ export default function Vehicle() {
                   >
                     <Edit size={18} />
                   </button>
+                  {v.status === 'Maintenance' && (
+                    <button
+                      onClick={() => handleRecover(v._id)}
+                      className="p-2 rounded-full text-emerald-700 hover:bg-emerald-100 hover:text-emerald-900 transition-colors"
+                      title="Mark as Recovered"
+                    >
+                      <CheckCircle2 size={18} />
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       setVehicleToDelete(v._id);

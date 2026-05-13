@@ -1,6 +1,7 @@
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { flushSync } from "react-dom";
 import { login as loginAPI } from "../../api/auth";
 
 export default function Login() {
@@ -23,22 +24,10 @@ export default function Login() {
       if (response.success) {
         const { user, token } = response.data;
         
-        // Store token in localStorage
+        // Store token FIRST so axios interceptor has it for subsequent calls
         localStorage.setItem("authToken", token);
-        
-        // Store user in context and localStorage
-        setUser({
-          id: user.id,
-          email: user.email,
-          role: user.role,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          phone: user.phone,
-          address: user.address,
-          isActive: user.isActive
-        });
 
-        // Redirect based on role
+        // Role → route mapping
         const roleMap = {
           owner: "/owner",
           factory_manager: "/factory-manager",
@@ -49,9 +38,26 @@ export default function Login() {
           supplier: "/supplier",
           driver: "/driver"
         };
+        const redirectPath = (roleMap[user.role] || "/") + "/dashboard";
 
-        const redirectPath = roleMap[user.role] || "/";
-        navigate(redirectPath + "/dashboard");
+        // flushSync ensures React commits the user state update synchronously
+        // BEFORE navigate() triggers the dashboard to mount — prevents null user on first load
+        flushSync(() => {
+          setUser({
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phone: user.phone,
+            address: user.address,
+            isActive: user.isActive,
+            factoryName: user.factoryName || ''
+          });
+        });
+
+        // Navigate only AFTER user state is committed
+        navigate(redirectPath);
       }
     } catch (err) {
       console.error("Login error:", err);

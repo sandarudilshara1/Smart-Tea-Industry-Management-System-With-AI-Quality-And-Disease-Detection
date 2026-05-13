@@ -1,8 +1,11 @@
 {
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "src/*"
+      ]
     },
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
@@ -16,5 +19,7 @@
     "jsx": "react-jsx",
     "forceConsistentCasingInFileNames": false
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }

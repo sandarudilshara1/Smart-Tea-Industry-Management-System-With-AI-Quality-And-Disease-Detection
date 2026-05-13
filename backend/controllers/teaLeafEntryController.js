@@ -5,10 +5,9 @@ const TeaRate = require('../models/TeaRate');
 // Get all tea leaf entries for a factory
 exports.getAllTeaLeafEntries = async (req, res) => {
     try {
-        const { factoryId } = req.params;
         const { page = 0, limit = 10, startDate, endDate, supplierId, routeId, status } = req.query;
 
-        const query = { factoryId };
+        const query = {};
         
         if (startDate && endDate) {
             query.date = {
@@ -274,18 +273,26 @@ exports.deleteTeaLeafEntry = async (req, res) => {
 // Get tea leaf entries by supplier
 exports.getTeaLeafEntriesBySupplier = async (req, res) => {
     try {
+        const mongoose = require('mongoose');
         const { supplierId } = req.params;
         const { page = 0, limit = 10, startDate, endDate, status } = req.query;
 
-        const query = { supplierId };
-        
+        let supplierObjectId = null;
+        try { supplierObjectId = new mongoose.Types.ObjectId(supplierId); } catch (_) {}
+
+        const idMatch = supplierObjectId
+            ? { $or: [{ supplierId: supplierObjectId }, { supplierId: supplierId }] }
+            : { supplierId: supplierId };
+
+        const query = { ...idMatch };
+
         if (startDate && endDate) {
             query.date = {
                 $gte: new Date(startDate),
                 $lte: new Date(endDate)
             };
         }
-        
+
         if (status) query.status = status;
 
         const skip = parseInt(page) * parseInt(limit);
@@ -469,3 +476,104 @@ exports.bulkCreateTeaLeafEntries = async (req, res) => {
         });
     }
 };
+
+// Get monthly supply summary — global aggregation (all entries, same for every owner)
+exports.getMonthlySummary = async (req, res) => {
+    try {
+        const year = parseInt(req.query.year) || new Date().getFullYear();
+
+        const start = new Date(`${year}-01-01T00:00:00.000Z`);
+        const end = new Date(`${year}-12-31T23:59:59.999Z`);
+
+        const monthly = await TeaLeafEntry.aggregate([
+            {
+                $match: {
+                    date: { $gte: start, $lte: end }
+                }
+            },
+            {
+                $group: {
+                    _id: { $month: '$date' },
+                    totalWeight: { $sum: '$netWeight' },
+                    entryCount: { $sum: 1 }
+                }
+            },
+            { $sort: { '_id': 1 } }
+        ]);
+
+        // Build full 12-month array, fill missing months with 0
+        const result = Array.from({ length: 12 }, (_, i) => {
+            const found = monthly.find(m => m._id === i + 1);
+            return {
+                month: i + 1,
+                totalWeight: found ? Math.round(found.totalWeight) : 0,
+                entryCount: found ? found.entryCount : 0
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            data: result,
+            year
+        });
+    } catch (error) {
+        console.error('Error fetching monthly summary:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching monthly summary',
+            error: error.message
+        });
+    }
+};
+
+// Get top suppliers by total weight
+exports.getTopSuppliersByWeight = async (req, res) => {
+    try {
+        const mongoose = require('mongoose');
+        const limit = parseInt(req.query.limit) || 5;
+
+        const topSuppliers = await TeaLeafEntry.aggregate([
+            {
+                $group: {
+                    _id: '$supplierId',
+                    totalWeight: { $sum: '$netWeight' },
+                    entryCount: { $sum: 1 }
+                }
+            },
+            { $sort: { totalWeight: -1 } },
+            { $limit: limit },
+            {
+                $lookup: {
+                    from: 'suppliers',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'supplier'
+                }
+            },
+            { $unwind: { path: '$supplier', preserveNullAndEmptyArrays: true } },
+            {
+                $project: {
+                    _id: 0,
+                    supplierId: '$_id',
+                    name: { $ifNull: ['$supplier.name', 'Unknown Supplier'] },
+                    supplierCode: { $ifNull: ['$supplier.supplierCode', ''] },
+                    totalWeight: { $round: ['$totalWeight', 2] },
+                    entryCount: 1
+                }
+            }
+        ]);
+
+        res.status(200).json({
+            success: true,
+            data: topSuppliers
+        });
+    } catch (error) {
+        console.error('Error fetching top suppliers:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching top suppliers',
+            error: error.message
+        });
+    }
+};
+

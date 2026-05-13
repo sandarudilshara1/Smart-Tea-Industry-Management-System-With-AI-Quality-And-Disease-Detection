@@ -14,12 +14,21 @@ export const createDriver = async (driverData) => {
     }
 };
 
+// Get current driver profile
+export const getMyDriverProfile = async () => {
+    try {
+        const response = await axios.get('/drivers/me');
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || { message: 'Failed to fetch your driver profile' };
+    }
+};
+
 // Get all drivers
 export const getAllDrivers = async (filters = {}) => {
     try {
         const params = new URLSearchParams();
         if (filters.status) params.append('status', filters.status);
-        if (filters.factoryId) params.append('factoryId', filters.factoryId);
         
         const queryString = params.toString();
         const url = queryString ? `/drivers?${queryString}` : '/drivers';
@@ -70,6 +79,16 @@ export const assignRoute = async (driverId, routeData) => {
     }
 };
 
+// Update current trip status
+export const updateTripStatus = async (driverId, status) => {
+    try {
+        const response = await axios.put(`/drivers/${driverId}/trip-status`, { status });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || { message: 'Failed to update trip status' };
+    }
+};
+
 // Unassign route from driver
 export const unassignRoute = async (driverId, routeId) => {
     try {
@@ -87,5 +106,15 @@ export const getAvailableDrivers = async () => {
         return response.data;
     } catch (error) {
         throw error.response?.data || { message: 'Failed to fetch available drivers' };
+    }
+};
+
+// Update my driver profile (Self-Service)
+export const updateMyDriverProfile = async (driverData) => {
+    try {
+        const response = await axios.put('/drivers/me', driverData);
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || { success: false, message: 'An error occurred' };
     }
 };

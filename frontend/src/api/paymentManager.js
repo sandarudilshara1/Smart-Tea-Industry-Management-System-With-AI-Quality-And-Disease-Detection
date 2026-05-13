@@ -1,8 +1,8 @@
 import axios from "./axios";
 
 // Get advances for a factory by status with pagination and filtering
-export const getAdvancesByStatus = async (factoryId, status, params = {}) => {
-  const res = await axios.get(`/advances/${factoryId}/status`, {
+export const getAdvancesByStatus = async (status, params = {}) => {
+  const res = await axios.get(`/advances/status`, {
     params: { status, ...params },
   });
   return res.data;
@@ -27,8 +27,8 @@ export const rejectAdvance = async (advanceId, rejectionData) => {
 };
 
 // Get advance status counts for a factory
-export const getAdvanceStatusCounts = async (factoryId, params = {}) => {
-  const res = await axios.get(`/advances/${factoryId}/status-counts`, {
+export const getAdvanceStatusCounts = async (params = {}) => {
+  const res = await axios.get(`/advances/status-counts`, {
     params,
   });
   return res.data;
@@ -190,17 +190,17 @@ export const getSupplierDeductionsTotal = async (supplierId) => {
 };
 
 // 25. Get Loan Statistics
-export const getLoanStats = async (factoryId, month, year) => {
+export const getLoanStats = async (month, year) => {
   const res = await axios.get(`/loans/stats`, {
-    params: { factoryId, month, year }
+    params: { month, year }
   });
   return res.data;
 };
 
 // 26. Get Filtered Loans by Status
-export const getFilteredLoans = async (factoryId, status, month, year) => {
+export const getFilteredLoans = async (status, month, year) => {
   const res = await axios.get(`/loans/filter`, {
-    params: { factoryId, status, month, year }
+    params: { status, month, year }
   });
   return res.data;
 };

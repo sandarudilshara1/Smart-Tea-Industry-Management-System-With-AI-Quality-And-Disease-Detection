@@ -1,7 +1,7 @@
 
 import axios from "./axios";
 
-const TEA_RATE_API_URL = "/tea_rates";
+const TEA_RATE_API_URL = "/tea-rates";
 const LOAN_REQUEST_API_URL = "/loan-requests";
 
 // Get tea rate records for a user
@@ -9,7 +9,7 @@ export const fetchTeaRateRecords = async (userId) => {
   try {
     const response = await axios.get(`${TEA_RATE_API_URL}?userId=${userId}`);
     if (response.status === 200) {
-      return response.data;
+      return response.data?.content || response.data;
     }
     return [];
   } catch (error) {

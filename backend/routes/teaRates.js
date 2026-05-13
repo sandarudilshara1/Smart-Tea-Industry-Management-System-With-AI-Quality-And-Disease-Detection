@@ -4,13 +4,13 @@ const teaRateController = require('../controllers/teaRateController');
 const { auth } = require('../middleware/auth');
 
 // Get active tea rate
-router.get('/factory/:factoryId/active', auth, teaRateController.getActiveTeaRate);
+router.get('/active', auth, teaRateController.getActiveTeaRate);
 
 // Get all tea rates for a factory
-router.get('/factory/:factoryId', auth, teaRateController.getAllTeaRates);
+router.get('/', auth, teaRateController.getAllTeaRates);
 
 // Get tea rate for a specific date
-router.get('/factory/:factoryId/for-date', auth, teaRateController.getTeaRateForDate);
+router.get('/for-date', auth, teaRateController.getTeaRateForDate);
 
 // Get tea rate by ID
 router.get('/:teaRateId', auth, teaRateController.getTeaRateById);

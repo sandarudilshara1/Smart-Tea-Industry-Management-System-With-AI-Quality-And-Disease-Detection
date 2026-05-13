@@ -197,15 +197,15 @@ diseaseDetectionSchema.statics.getStatisticsByUser = async function(userId, star
     ]);
 };
 
-diseaseDetectionSchema.statics.getDailyStatistics = async function() {
+diseaseDetectionSchema.statics.getDailyStatistics = async function(matchQuery = {}) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const match = { ...matchQuery, createdAt: { $gte: today } };
+
     const stats = await this.aggregate([
         {
-            $match: {
-                createdAt: { $gte: today }
-            }
+            $match: match
         },
         {
             $group: {

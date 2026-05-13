@@ -5,7 +5,6 @@ const User = require('../models/User');
 // @access  Private
 exports.getAllManagers = async (req, res) => {
     try {
-        // Get all users with manager roles
         const managerRoles = [
             'factory_manager',
             'fertilizer_manager',
@@ -14,21 +13,20 @@ exports.getAllManagers = async (req, res) => {
             'transport_manager'
         ];
 
+        // Single-tenant: return all staff with manager roles, no factory filtering needed
         const managers = await User.find({
             role: { $in: managerRoles }
         })
             .select('-password -__v')
             .sort({ createdAt: -1 });
 
-        // Transform to match frontend expected format
         const formattedManagers = managers.map(manager => ({
             id: manager._id.toString(),
             name: `${manager.firstName} ${manager.lastName}`,
             email: manager.email,
             role: formatRole(manager.role),
+            rawRole: manager.role,
             status: manager.isActive ? 'Active' : 'Suspended',
-            factoryId: manager.factoryId,
-            factoryName: manager.factoryName,
             phone: manager.phone,
             address: manager.address,
             nic: manager.nic
@@ -45,52 +43,12 @@ exports.getAllManagers = async (req, res) => {
     }
 };
 
-// @desc    Get managers by factory ID
+// @desc    Get managers by factory ID (kept for backward compat, now returns all)
 // @route   GET /api/manager-info/:factoryId
 // @access  Private
 exports.getManagersByFactory = async (req, res) => {
-    try {
-        const { factoryId } = req.params;
-
-        // Get all users with manager roles for specific factory
-        const managerRoles = [
-            'factory_manager',
-            'fertilizer_manager',
-            'inventory_manager',
-            'payment_manager',
-            'transport_manager'
-        ];
-
-        const managers = await User.find({
-            role: { $in: managerRoles },
-            factoryId: parseInt(factoryId)
-        })
-            .select('-password -__v')
-            .sort({ createdAt: -1 });
-
-        // Transform to match frontend expected format
-        const formattedManagers = managers.map(manager => ({
-            id: manager._id.toString(),
-            name: `${manager.firstName} ${manager.lastName}`,
-            email: manager.email,
-            role: formatRole(manager.role),
-            status: manager.isActive ? 'Active' : 'Suspended',
-            factoryId: manager.factoryId,
-            factoryName: manager.factoryName,
-            phone: manager.phone,
-            address: manager.address,
-            nic: manager.nic
-        }));
-
-        res.status(200).json(formattedManagers);
-    } catch (error) {
-        console.error('Get managers by factory error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Server error fetching managers for factory',
-            error: process.env.NODE_ENV === 'development' ? error.message : {}
-        });
-    }
+    // Single-tenant: ignore factoryId param, delegate to getAllManagers logic
+    return exports.getAllManagers(req, res);
 };
 
 // @desc    Update manager status (suspend/activate)

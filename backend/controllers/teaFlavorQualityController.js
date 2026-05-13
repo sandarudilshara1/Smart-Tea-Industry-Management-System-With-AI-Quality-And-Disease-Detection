@@ -246,7 +246,7 @@ const calculateQuality = (formData) => {
 // Create quality calculation
 exports.createCalculation = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.userId;
     const {
       teaFlavor,
       particleSize,
@@ -331,13 +331,18 @@ exports.createCalculation = async (req, res) => {
   }
 };
 
-// Get all calculations for user
+// Get all calculations
 exports.getAllCalculations = async (req, res) => {
   try {
-    const userId = req.user._id;
     const { page = 1, limit = 10, grade = null, status = null } = req.query;
 
-    const filter = { userId };
+    const filter = {};
+    
+    // If not owner or factory_manager or supplier, filter by their own user ID
+    if (req.user && req.user.role && !['owner', 'factory_manager', 'supplier'].includes(req.user.role.toLowerCase())) {
+      filter.userId = req.user.userId;
+    }
+
     if (grade) filter.grade = grade;
     if (status) filter.status = status;
 
@@ -489,7 +494,8 @@ exports.deleteCalculation = async (req, res) => {
 // Get statistics
 exports.getStatistics = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const isOwner = req.user && req.user.role === 'owner';
+    const userId = isOwner ? null : req.user.userId;
     const { days = 30 } = req.query;
 
     const startDate = new Date();
@@ -521,10 +527,12 @@ exports.getStatistics = async (req, res) => {
 // Get recent calculations
 exports.getRecentCalculations = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const isOwner = req.user && req.user.role === 'owner';
     const { limit = 5 } = req.query;
 
-    const calculations = await TeaFlavorQualityCalculation.find({ userId })
+    const query = isOwner ? {} : { userId: req.user.userId };
+
+    const calculations = await TeaFlavorQualityCalculation.find(query)
       .sort({ createdAt: -1 })
       .limit(parseInt(limit));
 

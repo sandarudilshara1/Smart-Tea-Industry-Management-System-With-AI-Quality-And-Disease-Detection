@@ -82,11 +82,13 @@ export const AuthProvider = ({ children }) => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "linear-gradient(135deg, #a8ff78 0%, #78ffd6 100%)"
+        background: "radial-gradient(circle at center, #1b4e43 0%, #0a241e 100%)"
       }}>
         <div style={{ textAlign: "center" }}>
-          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-[#165E52] border-solid mx-auto mb-4"></div>
-          <div style={{ color: "#165E52", fontWeight: "bold", fontSize: 20 }}>
+          <div className="five-balls-loader">
+            <div></div><div></div><div></div><div></div><div></div>
+          </div>
+          <div style={{ color: "#ffffff", fontWeight: "bold", fontSize: 20, letterSpacing: "0.5px" }}>
             Loading Tea Factory System...
           </div>
         </div>

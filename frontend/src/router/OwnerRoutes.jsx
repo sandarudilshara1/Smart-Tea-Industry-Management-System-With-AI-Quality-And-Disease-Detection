@@ -8,8 +8,6 @@ import OwnerAnnouncementManage from "../pages/Owner/Announcement/Announcement";
 import OwnerDashboard from "../pages/Owner/dashboard";
 import AddEmployee from "../pages/Owner/Employers/AddEmployee";
 import EmployerManagement from "../pages/Owner/Employers/EmployerManagement";
-import FertilizerCompany from "../pages/Owner/FertilizerCompany/FertilizerCompany";
-import AddFertilizerCompany from "../pages/Owner/FertilizerCompany/AddFertilizerCompany";
 import LoanRates from "../pages/Owner/Rates/Rates";
 import AddManagers from "../pages/Owner/ManagerView/addManagers";
 import GiveAccess from "../pages/Owner/ManagerView/giveaccess";
@@ -20,6 +18,8 @@ import ViewLoanFactoryWise from "../pages/Owner/Payments/viewLoanFactoryWise";
 import ViewPaymentFactoryWise from "../pages/Owner/Payments/viewPaymentFactoryWise";
 import OwnerReports from "../pages/Owner/Reports/reports";
 import OwnerTeaRate from "../pages/Owner/TeaRate/teaRate";
+import OwnerSuppliers from "../pages/Owner/Suppliers/Suppliers";
+import FertilizerCompany from "../pages/Owner/FertilizerCompany/FertilizerCompany";
 
 export default [
   <>
@@ -29,6 +29,22 @@ export default [
         <Layout>
           {" "}
           <OwnerDashboard />{" "}
+        </Layout>
+      }
+    />
+    <Route
+      path="/owner/suppliers"
+      element={
+        <Layout>
+          <OwnerSuppliers />
+        </Layout>
+      }
+    />
+    <Route
+      path="/owner/fertilizer-companies"
+      element={
+        <Layout>
+          <FertilizerCompany />
         </Layout>
       }
     />
@@ -92,15 +108,6 @@ export default [
         <Layout>
           {" "}
           <OwnerReports />{" "}
-        </Layout>
-      }
-    />
-    <Route
-      path="/owner/payments"
-      element={
-        <Layout>
-          {" "}
-          <OwnerPaymnets />{" "}
         </Layout>
       }
     />
@@ -175,69 +182,6 @@ export default [
         <Layout>
           {" "}
           <UpdateAnnouncement />{" "}
-        </Layout>
-      }
-    />
-    <Route
-      path="/owner/payments/viewAdvanceFactoryWise"
-      element={
-        <Layout>
-          {" "}
-          <ViewAdvanceFactoryWise />{" "}
-        </Layout>
-      }
-    />
-    <Route
-      path="/owner/payments/viewLoanFactoryWise"
-      element={
-        <Layout>
-          {" "}
-          <ViewLoanFactoryWise />{" "}
-        </Layout>
-      }
-    />
-    <Route
-      path="/owner/payments/viewPaymentFactoryWise"
-      element={
-        <Layout>
-          {" "}
-          <ViewPaymentFactoryWise />{" "}
-        </Layout>
-      }
-    />
-    <Route
-      path="/owner/fertilizer-company"
-      element={
-        <Layout>
-          {" "}
-          <FertilizerCompany />{" "}
-        </Layout>
-      }
-    />
-    <Route
-      path="/owner/fertilizer-companies"
-      element={
-        <Layout>
-          {" "}
-          <FertilizerCompany />{" "}
-        </Layout>
-      }
-    />
-    <Route
-      path="/owner/fertilizer-companies/add"
-      element={
-        <Layout>
-          {" "}
-          <AddFertilizerCompany />{" "}
-        </Layout>
-      }
-    />
-    <Route
-      path="/owner/fertilizer-companies/edit"
-      element={
-        <Layout>
-          {" "}
-          <AddFertilizerCompany />{" "}
         </Layout>
       }
     />

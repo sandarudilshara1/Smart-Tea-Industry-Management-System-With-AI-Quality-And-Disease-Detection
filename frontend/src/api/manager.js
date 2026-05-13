@@ -7,7 +7,7 @@ export const getManagers = async () => {
 };
 
 // Get managers by factory id
-export const getManagersByFactory = async (factoryId) => {
-  const res = await axios.get(`/manager-info/${factoryId}`);
+export const getManagersByFactory = async () => {
+  const res = await axios.get(`/manager-info`);
   return res.data;
 };

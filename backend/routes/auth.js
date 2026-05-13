@@ -5,9 +5,10 @@ const {
     login, 
     getMe, 
     updateProfile, 
-    changePassword 
+    changePassword,
+    createStaff
 } = require('../controllers/authController');
-const { auth } = require('../middleware/auth');
+const { auth, authorize } = require('../middleware/auth');
 
 // Public routes
 router.post('/register', register);
@@ -17,5 +18,8 @@ router.post('/login', login);
 router.get('/me', auth, getMe);
 router.put('/profile', auth, updateProfile);
 router.put('/change-password', auth, changePassword);
+
+// Owner-only: create a staff account
+router.post('/staff', auth, authorize('owner'), createStaff);
 
 module.exports = router;

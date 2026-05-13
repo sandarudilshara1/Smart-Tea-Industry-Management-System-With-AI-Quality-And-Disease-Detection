@@ -56,8 +56,8 @@ export default function TeaRateAdjustment() {
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
     if (storedUserId) {
-      setUserId(Number(storedUserId));
-      fetchRecords(Number(storedUserId));
+      setUserId(storedUserId);
+      fetchRecords(storedUserId);
     } else {
       setUserId(null);
       console.warn("User ID not found in localStorage");
@@ -123,7 +123,15 @@ export default function TeaRateAdjustment() {
     }
     try {
       const payload = {
-        userId: userId,
+        createdBy: userId,
+        effectiveDate: new Date(`${2025}-${currentMonth.toString().padStart(2, "0")}-01`),
+        defaultRate: calculatedRate || 0,
+        rates: [
+          { quality: 'A', ratePerKg: calculatedRate || 0 },
+          { quality: 'B', ratePerKg: calculatedRate || 0 },
+          { quality: 'C', ratePerKg: calculatedRate || 0 },
+          { quality: 'Premium', ratePerKg: calculatedRate || 0 }
+        ],
         month: `${2025}-${currentMonth.toString().padStart(2, "0")}`,
         nsa: parseFloat(nsaValue),
         gsa: parseFloat(gsaValue),

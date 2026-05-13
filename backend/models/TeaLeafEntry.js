@@ -9,12 +9,12 @@ const teaLeafEntrySchema = new mongoose.Schema({
     factoryId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
+        required: false
     },
     routeId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Route',
-        required: true
+        required: false // Optional — not all suppliers have a route assigned
     },
     date: {
         type: Date,

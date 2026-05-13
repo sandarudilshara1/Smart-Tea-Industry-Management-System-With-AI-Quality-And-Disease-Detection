@@ -4,7 +4,7 @@ const teaRateSchema = new mongoose.Schema({
     factoryId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
+        required: false
     },
     effectiveDate: {
         type: Date,
@@ -60,6 +60,13 @@ const teaRateSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    nsa: { type: Number },
+    gsa: { type: Number },
+    monthlyRate: { type: Number },
+    totalWeight: { type: Number },
+    finalRatePerKg: { type: Number },
+    totalPayout: { type: Number },
+    month: { type: String },
     notes: {
         type: String
     }

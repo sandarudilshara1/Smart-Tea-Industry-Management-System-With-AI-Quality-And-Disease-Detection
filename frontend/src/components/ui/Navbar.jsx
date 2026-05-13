@@ -66,7 +66,7 @@ const Navbar = () => {
         {/* Company Name */}
         <div className="flex flex-col items-start">
           <span className="text-3xl font-bold text-black tracking-tight font-sans">
-            {user?.factoryName || "Factory Name"}
+            {user?.factoryName || "GreenLeaf Tea Factory"}
           </span>
           <span className="text-s text-gray-500 font-normal mt-1">
             {todayDate}
@@ -100,13 +100,10 @@ const Navbar = () => {
               onClick={toggleProfile}
               className="flex items-center space-x-3 p-2 rounded-md hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#172526]/20"
             >
-              <UserAvatar name={user?.username} />
+              <UserAvatar name={`${user?.firstName || ""} ${user?.lastName || ""}`.trim()} />
               <div className="hidden md:block text-left">
                 <p className="font-semibold text-sm text-[#172526] leading-tight">
-                  {user?.name || ""}
-                </p>
-                <p className="text-gray-500 text-xs capitalize font-medium">
-                  {user?.role?.toLowerCase() || "Supervisor"}
+                  {`${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "User"}
                 </p>
               </div>
               {/* Dropdown Arrow */}

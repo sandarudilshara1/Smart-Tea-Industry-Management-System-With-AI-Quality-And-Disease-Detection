@@ -4,7 +4,7 @@ const bankBatchSchema = new mongoose.Schema({
     factoryId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
+        required: false
     },
     batchNumber: {
         type: String,
@@ -55,7 +55,7 @@ const bankBatchSchema = new mongoose.Schema({
 
 // Indexes
 bankBatchSchema.index({ factoryId: 1, generatedDate: -1 });
-bankBatchSchema.index({ batchNumber: 1 }, { unique: true });
 bankBatchSchema.index({ status: 1 });
+
 
 module.exports = mongoose.model('BankBatch', bankBatchSchema);

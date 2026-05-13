@@ -440,7 +440,8 @@ exports.getStatistics = async (req, res) => {
         ]);
 
         // Get daily statistics (today)
-        const dailyStats = await DiseaseDetection.getDailyStatistics();
+        const dailyStatsMatch = match.userId ? { userId: match.userId } : {};
+        const dailyStats = await DiseaseDetection.getDailyStatistics(dailyStatsMatch);
 
         // Get total counts
         const totalDetections = await DiseaseDetection.countDocuments(match);

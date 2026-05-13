@@ -118,3 +118,18 @@ export const getCompaniesByFertilizerCategory = async (categoryId) => {
   const res = await axios.get(`/fertilizer-categories/${categoryId}/companies`);
   return res.data; // [{id, name}]
 };
+
+// Dashboard: Monthly tea leaf supply summary (global — same for all owners)
+export const getMonthlyTeaLeafSummary = async (year) => {
+  const params = {};
+  if (year) params.year = year;
+  const res = await axios.get(`/tea-leaf-entries/monthly-summary`, { params });
+  return res.data;
+};
+
+// Dashboard: Top N suppliers by total tea weight collected
+export const getTopSuppliersByWeight = async (limit = 5) => {
+  const res = await axios.get(`/tea-leaf-entries/top-suppliers`, { params: { limit } });
+  return res.data;
+};
+

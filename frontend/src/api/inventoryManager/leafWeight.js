@@ -69,9 +69,9 @@ export const updateBagWeights = async (bagWeightId, payload) => {
 };
 
 // Get trip status counts for a factory for today
-export const getTripStatusCounts = async (factoryId) => {
+export const getTripStatusCounts = async () => {
   const res = await axios.get(
-    `/trips/status-counts/factory/${factoryId}/today`
+    `/trips/status-counts/today`
   );
   return res.data;
 };
@@ -87,7 +87,7 @@ export const getTripsByFactoryAndStatus = async (
   const params = { page };
   if (search) params.search = search;
   const res = await axios.get(
-    `/trips/factory/${factoryId}/status/${status}/today`,
+    `/trips/status/${status}/today`,
     {
       params,
     }

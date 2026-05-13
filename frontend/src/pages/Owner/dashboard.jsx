@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import * as diseaseAPI from '../../api/diseaseDetection';
+import { getMonthlyTeaLeafSummary } from '../../api/owner';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -25,7 +27,6 @@ import {
   Award,
   AlertTriangle,
   CheckCircle,
-  XCircle,
 } from "lucide-react";
 
 ChartJS.register(
@@ -43,59 +44,14 @@ const ACCENT_COLOR = "#165e52";
 const BLACK = "#000000";
 const BUTTON_COLOR = "#172526";
 const BORDER_COLOR = "#cfece6";
-const CARD_BG = "#fff";
 
-const suppliers = [
-  { name: "Supplier - A", weight: "485 kg" },
-  { name: "Supplier - B", weight: "412 kg" },
-  { name: "Supplier - C", weight: "387 kg" },
-  { name: "Supplier - D", weight: "342 kg" },
-  { name: "Supplier - E", weight: "298 kg" },
-];
-
-const monthlySupplyData = {
-  labels: [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ],
-  datasets: [
-    {
-      label: "Tea Collected (kg)",
-      data: [
-        12000, 15000, 14000, 16000, 17000, 15500, 16500, 18000, 17500, 19000,
-        20000, 21000,
-      ],
-      borderColor: ACCENT_COLOR,
-      backgroundColor: "rgba(22, 94, 82, 0.3)",
-      fill: true,
-      tension: 0.3,
-      pointRadius: 5,
-      pointHoverRadius: 8,
-    },
-  ],
-};
+const MONTH_LABELS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 const monthlySupplyOptions = {
   responsive: true,
-  interaction: {
-    mode: "nearest",
-    intersect: false,
-  },
+  interaction: { mode: "nearest", intersect: false },
   plugins: {
-    legend: {
-      display: true,
-      labels: { color: BUTTON_COLOR },
-    },
+    legend: { display: true, labels: { color: BUTTON_COLOR } },
     tooltip: {
       enabled: true,
       mode: "index",
@@ -105,150 +61,78 @@ const monthlySupplyOptions = {
       bodyColor: "#fff",
     },
     zoom: {
-      pan: {
-        enabled: true,
-        mode: "x",
-        modifierKey: "ctrl",
-      },
-      zoom: {
-        wheel: { enabled: true },
-        pinch: { enabled: true },
-        mode: "x",
-      },
+      pan: { enabled: true, mode: "x", modifierKey: "ctrl" },
+      zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: "x" },
     },
   },
   scales: {
-    x: {
-      ticks: { color: BUTTON_COLOR },
-      grid: { color: BORDER_COLOR },
-    },
-    y: {
-      beginAtZero: true,
-      ticks: { color: BUTTON_COLOR },
-      grid: { color: BORDER_COLOR },
-    },
+    x: { ticks: { color: BUTTON_COLOR }, grid: { color: BORDER_COLOR } },
+    y: { beginAtZero: true, ticks: { color: BUTTON_COLOR }, grid: { color: BORDER_COLOR } },
   },
 };
 
-const qualityData = {
-  overallScore: 87,
-  averageGrade: 'A',
-  passRate: 94,
-  totalAssessments: 234,
-  gradeDistribution: [
-    { grade: 'A+', count: 45, percentage: 19 },
-    { grade: 'A', count: 89, percentage: 38 },
-    { grade: 'B+', count: 67, percentage: 29 },
-    { grade: 'B', count: 28, percentage: 12 },
-    { grade: 'C', count: 5, percentage: 2 },
-  ],
-  recentAssessments: [
-    { teaType: 'Green Tea', grade: 'A+', score: 92, date: 'Nov 24, 2025', factory: 'Factory A' },
-    { teaType: 'Black Tea', grade: 'A', score: 88, date: 'Nov 24, 2025', factory: 'Factory B' },
-    { teaType: 'Oolong Tea', grade: 'B+', score: 81, date: 'Nov 23, 2025', factory: 'Factory C' },
-    { teaType: 'White Tea', grade: 'A', score: 86, date: 'Nov 23, 2025', factory: 'Factory A' },
-  ]
-};
-
-const diseaseData = {
-  totalReports: 12,
-  activeOutbreaks: 3,
-  resolvedCases: 156,
-  affectedArea: '24 hectares',
-  recentReports: [
-    {
-      disease: 'Blister Blight',
-      severity: 'High',
-      factory: 'Factory A',
-      area: '8 hectares',
-      status: 'Active',
-      date: 'Nov 23, 2025'
-    },
-    {
-      disease: 'Root Rot',
-      severity: 'Medium',
-      factory: 'Factory C',
-      area: '5 hectares',
-      status: 'Active',
-      date: 'Nov 22, 2025'
-    },
-    {
-      disease: 'Tea Mosquito Bug',
-      severity: 'Low',
-      factory: 'Factory B',
-      area: '3 hectares',
-      status: 'Monitoring',
-      date: 'Nov 22, 2025'
-    },
-    {
-      disease: 'Grey Blight',
-      severity: 'Medium',
-      factory: 'Factory D',
-      area: '4 hectares',
-      status: 'Resolved',
-      date: 'Nov 20, 2025'
-    },
-  ],
-  diseaseStats: [
-    { name: 'Blister Blight', cases: 5, trend: 'up' },
-    { name: 'Root Rot', cases: 3, trend: 'stable' },
-    { name: 'Tea Mosquito Bug', cases: 2, trend: 'down' },
-    { name: 'Grey Blight', cases: 2, trend: 'down' },
-  ]
-};
-
 export default function Dashboard() {
-  const [diseaseStats, setDiseaseStats] = useState({
-    totalScans: 0,
-    diseasesFound: 0,
-    healthyLeaves: 0,
-    avgConfidence: 0
-  });
+  const { user } = useAuth();
+
+  const [diseaseStats, setDiseaseStats] = useState({ totalScans: 0, diseasesFound: 0, healthyLeaves: 0, avgConfidence: 0 });
   const [loadingStats, setLoadingStats] = useState(true);
 
+  const [chartData, setChartData] = useState(null);
+  const [loadingChart, setLoadingChart] = useState(true);
+
+  // Fetch everything on mount — chart data is global (same for all owners)
   useEffect(() => {
     fetchDiseaseStatistics();
+    fetchMonthlyChart();
   }, []);
+
+  const fetchMonthlyChart = async () => {
+    try {
+      setLoadingChart(true);
+      const response = await getMonthlyTeaLeafSummary();
+      if (response.success && response.data) {
+        const weights = response.data.map(m => m.totalWeight);
+        setChartData({
+          labels: MONTH_LABELS,
+          datasets: [{
+            label: "Tea Collected (kg)",
+            data: weights,
+            borderColor: ACCENT_COLOR,
+            backgroundColor: "rgba(22, 94, 82, 0.3)",
+            fill: true,
+            tension: 0.3,
+            pointRadius: 5,
+            pointHoverRadius: 8,
+          }],
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching monthly chart data:', error);
+    } finally {
+      setLoadingChart(false);
+    }
+  };
+
 
   const fetchDiseaseStatistics = async () => {
     try {
       setLoadingStats(true);
-      console.log('📊 Dashboard: Fetching disease detection statistics...');
-      
-      // Fetch both daily and overall statistics
       const [dailyResponse, overallResponse] = await Promise.all([
         diseaseAPI.getDailyStatistics(),
         diseaseAPI.getStatistics()
       ]);
-      
-      console.log('Dashboard daily stats:', dailyResponse);
-      console.log('Dashboard overall stats:', overallResponse);
-      
-      // Use daily stats if available, otherwise use overall stats
       if (dailyResponse.success && dailyResponse.data.daily && dailyResponse.data.daily.totalScans > 0) {
         const daily = dailyResponse.data.daily;
-        console.log('✅ Dashboard using daily statistics:', daily);
-        setDiseaseStats({
-          totalScans: daily.totalScans || 0,
-          diseasesFound: daily.diseasesFound || 0,
-          healthyLeaves: daily.healthyLeaves || 0,
-          avgConfidence: daily.avgConfidence || 0
-        });
+        setDiseaseStats({ totalScans: daily.totalScans || 0, diseasesFound: daily.diseasesFound || 0, healthyLeaves: daily.healthyLeaves || 0, avgConfidence: daily.avgConfidence || 0 });
       } else if (overallResponse.success && overallResponse.data) {
-        // Fallback to overall statistics if no daily data
         const overall = overallResponse.data;
-        console.log('✅ Dashboard using overall statistics:', overall);
         setDiseaseStats({
-          totalScans: overall.total || 0,
-          diseasesFound: overall.diseased || 0,
-          healthyLeaves: overall.healthy || 0,
+          totalScans: overall.total || 0, diseasesFound: overall.diseased || 0, healthyLeaves: overall.healthy || 0,
           avgConfidence: overall.byDisease?.reduce((sum, d) => sum + (d.avgConfidence || 0), 0) / (overall.byDisease?.length || 1) || 0
         });
-      } else {
-        console.log('ℹ️ Dashboard: No statistics data available');
       }
     } catch (error) {
-      console.error('❌ Dashboard error fetching disease statistics:', error);
+      console.error('Error fetching disease statistics:', error);
     } finally {
       setLoadingStats(false);
     }
@@ -313,45 +197,112 @@ export default function Dashboard() {
 
         {/* Charts & Top Suppliers */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* Monthly Supply Chart with zoom & pan */}
+          {/* Monthly Supply Chart */}
           <div className="bg-white p-6 rounded-lg shadow-md border border-black flex flex-col">
-            <h3
-              className="text-lg font-semibold text-black mb-5"
-              style={{ color: ACCENT_COLOR }}
-            >
-              Monthly Supply Chart
+            <h3 className="text-lg font-semibold text-black mb-5" style={{ color: ACCENT_COLOR }}>
+              Monthly Supply Chart ({new Date().getFullYear()})
             </h3>
-            <div className="flex-1 min-h-[320px]">
-              <Line data={monthlySupplyData} options={monthlySupplyOptions} />
+            <div className="flex-1 min-h-[320px] flex items-center justify-center">
+              {loadingChart ? (
+                <div className="text-center text-gray-400">
+                  <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-emerald-600 mx-auto mb-2"></div>
+                  <p className="text-sm">Loading chart data...</p>
+                </div>
+              ) : chartData ? (
+                <Line data={chartData} options={monthlySupplyOptions} />
+              ) : (
+                <p className="text-gray-400 text-sm text-center">No supply data found for this factory.<br/>Tea leaf entries will appear here once recorded.</p>
+              )}
             </div>
           </div>
 
-          {/* Top 5 Suppliers */}
+          {/* Monthly Collection Progress */}
           <div className="bg-white p-6 rounded-lg shadow-md border border-black">
-            <h3
-              className="text-lg font-semibold text-black mb-5"
-              style={{ color: ACCENT_COLOR }}
-            >
-              Top 5 Factory (by tea collecting weight)
+            <h3 className="text-lg font-semibold mb-1" style={{ color: ACCENT_COLOR }}>
+              Monthly Collection Progress
             </h3>
-            <div className="space-y-4">
-              {suppliers.map((supplier, i) => (
-                <div
-                  key={i}
-                  className="flex justify-between items-center py-2 border-b last:border-b-0"
-                  style={{ borderColor: BORDER_COLOR }}
-                >
-                  <span className="font-medium text-gray-700">
-                    {supplier.name}
-                  </span>
-                  <span className="font-bold" style={{ color: ACCENT_COLOR }}>
-                    {supplier.weight}
-                  </span>
+            <p className="text-xs text-gray-400 mb-5">{new Date().getFullYear()} — Tea Collected (kg)</p>
+
+            {loadingChart ? (
+              <div className="space-y-3">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="flex justify-between mb-1">
+                      <div className="h-3 bg-gray-200 rounded w-8"></div>
+                      <div className="h-3 bg-gray-200 rounded w-16"></div>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full"><div className="h-2 bg-gray-200 rounded-full" style={{ width: `${30 + i * 10}%` }}></div></div>
+                  </div>
+                ))}
+              </div>
+            ) : chartData ? (() => {
+              const weights = chartData.datasets[0].data;
+              const maxWeight = Math.max(...weights, 1);
+              const totalKg = weights.reduce((a, b) => a + b, 0);
+              const bestMonthIdx = weights.indexOf(Math.max(...weights));
+              const currentMonth = new Date().getMonth(); // 0-indexed
+
+              return (
+                <div>
+                  {/* Summary row */}
+                  <div className="grid grid-cols-2 gap-3 mb-5">
+                    <div className="bg-emerald-50 rounded-xl p-3 text-center">
+                      <p className="text-xs text-gray-500 mb-0.5">Total This Year</p>
+                      <p className="text-xl font-extrabold" style={{ color: ACCENT_COLOR }}>
+                        {totalKg.toLocaleString()} <span className="text-sm font-medium">kg</span>
+                      </p>
+                    </div>
+                    <div className="bg-amber-50 rounded-xl p-3 text-center">
+                      <p className="text-xs text-gray-500 mb-0.5">Best Month</p>
+                      <p className="text-xl font-extrabold text-amber-600">
+                        {MONTH_LABELS[bestMonthIdx]}
+                        <span className="text-sm font-medium block text-amber-500">{weights[bestMonthIdx].toLocaleString()} kg</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Mini bar chart for each month */}
+                  <div className="space-y-2">
+                    {MONTH_LABELS.map((month, i) => {
+                      const pct = maxWeight > 0 ? (weights[i] / maxWeight) * 100 : 0;
+                      const isCurrent = i === currentMonth;
+                      const isBest = i === bestMonthIdx;
+                      return (
+                        <div key={month}>
+                          <div className="flex justify-between items-center mb-0.5">
+                            <span className={`text-xs font-semibold ${isCurrent ? 'text-emerald-600' : 'text-gray-500'}`}>
+                              {month} {isCurrent && <span className="ml-1 text-[10px] bg-emerald-100 text-emerald-700 px-1 rounded">Current</span>}
+                              {isBest && !isCurrent && <span className="ml-1 text-[10px] bg-amber-100 text-amber-700 px-1 rounded">Best</span>}
+                            </span>
+                            <span className={`text-xs font-bold ${weights[i] > 0 ? 'text-gray-700' : 'text-gray-300'}`}>
+                              {weights[i] > 0 ? `${weights[i].toLocaleString()} kg` : '—'}
+                            </span>
+                          </div>
+                          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div
+                              className="h-2 rounded-full transition-all duration-500"
+                              style={{
+                                width: `${pct}%`,
+                                backgroundColor: isCurrent ? '#165e52' : isBest ? '#d97706' : '#6ee7b7'
+                              }}
+                            ></div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              ))}
-            </div>
+              );
+            })() : (
+              <div className="flex flex-col items-center justify-center h-48 text-center">
+                <div className="text-4xl mb-3">📊</div>
+                <p className="text-gray-400 text-sm">No data yet for this year.</p>
+                <p className="text-gray-300 text-xs mt-1">Progress will appear as tea entries are recorded.</p>
+              </div>
+            )}
           </div>
         </section>
+
 
         {/* Quick Links Section */}
         <section className="bg-white rounded-lg shadow-md p-6 ">

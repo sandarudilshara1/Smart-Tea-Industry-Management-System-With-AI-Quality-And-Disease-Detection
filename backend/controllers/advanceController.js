@@ -4,11 +4,10 @@ const Supplier = require('../models/Supplier');
 // Get advances by status for a factory with pagination and filtering
 exports.getAdvancesByStatus = async (req, res) => {
     try {
-        const { factoryId } = req.params;
         const { status, page = 0, month, year, search } = req.query;
         const limit = 10;
 
-        const query = { factoryId, status };
+        const query = { status };
 
         // Date filtering
         if (month && year) {
@@ -201,10 +200,9 @@ exports.rejectAdvance = async (req, res) => {
 // Get advance status counts for a factory
 exports.getAdvanceStatusCounts = async (req, res) => {
     try {
-        const { factoryId } = req.params;
         const { month, year, startDate, endDate } = req.query;
 
-        const query = { factoryId };
+        const query = {};
 
         // Date filtering
         if (startDate && endDate) {
@@ -283,10 +281,18 @@ exports.createAdvanceRequest = async (req, res) => {
 // Get advances by supplier
 exports.getAdvancesBySupplier = async (req, res) => {
     try {
+        const mongoose = require('mongoose');
         const { supplierId } = req.params;
         const { page = 0, limit = 10, status } = req.query;
 
-        const query = { supplierId };
+        let supplierObjectId = null;
+        try { supplierObjectId = new mongoose.Types.ObjectId(supplierId); } catch (_) {}
+
+        const idMatch = supplierObjectId
+            ? { $or: [{ supplierId: supplierObjectId }, { supplierId: supplierId }] }
+            : { supplierId: supplierId };
+
+        const query = { ...idMatch };
         if (status) query.status = status;
 
         const skip = parseInt(page) * parseInt(limit);

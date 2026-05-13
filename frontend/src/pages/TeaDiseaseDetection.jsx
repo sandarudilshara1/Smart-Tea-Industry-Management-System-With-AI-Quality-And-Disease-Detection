@@ -6,6 +6,9 @@ import * as diseaseAPI from '../api/diseaseDetection';
 
 const TeaDiseaseDetection = () => {
   const { user } = useAuth();
+  // Only factory_manager can upload images and run detection
+  const canUpload = user?.role === 'factory_manager';
+  const isOwner   = user?.role === 'owner';
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -1194,13 +1197,15 @@ const TeaDiseaseDetection = () => {
                           >
                             <Download className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => handleDeleteDetection(detection)}
-                            className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded transition-colors"
-                            title="Delete"
-                          >
-                            <Trash className="w-4 h-4" />
-                          </button>
+                          {canUpload && (
+                            <button
+                              onClick={() => handleDeleteDetection(detection)}
+                              className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded transition-colors"
+                              title="Delete"
+                            >
+                              <Trash className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -1405,106 +1410,234 @@ const TeaDiseaseDetection = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Tea Disease Detection</h1>
-              <p className="text-gray-600">Upload leaf images or capture photos to detect common tea diseases using AI-powered analysis</p>
+              <p className="text-gray-600">
+                {canUpload
+                  ? 'Upload leaf images or capture photos to detect common tea diseases using AI-powered analysis'
+                  : 'View disease detection results, statistics, and historical scan records'}
+              </p>
             </div>
-            <button
-              onClick={generateSystemGuidePDF}
-              className="flex items-center gap-2 px-4 py-2 bg-[#165E52] text-white rounded-lg hover:bg-[#0f4d42] transition-all shadow-md hover:shadow-lg"
-            >
-              <FileText className="w-5 h-5" />
-              <span className="font-semibold">Download System Guide</span>
-            </button>
+            <div className="flex items-center gap-3">
+              {isOwner && (
+                <span className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1 rounded-full font-medium">
+                  👁️ View Only
+                </span>
+              )}
+              <button
+                onClick={generateSystemGuidePDF}
+                className="flex items-center gap-2 px-4 py-2 bg-[#165E52] text-white rounded-lg hover:bg-[#0f4d42] transition-all shadow-md hover:shadow-lg"
+              >
+                <FileText className="w-5 h-5" />
+                <span className="font-semibold">Download System Guide</span>
+              </button>
+            </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left column: upload panel (factory_manager only) OR info banner for others */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Image Upload</h2>
+            {canUpload ? (
+              /* ── Full upload + detection UI ── */
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">Image Upload</h2>
 
-              {!imagePreview ? (
-                <div className="space-y-4">
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-green-500 cursor-pointer transition-colors"
-                  >
-                    <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600 mb-2">Click to upload or drag and drop</p>
-                    <p className="text-sm text-gray-500">PNG, JPG, JPEG up to 10MB</p>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <button
+                {!imagePreview ? (
+                  <div className="space-y-4">
+                    <div
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#165E52] text-white rounded-lg hover:bg-[#0f4d42] transition-colors shadow-sm"
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-green-500 cursor-pointer transition-colors"
                     >
-                      <Upload className="w-5 h-5" />
-                      Choose File
-                    </button>
-                    <button
-                      onClick={() => cameraInputRef.current?.click()}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#01251F] text-white rounded-lg hover:bg-[#014c3b] transition-colors shadow-sm"
-                    >
-                      <Camera className="w-5 h-5" />
-                      Take Photo
-                    </button>
+                      <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600 mb-2">Click to upload or drag and drop</p>
+                      <p className="text-sm text-gray-500">PNG, JPG, JPEG up to 10MB</p>
+                    </div>
+
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#165E52] text-white rounded-lg hover:bg-[#0f4d42] transition-colors shadow-sm"
+                      >
+                        <Upload className="w-5 h-5" />
+                        Choose File
+                      </button>
+                      <button
+                        onClick={() => cameraInputRef.current?.click()}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#01251F] text-white rounded-lg hover:bg-[#014c3b] transition-colors shadow-sm"
+                      >
+                        <Camera className="w-5 h-5" />
+                        Take Photo
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <img
+                        src={imagePreview}
+                        alt="Selected leaf"
+                        className="w-full h-96 object-cover rounded-lg"
+                      />
+                      <button
+                        onClick={clearImage}
+                        className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {!analysisResult && (
+                      <button
+                        onClick={handleAnalyze}
+                        disabled={isAnalyzing}
+                        className="w-full py-3 bg-[#165E52] text-white rounded-lg hover:bg-[#0f4d42] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-semibold shadow-md"
+                      >
+                        {isAnalyzing ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Analyzing...
+                          </span>
+                        ) : (
+                          'Analyze Image'
+                        )}
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={(e) => handleFileSelect(e, 'upload')} className="hidden" />
+                <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={(e) => handleFileSelect(e, 'camera')} className="hidden" />
+              </div>
+            ) : (
+              /* ── View-only: inline detection list for owner / other roles ── */
+              <div className="space-y-4">
+                {/* Info bar */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg px-5 py-3 flex items-center gap-3">
+                  <Eye className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                  <p className="text-blue-700 text-sm">
+                    <span className="font-semibold">Read-Only.</span> Detection scans are performed by the Factory Manager. You can view, filter, and download reports below.
+                  </p>
+                </div>
+
+                {/* Search + filter */}
+                <div className="bg-white rounded-lg shadow-sm p-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="relative">
+                      <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Search by disease or analyzer…"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#165E52] focus:border-transparent"
+                      />
+                    </div>
+                    <div className="relative">
+                      <Filter className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <select
+                        value={filterDisease}
+                        onChange={(e) => setFilterDisease(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#165E52] focus:border-transparent appearance-none"
+                      >
+                        <option value="all">All Diseases</option>
+                        <option value="BB">Brown Blight</option>
+                        <option value="RR">Red Rust</option>
+                        <option value="RSM">Red Spider Mite</option>
+                        <option value="GL">Healthy Leaf</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="relative">
-                    <img
-                      src={imagePreview}
-                      alt="Selected leaf"
-                      className="w-full h-96 object-cover rounded-lg"
-                    />
-                    <button
-                      onClick={clearImage}
-                      className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
 
-                  {!analysisResult && (
-                    <button
-                      onClick={handleAnalyze}
-                      disabled={isAnalyzing}
-                      className="w-full py-3 bg-[#165E52] text-white rounded-lg hover:bg-[#0f4d42] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-semibold shadow-md"
-                    >
-                      {isAnalyzing ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          Analyzing...
-                        </span>
-                      ) : (
-                        'Analyze Image'
-                      )}
-                    </button>
+                {/* Detection table */}
+                <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                  {loading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="w-8 h-8 border-4 border-[#165E52] border-t-transparent rounded-full animate-spin"></div>
+                      <span className="ml-3 text-gray-500">Loading detections…</span>
+                    </div>
+                  ) : filteredDetections.length === 0 ? (
+                    <div className="text-center py-12">
+                      <AlertCircle className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-500 font-medium">No detection records found</p>
+                      <p className="text-gray-400 text-sm mt-1">Try adjusting your search or filter</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 border-b border-gray-200">
+                          <tr>
+                            <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Report</th>
+                            <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Disease</th>
+                            <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Confidence</th>
+                            <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                            <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {filteredDetections.map((detection) => (
+                            <tr key={detection.id} className="hover:bg-gray-50 transition-colors">
+                              <td className="px-5 py-3 font-mono text-xs text-gray-500">#{detection.id.toString().slice(-6)}</td>
+                              <td className="px-5 py-3">
+                                <div className="flex items-center gap-2">
+                                  <div className={`w-3 h-3 ${diseaseInfo[detection.disease]?.color} rounded-full flex-shrink-0`}></div>
+                                  <div>
+                                    <div className="font-medium text-gray-900">{diseaseInfo[detection.disease]?.name}</div>
+                                    <div className="text-xs text-gray-400">{detection.disease}</div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-5 py-3">
+                                <div className="flex items-center gap-2">
+                                  <span className={`font-semibold ${detection.confidence >= 90 ? 'text-green-600' : detection.confidence >= 80 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                    {detection.confidence}%
+                                  </span>
+                                  <div className="w-14 bg-gray-200 rounded-full h-1.5">
+                                    <div
+                                      className={`h-1.5 rounded-full ${detection.confidence >= 90 ? 'bg-green-500' : detection.confidence >= 80 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                      style={{ width: `${detection.confidence}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-5 py-3 text-gray-600">
+                                <div>{detection.date}</div>
+                                <div className="text-xs text-gray-400">{detection.time}</div>
+                              </td>
+                              <td className="px-5 py-3">
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => viewReportDetail(detection)}
+                                    title="View Details"
+                                    className="p-1.5 text-[#165E52] hover:bg-green-50 rounded transition-colors"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => downloadReport(detection)}
+                                    title="Download PDF"
+                                    className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                  >
+                                    <Download className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      <div className="px-5 py-3 border-t border-gray-100 text-xs text-gray-400">
+                        Showing {filteredDetections.length} record{filteredDetections.length !== 1 ? 's' : ''}
+                      </div>
+                    </div>
                   )}
                 </div>
-              )}
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileSelect(e, 'upload')}
-                className="hidden"
-              />
-              <input
-                ref={cameraInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={(e) => handleFileSelect(e, 'camera')}
-                className="hidden"
-              />
-            </div>
+              </div>
+            )}
 
             {analysisResult && currentDisease && (
               <div className="bg-white rounded-lg shadow-sm p-6">
@@ -1598,83 +1731,81 @@ const TeaDiseaseDetection = () => {
             )}
           </div>
 
+          {/* Right sidebar */}
           <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-sm p-6">
+
+            {/* ── Detection Statistics cards ── */}
+            <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-gray-900">Detection Statistics</h3>
-                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                  {statsType === 'daily' ? "Today's Data" : 'All Time'}
+                <span className="text-xs font-medium text-[#165E52] bg-green-50 border border-green-200 px-2 py-1 rounded-full">
+                  {statsType === 'daily' ? "Today" : 'All Time'}
                 </span>
               </div>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">{statsType === 'daily' ? "Today's Scans" : 'Total Scans'}</span>
-                  <span className="font-bold text-gray-900">{statistics.totalScans || 0}</span>
+              <div className="grid grid-cols-2 gap-3">
+                {/* Total Scans */}
+                <div className="bg-gradient-to-br from-[#165E52] to-[#0f4d42] rounded-xl p-4 text-white">
+                  <p className="text-xs font-medium text-green-200 mb-1">
+                    {statsType === 'daily' ? "Today's Scans" : 'Total Scans'}
+                  </p>
+                  <p className="text-3xl font-bold">{statistics.totalScans || 0}</p>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Diseases Found</span>
-                  <span className="font-bold text-red-600">{statistics.diseasesFound || 0}</span>
+                {/* Diseases Found */}
+                <div className="bg-gradient-to-br from-red-500 to-red-700 rounded-xl p-4 text-white">
+                  <p className="text-xs font-medium text-red-200 mb-1">Diseases Found</p>
+                  <p className="text-3xl font-bold">{statistics.diseasesFound || 0}</p>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Healthy Leaves</span>
-                  <span className="font-bold text-green-600">{statistics.healthyLeaves || 0}</span>
+                {/* Healthy Leaves */}
+                <div className="bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl p-4 text-white">
+                  <p className="text-xs font-medium text-emerald-100 mb-1">Healthy Leaves</p>
+                  <p className="text-3xl font-bold">{statistics.healthyLeaves || 0}</p>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Avg Confidence</span>
-                  <span className="font-bold text-gray-900">{statistics.avgConfidence ? statistics.avgConfidence.toFixed(1) : '0.0'}%</span>
+                {/* Avg Confidence */}
+                <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl p-4 text-white">
+                  <p className="text-xs font-medium text-blue-200 mb-1">Avg Confidence</p>
+                  <p className="text-3xl font-bold">
+                    {statistics.avgConfidence ? statistics.avgConfidence.toFixed(1) : '0.0'}
+                    <span className="text-lg font-semibold">%</span>
+                  </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            {/* ── Disease Reference cards ── */}
+            <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
               <h3 className="font-semibold text-gray-900 mb-4">Disease Reference</h3>
               <div className="space-y-3">
-                {Object.entries(diseaseInfo).map(([code, disease]) => (
-                  <div key={code} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                    <div className={`w-3 h-3 ${disease.color} rounded-full mt-1.5 flex-shrink-0`}></div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-sm">{disease.name}</p>
-                      <p className="text-xs text-gray-600 truncate">{disease.fullName}</p>
+                {Object.entries(diseaseInfo).map(([code, disease]) => {
+                  const borderColors = {
+                    BB: 'border-red-400 bg-red-50',
+                    RR: 'border-orange-400 bg-orange-50',
+                    RSM: 'border-amber-500 bg-amber-50',
+                    GL: 'border-green-500 bg-green-50',
+                  };
+                  const badgeColors = {
+                    BB: 'bg-red-500',
+                    RR: 'bg-orange-500',
+                    RSM: 'bg-amber-600',
+                    GL: 'bg-green-500',
+                  };
+                  return (
+                    <div key={code} className={`flex items-center gap-3 p-3 border-l-4 rounded-lg ${borderColors[code] || 'border-gray-300 bg-gray-50'}`}>
+                      <div className={`w-8 h-8 ${badgeColors[code] || 'bg-gray-400'} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                        <span className="text-white text-xs font-bold">{code}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900 text-sm">{disease.name}</p>
+                        <p className="text-xs text-gray-500 italic truncate">{disease.fullName}</p>
+                      </div>
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full text-white ${badgeColors[code] || 'bg-gray-400'}`}>
+                        {disease.severity}
+                      </span>
                     </div>
-                    <span className="text-xs text-gray-500 whitespace-nowrap">{code}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900">Recent Detections</h3>
-                <button
-                  onClick={() => setCurrentView('history')}
-                  className="text-[#165E52] hover:text-[#0f4d42] text-sm font-medium flex items-center gap-1 transition-colors"
-                >
-                  View All
-                  <ChevronDown className="w-4 h-4 -rotate-90" />
-                </button>
-              </div>
-              <div className="space-y-3">
-                {allDetections.slice(0, 4).map((detection) => (
-                  <div
-                    key={detection.id}
-                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-                    onClick={() => viewReportDetail(detection)}
-                  >
-                    <div className={`w-10 h-10 ${diseaseInfo[detection.disease].color} rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}>
-                      {detection.disease}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-sm">{diseaseInfo[detection.disease].name}</p>
-                      <p className="text-xs text-gray-600">Report #{detection.id}</p>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-sm font-bold text-gray-900">{detection.confidence}%</p>
-                      <p className="text-xs text-gray-500">{detection.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </div>

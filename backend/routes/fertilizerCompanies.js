@@ -22,13 +22,13 @@ router.get('/:id/categories', getCompanyCategories);
 // GET /api/fertilizer-companies - Get all companies
 router.get('/', getAllCompanies);
 
-// POST /api/fertilizer-companies - Create company (owner only)
-router.post('/', authorize('owner'), createCompany);
+// POST /api/fertilizer-companies - Create company (inventory manager only)
+router.post('/', authorize('inventory_manager'), createCompany);
 
-// PUT /api/fertilizer-companies/:id - Update company (owner only)
-router.put('/:id', authorize('owner'), updateCompany);
+// PUT /api/fertilizer-companies/:id - Update company (inventory manager only)
+router.put('/:id', authorize('inventory_manager'), updateCompany);
 
-// DELETE /api/fertilizer-companies/:id - Delete company (owner only)
-router.delete('/:id', authorize('owner'), deleteCompany);
+// DELETE /api/fertilizer-companies/:id - Delete company (inventory manager only)
+router.delete('/:id', authorize('inventory_manager'), deleteCompany);
 
 module.exports = router;

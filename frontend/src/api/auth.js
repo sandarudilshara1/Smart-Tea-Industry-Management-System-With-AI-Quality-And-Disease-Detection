@@ -32,3 +32,9 @@ export const changePassword = async (currentPassword, newPassword) => {
   });
   return res.data;
 };
+
+// Create a staff account (owner only — calls the protected /auth/staff endpoint)
+export const createStaff = async (staffData) => {
+  const res = await axios.post("/auth/staff", staffData);
+  return res.data;
+};

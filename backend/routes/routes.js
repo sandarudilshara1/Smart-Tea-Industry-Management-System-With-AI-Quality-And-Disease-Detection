@@ -3,8 +3,8 @@ const router = express.Router();
 const routeController = require('../controllers/routeController');
 const { auth } = require('../middleware/auth');
 
-// Get all routes for a factory
-router.get('/factory/:factoryId', auth, routeController.getAllRoutes);
+// Get all routes
+router.get('/', auth, routeController.getAllRoutes);
 
 // Get route statistics (must be before /:routeId)
 router.get('/:routeId/statistics', auth, routeController.getRouteStatistics);
