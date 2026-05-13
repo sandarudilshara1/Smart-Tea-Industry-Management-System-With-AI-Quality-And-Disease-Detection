@@ -19,11 +19,11 @@ router.get('/stats/summary', auth, getVehicleStats);
 // Main CRUD routes
 router.route('/')
     .get(auth, getAllVehicles)
-    .post(auth, authorize('transport_manager', 'owner'), createVehicle);
+    .post(auth, authorize('transport_manager', 'owner', 'driver'), createVehicle);
 
 router.route('/:id')
     .get(auth, getVehicleById)
-    .put(auth, authorize('transport_manager', 'owner'), updateVehicle)
+    .put(auth, authorize('transport_manager', 'owner', 'driver'), updateVehicle)
     .delete(auth, authorize('owner'), deleteVehicle);
 
 // Status management

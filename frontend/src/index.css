@@ -127,3 +127,39 @@ button:focus-visible {
     background-color: #f9f9f9;
   } */
 }
+
+/* ── 5-Balls Global Loader ── */
+.five-balls-loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin: 0 auto 30px auto;
+}
+
+.five-balls-loader div {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  animation: premium-pulse 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.five-balls-loader div:nth-child(1) { animation-delay: 0s; }
+.five-balls-loader div:nth-child(2) { animation-delay: 0.15s; }
+.five-balls-loader div:nth-child(3) { animation-delay: 0.3s; }
+.five-balls-loader div:nth-child(4) { animation-delay: 0.45s; }
+.five-balls-loader div:nth-child(5) { animation-delay: 0.6s; }
+
+@keyframes premium-pulse {
+  0%, 100% { 
+    transform: scale(0.6); 
+    opacity: 0.3; 
+    box-shadow: 0 0 0 rgba(255, 255, 255, 0);
+  }
+  50% { 
+    transform: scale(1.2); 
+    opacity: 1; 
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+  }
+}

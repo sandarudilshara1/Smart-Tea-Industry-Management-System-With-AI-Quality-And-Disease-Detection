@@ -46,7 +46,7 @@ const fertilizerCompanySchema = new mongoose.Schema({
 
 // Index for faster queries
 fertilizerCompanySchema.index({ name: 1 });
-fertilizerCompanySchema.index({ email: 1 });
+
 fertilizerCompanySchema.index({ isActive: 1 });
 
 module.exports = mongoose.model('FertilizerCompany', fertilizerCompanySchema);

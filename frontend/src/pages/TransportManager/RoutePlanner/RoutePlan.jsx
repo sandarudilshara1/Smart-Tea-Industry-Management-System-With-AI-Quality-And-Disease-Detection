@@ -12,7 +12,7 @@ const BG_INPUT = "#f8fdfc";
 
 export default function RoutePlanningPage() {
   const { user } = useAuth();
-  
+
   const [form, setForm] = useState({
     route: "",
     driver: "",
@@ -40,7 +40,7 @@ export default function RoutePlanningPage() {
       setErrors({});
 
       // Fetch routes (Active status only)
-      const routesResponse = await getAllRoutes("me", { status: "Active", limit: 100 });
+      const routesResponse = await getAllRoutes({ status: "Active", limit: 100 });
       if (routesResponse.success && routesResponse.content) {
         setRoutes(Array.isArray(routesResponse.content) ? routesResponse.content : []);
         console.log("✅ Routes loaded:", routesResponse.content.length);

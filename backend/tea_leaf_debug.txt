@@ -1,0 +1,34 @@
+{
+  "supplierId": "69ad84b3e17d48d0bac82a75",
+  "objIdCount": 7,
+  "strCount": 7,
+  "aggResult": [
+    {
+      "_id": null,
+      "totalWeight": 840,
+      "totalNetWeight": 714,
+      "totalAmount": 106441.25,
+      "entryCount": 7
+    }
+  ],
+  "sampleEntry": {
+    "_id": "69f43c6cab07a5c68ac7fb8c",
+    "supplierId": "69ad84b3e17d48d0bac82a75",
+    "routeId": "69ad09112646b2e866820757",
+    "date": "2026-04-26T05:38:52.655Z",
+    "weight": 90,
+    "quality": "Premium",
+    "ratePerKg": 155,
+    "grossAmount": 13950,
+    "bagWeight": 0.9,
+    "waterWeight": 9,
+    "coarseLeafWeight": 3.6,
+    "netWeight": 76.5,
+    "netAmount": 11857.5,
+    "recordedBy": "69f42dedc8e55a01bcac3c57",
+    "status": "Recorded",
+    "createdAt": "2026-05-01T05:38:52.656Z",
+    "updatedAt": "2026-05-01T05:38:52.656Z",
+    "__v": 0
+  }
+}

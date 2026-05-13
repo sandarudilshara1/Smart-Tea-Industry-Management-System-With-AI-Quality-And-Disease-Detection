@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
-import { Coffee, DollarSign, Award, TrendingUp, Leaf, CheckCircle2, XCircle, FileDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Coffee, DollarSign, Award, TrendingUp, Leaf, CheckCircle2, XCircle, FileDown, Beaker, Cpu, BarChart3, Loader2, Eye } from 'lucide-react';
 import jsPDF from 'jspdf';
+import { predictTeaQuality, getAllCalculations, createCalculation } from '../api/teaFlavorQuality';
+import { useAuth } from '../contexts/AuthContext';
 
 const TeaQuality = () => {
+  const { user } = useAuth();
+  const canCreate = user?.role === 'factory_manager';
+  const isOwner = user?.role === 'owner';
   const [formData, setFormData] = useState({
     teaFlavor: '',
     particleSize: '',
@@ -17,6 +22,56 @@ const TeaQuality = () => {
   });
 
   const [results, setResults] = useState(null);
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [historyRecords, setHistoryRecords] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      if (!canCreate) {
+        setLoadingHistory(true);
+        try {
+          const response = await getAllCalculations({ limit: 50 });
+          if (response.success && response.data) {
+            // Map backend data to UI format
+            const formattedData = response.data.map(item => ({
+              id: item._id.substring(0, 8).toUpperCase(),
+              date: new Date(item.createdAt).toLocaleDateString(),
+              time: new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              flavor: item.teaFlavor?.label || item.teaFlavor?.value || 'Unknown',
+              grade: item.grade || 'N/A',
+              score: item.qualityScore ? Number(item.qualityScore.toFixed(1)) : 0,
+              status: item.qualityStatus || 'Pending'
+            }));
+            setHistoryRecords(formattedData);
+          }
+        } catch (error) {
+          console.error('Error fetching quality history:', error);
+        } finally {
+          setLoadingHistory(false);
+        }
+      }
+    };
+
+    fetchHistory();
+  }, [canCreate]);
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState('calculator');
+
+  // ML Quality Check state
+  const [mlFormData, setMlFormData] = useState({
+    teaFlavor: '',
+    basePrice: '',
+    moisture: '',
+    qualityScore: '',
+    caffeine: '',
+    fineness: '',
+    batchWeight: ''
+  });
+  const [mlResults, setMlResults] = useState(null);
+  const [mlLoading, setMlLoading] = useState(false);
+  const [mlError, setMlError] = useState(null);
 
   const teaFlavors = [
     { 
@@ -133,7 +188,7 @@ const TeaQuality = () => {
     });
   };
 
-  const calculateQualityAndPrice = () => {
+  const calculateQualityAndPrice = async () => {
     const flavor = teaFlavors.find(t => t.value === formData.teaFlavor);
     if (!flavor) return;
 
@@ -263,6 +318,19 @@ const TeaQuality = () => {
       pricePercentDiff,
       parameterResults
     });
+
+    // Save calculation to database
+    try {
+      setIsCalculating(true);
+      await createCalculation({
+        ...formData,
+        notes: `Assessed on ${new Date().toLocaleDateString()}`
+      });
+    } catch (error) {
+      console.error("Failed to save quality calculation to database:", error);
+    } finally {
+      setIsCalculating(false);
+    }
   };
 
   const clearForm = () => {
@@ -279,6 +347,69 @@ const TeaQuality = () => {
       batchWeight: ''
     });
     setResults(null);
+  };
+
+  // ML Form handlers
+  const handleMlInputChange = (e) => {
+    const { name, value } = e.target;
+    const updated = { ...mlFormData, [name]: value };
+    
+    // Auto-fill base price when tea flavor is selected
+    if (name === 'teaFlavor') {
+      const flavor = teaFlavors.find(t => t.value === value);
+      if (flavor) {
+        updated.basePrice = flavor.basePrice.toString();
+      }
+    }
+    setMlFormData(updated);
+  };
+
+  const handleMlPredict = async () => {
+    setMlError(null);
+    setMlLoading(true);
+    try {
+      const response = await predictTeaQuality({
+        teaFlavor: mlFormData.teaFlavor,
+        basePrice: parseFloat(mlFormData.basePrice),
+        moisture: parseFloat(mlFormData.moisture),
+        qualityScore: parseFloat(mlFormData.qualityScore),
+        caffeine: parseFloat(mlFormData.caffeine),
+        fineness: parseFloat(mlFormData.fineness),
+        batchWeight: parseFloat(mlFormData.batchWeight)
+      });
+      if (response.success) {
+        setMlResults(response.data);
+      } else {
+        setMlError(response.message || 'Prediction failed');
+      }
+    } catch (err) {
+      setMlError(err.response?.data?.message || err.message || 'Prediction failed');
+    } finally {
+      setMlLoading(false);
+    }
+  };
+
+  const clearMlForm = () => {
+    setMlFormData({
+      teaFlavor: '',
+      basePrice: '',
+      moisture: '',
+      qualityScore: '',
+      caffeine: '',
+      fineness: '',
+      batchWeight: ''
+    });
+    setMlResults(null);
+    setMlError(null);
+  };
+
+  const getQualityColor = (quality) => {
+    switch(quality?.toLowerCase()) {
+      case 'premium': return { bg: 'from-emerald-500 to-green-600', text: 'text-emerald-600', light: 'bg-emerald-50' };
+      case 'high': return { bg: 'from-blue-500 to-indigo-600', text: 'text-blue-600', light: 'bg-blue-50' };
+      case 'poor': return { bg: 'from-orange-500 to-red-500', text: 'text-orange-600', light: 'bg-orange-50' };
+      default: return { bg: 'from-gray-500 to-gray-600', text: 'text-gray-600', light: 'bg-gray-50' };
+    }
   };
 
   const getGradeColor = (grade) => {
@@ -797,13 +928,20 @@ const TeaQuality = () => {
               </div>
             </div>
             <div className="flex flex-col items-end gap-2">
-              <button
-                onClick={generatePDF}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg"
-              >
-                <FileDown className="w-5 h-5" />
-                <span className="font-semibold">Export PDF</span>
-              </button>
+              {isOwner && (
+                <span className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1 rounded-full font-medium mb-1">
+                  👁️ View Only
+                </span>
+              )}
+              {canCreate && (
+                <button
+                  onClick={generatePDF}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg"
+                >
+                  <FileDown className="w-5 h-5" />
+                  <span className="font-semibold">Export PDF</span>
+                </button>
+              )}
               <div className="text-right">
                 <p className="text-sm text-gray-500">Assessment Date</p>
                 <p className="text-lg font-semibold text-gray-700">{new Date().toLocaleDateString()}</p>
@@ -812,6 +950,113 @@ const TeaQuality = () => {
           </div>
         </div>
 
+        {!canCreate ? (
+          /* ── View-only history panel for non-factory_manager roles ── */
+          <div className="space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-3">
+              <Eye className="w-5 h-5 text-blue-600 flex-shrink-0" />
+              <p className="text-blue-700 text-sm">
+                <span className="font-semibold">Read-Only Access.</span> Quality assessment and AI predictions are performed by the Factory Manager. You can view recent quality reports below.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+              <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <h3 className="font-semibold text-gray-800">Recent Quality Assessments</h3>
+              </div>
+              <div className="overflow-x-auto">
+                {loadingHistory ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-gray-400 bg-gray-50/30">
+                    <Loader2 className="w-8 h-8 mb-3 animate-spin text-blue-500" />
+                    <p className="text-gray-500 font-medium">Loading records...</p>
+                  </div>
+                ) : historyRecords.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-gray-400 bg-gray-50/30">
+                    <Coffee className="w-12 h-12 mb-3 opacity-20" />
+                    <p className="text-gray-500 font-medium">Nothing to display</p>
+                  </div>
+                ) : (
+                  <table className="w-full text-sm text-left">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-5 py-3 font-semibold text-gray-500 uppercase tracking-wider text-xs">Report ID</th>
+                        <th className="px-5 py-3 font-semibold text-gray-500 uppercase tracking-wider text-xs">Date & Time</th>
+                        <th className="px-5 py-3 font-semibold text-gray-500 uppercase tracking-wider text-xs">Tea Variety</th>
+                        <th className="px-5 py-3 font-semibold text-gray-500 uppercase tracking-wider text-xs">Quality Score</th>
+                        <th className="px-5 py-3 font-semibold text-gray-500 uppercase tracking-wider text-xs">Grade</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {historyRecords.map((record) => (
+                        <tr key={record.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-5 py-3 font-mono text-xs text-gray-500">{record.id}</td>
+                          <td className="px-5 py-3 text-gray-600">
+                            <div>{record.date}</div>
+                            <div className="text-xs text-gray-400">{record.time}</div>
+                          </td>
+                          <td className="px-5 py-3 font-medium text-gray-800">{record.flavor}</td>
+                          <td className="px-5 py-3">
+                            <div className="flex items-center gap-2">
+                              <span className={`font-semibold ${record.score >= 90 ? 'text-green-600' : record.score >= 80 ? 'text-blue-600' : 'text-yellow-600'}`}>
+                                {record.score}%
+                              </span>
+                              <div className="w-16 bg-gray-200 rounded-full h-1.5 hidden sm:block">
+                                <div
+                                  className={`h-1.5 rounded-full ${record.score >= 90 ? 'bg-green-500' : record.score >= 80 ? 'bg-blue-500' : 'bg-yellow-500'}`}
+                                  style={{ width: `${record.score}%` }}
+                                />
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-5 py-3">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${
+                              record.grade.startsWith('A') ? 'bg-green-100 text-green-800' :
+                              record.grade.startsWith('B') ? 'bg-blue-100 text-blue-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {record.grade}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Tab Navigation */}
+        <div className="bg-white rounded-lg shadow-sm p-2 mb-6">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setActiveTab('calculator')}
+              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
+                activeTab === 'calculator'
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <Beaker className="w-5 h-5" />
+              Tea Flavor Quality & Price
+            </button>
+            <button
+              onClick={() => setActiveTab('mlQuality')}
+              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
+                activeTab === 'mlQuality'
+                  ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-md'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <Cpu className="w-5 h-5" />
+              AI Tea Leaf Quality Check
+            </button>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'calculator' ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Input Form */}
           <div className="bg-white rounded-lg shadow-sm p-6">
@@ -990,14 +1235,24 @@ const TeaQuality = () => {
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={calculateQualityAndPrice}
-                  disabled={!formData.teaFlavor || !formData.particleSize || !formData.batchWeight}
-                  className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed"
+                  disabled={isCalculating || !formData.teaFlavor || !formData.particleSize || !formData.moistureContent || !formData.colorValue || !formData.aromaPower || !formData.tasteStrength || !formData.solubility || !formData.caffeineContent || !formData.powderFineness || !formData.batchWeight}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                 >
-                  Calculate Quality & Price
+                  {isCalculating ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Calculating...
+                    </>
+                  ) : (
+                    <>
+                      <Beaker className="w-5 h-5" />
+                      Calculate Quality & Price
+                    </>
+                  )}
                 </button>
                 <button
                   onClick={clearForm}
-                  className="px-6 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-all"
+                  className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-semibold"
                 >
                   Clear
                 </button>
@@ -1142,6 +1397,258 @@ const TeaQuality = () => {
             )}
           </div>
         </div>
+        ) : (
+        /* ==================== ML Quality Check Tab ==================== */
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* ML Input Form */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-purple-200">
+              <Cpu className="w-6 h-6 text-purple-600" />
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">AI Quality Prediction</h2>
+                <p className="text-sm text-gray-500 mt-1">ML-powered tea leaf quality assessment</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Tea Flavor Type *
+                </label>
+                <select
+                  name="teaFlavor"
+                  value={mlFormData.teaFlavor}
+                  onChange={handleMlInputChange}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                >
+                  <option value="">Select Tea Flavor</option>
+                  {teaFlavors.map(flavor => (
+                    <option key={flavor.value} value={flavor.value}>
+                      {flavor.label} - Base: Rs {flavor.basePrice.toLocaleString()}/kg
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Base Price (Rs) *
+                  </label>
+                  <input
+                    type="number"
+                    name="basePrice"
+                    value={mlFormData.basePrice}
+                    onChange={handleMlInputChange}
+                    placeholder="e.g. 25500"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Moisture (%) *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    name="moisture"
+                    value={mlFormData.moisture}
+                    onChange={handleMlInputChange}
+                    placeholder="e.g. 4.5"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Quality Score (88-100) *
+                  </label>
+                  <input
+                    type="number"
+                    name="qualityScore"
+                    value={mlFormData.qualityScore}
+                    onChange={handleMlInputChange}
+                    placeholder="e.g. 95"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Caffeine (%) *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    name="caffeine"
+                    value={mlFormData.caffeine}
+                    onChange={handleMlInputChange}
+                    placeholder="e.g. 3.5"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Fineness (%) *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    name="fineness"
+                    value={mlFormData.fineness}
+                    onChange={handleMlInputChange}
+                    placeholder="e.g. 95"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Batch Weight (kg) *
+                  </label>
+                  <input
+                    type="number"
+                    name="batchWeight"
+                    value={mlFormData.batchWeight}
+                    onChange={handleMlInputChange}
+                    placeholder="e.g. 100"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={handleMlPredict}
+                  disabled={mlLoading || !mlFormData.teaFlavor || !mlFormData.moisture || !mlFormData.qualityScore || !mlFormData.caffeine || !mlFormData.fineness || !mlFormData.batchWeight}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                >
+                  {mlLoading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Predicting...
+                    </>
+                  ) : (
+                    <>
+                      <Cpu className="w-5 h-5" />
+                      Predict Quality
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={clearMlForm}
+                  className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-semibold"
+                >
+                  Clear
+                </button>
+              </div>
+
+              {mlError && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                  <strong>Error:</strong> {mlError}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ML Results Panel */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-purple-200">
+              <BarChart3 className="w-6 h-6 text-purple-600" />
+              <h2 className="text-2xl font-bold text-gray-800">AI Prediction Results</h2>
+            </div>
+
+            {!mlResults ? (
+              <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+                <Cpu className="w-16 h-16 mb-4 opacity-30" />
+                <p className="text-lg font-medium">Enter parameters and click &quot;Predict Quality&quot;</p>
+                <p className="text-sm mt-2">AI model will analyze the tea leaf quality</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Quality Result Card */}
+                <div className={`bg-gradient-to-r ${getQualityColor(mlResults.quality).bg} rounded-xl p-6 text-white`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm opacity-90">AI Predicted Quality</p>
+                      <h3 className="text-3xl font-bold mt-1 capitalize">{mlResults.quality}</h3>
+                      <p className="text-sm opacity-80 mt-1">Quality Classification</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="w-20 h-20 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                        <span className="text-2xl font-bold">{mlResults.percentage}%</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-4 bg-white bg-opacity-20 rounded-full h-3">
+                    <div
+                      className="bg-white rounded-full h-3 transition-all duration-1000"
+                      style={{ width: `${mlResults.percentage}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Grade Percentage */}
+                <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Award className="w-5 h-5 text-purple-600" />
+                    <h4 className="font-bold text-gray-800">Grade Percentage</h4>
+                  </div>
+                  <div className="flex items-end gap-2">
+                    <span className="text-5xl font-bold text-purple-600">{mlResults.percentage}</span>
+                    <span className="text-2xl text-gray-400 mb-1">%</span>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-2">
+                    {mlResults.percentage >= 95 ? 'Exceptional grade - suitable for premium markets' :
+                     mlResults.percentage >= 90 ? 'High grade - excellent quality product' :
+                     mlResults.percentage >= 85 ? 'Good grade - meets commercial standards' :
+                     'Standard grade - may need quality improvements'}
+                  </p>
+                </div>
+
+                {/* Quality Probabilities */}
+                {mlResults.qualityProbabilities && (
+                  <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                    <div className="flex items-center gap-2 mb-4">
+                      <BarChart3 className="w-5 h-5 text-purple-600" />
+                      <h4 className="font-bold text-gray-800">Quality Probability Breakdown</h4>
+                    </div>
+                    <div className="space-y-3">
+                      {Object.entries(mlResults.qualityProbabilities)
+                        .sort(([,a], [,b]) => b - a)
+                        .map(([cls, prob]) => (
+                        <div key={cls}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm font-semibold text-gray-700 capitalize">{cls}</span>
+                            <span className={`text-sm font-bold ${getQualityColor(cls).text}`}>{prob}%</span>
+                          </div>
+                          <div className="bg-gray-200 rounded-full h-2.5">
+                            <div
+                              className={`rounded-full h-2.5 transition-all duration-700 bg-gradient-to-r ${getQualityColor(cls).bg}`}
+                              style={{ width: `${prob}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Processing Info */}
+                <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 p-3 rounded-lg">
+                  <Cpu className="w-4 h-4" />
+                  <span>Processed by XGBoost ML Model in {mlResults.processingTime}ms</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        )}
+          </>
+        )}
       </div>
     </div>
   );

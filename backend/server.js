@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+// nodemon trigger
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const connectDB = require('./config/database');
@@ -37,7 +38,7 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
 // Basic route for testing
 app.get('/', (req, res) => {
-    res.json({ 
+    res.json({
         message: 'Tea Factory Management System API',
         version: '1.0.0',
         status: 'Running'
@@ -74,9 +75,12 @@ app.use('/api/drivers', require('./routes/drivers'));
 app.use('/api/employees', require('./routes/employees'));
 app.use('/api/manager-info', require('./routes/managers'));
 app.use('/api/fertilizer-companies', require('./routes/fertilizerCompanies'));
+app.use('/api/fertilizer-inventory', require('./routes/fertilizerInventory'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/vehicles', require('./routes/vehicles'));
 app.use('/api/disease-detections', require('./routes/diseaseDetections'));
+app.use('/api/transport-manager', require('./routes/transportManager'));
+app.use('/api/emergencies', require('./routes/emergencies'));
 
 // Payment System Routes
 app.use('/api/payments', require('./routes/payments'));
@@ -85,9 +89,16 @@ app.use('/api/suppliers', require('./routes/suppliers'));
 app.use('/api/routes', require('./routes/routes'));
 app.use('/api/tea-rates', require('./routes/teaRates'));
 app.use('/api/tea-leaf-entries', require('./routes/teaLeafEntries'));
+app.use('/api/leaf-supply-requests', require('./routes/leafSupplyRequests'));
+
+// Inventory Manager (minimal dashboard endpoints)
+app.use('/api/inventory-process', require('./routes/inventoryProcess'));
 
 // Tea Flavor Quality Routes
 app.use('/api/tea-flavor-quality', require('./routes/teaFlavorQuality'));
+
+// Loan Rates
+app.use('/api/loan-rate', require('./routes/loanRates'));
 
 // Future API Routes
 // app.use('/api/users', require('./routes/users'));
@@ -96,7 +107,7 @@ app.use('/api/tea-flavor-quality', require('./routes/teaFlavorQuality'));
 
 // 404 handler - must be after all routes
 app.use((req, res) => {
-    res.status(404).json({ 
+    res.status(404).json({
         success: false,
         message: `Route ${req.originalUrl} not found`
     });
@@ -112,7 +123,7 @@ app.use((err, req, res, next) => {
     }
 
     console.error('❌ Error:', err.stack);
-    res.status(err.status || 500).json({ 
+    res.status(err.status || 500).json({
         success: false,
         message: err.message || 'Something went wrong!',
         error: process.env.NODE_ENV === 'development' ? err.stack : {}
@@ -161,15 +172,18 @@ process.on('unhandledRejection', (reason, promise) => {
 // Graceful shutdown
 const gracefulShutdown = (signal) => {
     console.log(`\n⚠️ ${signal} received. Starting graceful shutdown...`);
-    
+
     server.close(() => {
         console.log('✅ HTTP server closed.');
-        
+
         // Close database connection
         const mongoose = require('mongoose');
-        mongoose.connection.close(false, () => {
+        mongoose.connection.close(false).then(() => {
             console.log('✅ MongoDB connection closed.');
             process.exit(0);
+        }).catch(err => {
+            console.error('Error closing DB', err);
+            process.exit(1);
         });
     });
 
@@ -186,3 +200,4 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 // Export for testing
 module.exports = app;
+

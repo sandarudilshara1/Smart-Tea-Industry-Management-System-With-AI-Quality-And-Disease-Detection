@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getVehicleById } from "../../../api/vehicle";
-import { Loader, Truck, Calendar, User } from "lucide-react";
+import { getVehicleById, updateVehicleStatus } from "../../../api/vehicle";
+import { Loader, Truck, Calendar, User, CheckCircle2 } from "lucide-react";
+
 
 const ACCENT_COLOR = "#165E52";
 const BORDER_COLOR = "#cfece6";
@@ -25,6 +26,19 @@ export default function ViewVehicle() {
     } catch (err) {
       console.error('Error fetching vehicle:', err);
       setError('Failed to load vehicle details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRecover = async () => {
+    try {
+      setLoading(true);
+      await updateVehicleStatus(id, 'Available');
+      await fetchVehicle();
+    } catch (err) {
+      console.error('Error recovering vehicle:', err);
+      setError('Failed to recover vehicle');
     } finally {
       setLoading(false);
     }
@@ -201,6 +215,16 @@ export default function ViewVehicle() {
             >
               Edit Vehicle
             </button>
+            {vehicle.status === 'Maintenance' && (
+              <button
+                onClick={handleRecover}
+                className="px-6 py-2 rounded-lg text-white font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity"
+                style={{ backgroundColor: '#165E52' }}
+              >
+                <CheckCircle2 size={20} />
+                Mark as Recovered
+              </button>
+            )}
           </div>
         </div>
       </div>

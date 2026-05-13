@@ -5,7 +5,7 @@ import axios from './axios';
  */
 
 // Get all routes for a factory
-export const getAllRoutes = async (factoryId, filters = {}) => {
+export const getAllRoutes = async (filters = {}) => {
     try {
         const params = new URLSearchParams();
         if (filters.page !== undefined) params.append('page', filters.page);
@@ -15,8 +15,8 @@ export const getAllRoutes = async (factoryId, filters = {}) => {
         
         const queryString = params.toString();
         const url = queryString 
-            ? `/routes/factory/${factoryId}?${queryString}` 
-            : `/routes/factory/${factoryId}`;
+            ? `/routes?${queryString}` 
+            : `/routes`;
         
         const response = await axios.get(url);
         return response.data;

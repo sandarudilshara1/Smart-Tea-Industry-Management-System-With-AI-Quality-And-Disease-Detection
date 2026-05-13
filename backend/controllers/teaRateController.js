@@ -3,10 +3,7 @@ const TeaRate = require('../models/TeaRate');
 // Get active tea rate for a factory
 exports.getActiveTeaRate = async (req, res) => {
     try {
-        const { factoryId } = req.params;
-
         const teaRate = await TeaRate.findOne({
-            factoryId,
             status: 'Active'
         })
             .populate('createdBy', 'name email')
@@ -36,10 +33,9 @@ exports.getActiveTeaRate = async (req, res) => {
 // Get all tea rates for a factory with pagination
 exports.getAllTeaRates = async (req, res) => {
     try {
-        const { factoryId } = req.params;
         const { page = 0, limit = 10, status } = req.query;
 
-        const query = { factoryId };
+        const query = {};
         if (status) query.status = status;
 
         const skip = parseInt(page) * parseInt(limit);
@@ -257,19 +253,8 @@ exports.activateTeaRate = async (req, res) => {
 // Get tea rate for a specific date
 exports.getTeaRateForDate = async (req, res) => {
     try {
-        const { factoryId } = req.params;
-        const { date } = req.query;
-
-        if (!date) {
-            return res.status(400).json({
-                success: false,
-                message: 'Date is required'
-            });
-        }
-
         // Find the most recent rate that was effective on or before the specified date
         const teaRate = await TeaRate.findOne({
-            factoryId,
             effectiveDate: { $lte: new Date(date) },
             status: 'Active'
         })

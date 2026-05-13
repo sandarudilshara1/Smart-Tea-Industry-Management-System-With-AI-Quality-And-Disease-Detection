@@ -4,10 +4,15 @@ import { login } from "../api/auth";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
-// COLORS FROM YOUR LANDING PAGE
-const BUTTON_COLOR = "#172526"; // dark green for buttons
-const ACCENT_COLOR = "#165e52"; // rest of greens (backgrounds/accents)
-const BG_COLOR = "#f5faf8"; // subtle background, optional
+import PublicNavbar from "./PublicNavbar";
+
+// COLORS FROM LANDING PAGE
+const BG_COLOR = "#0b1a0e"; 
+const BOX_BG = "rgba(255,255,255,0.035)";
+const BORDER = "rgba(180,210,79,0.2)";
+const TEXT_PRIMARY = "#f2f7e8";
+const TEXT_SECONDARY = "rgba(214,233,176,0.55)";
+const ACCENT = "#b4d24f";
 
 export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
@@ -50,7 +55,8 @@ export default function Auth() {
           address: user.address,
           nic: user.nic,
           profileImage: user.profileImage,
-          isActive: user.isActive
+          isActive: user.isActive,
+          factoryName: user.factoryName || ''
         };
         
         setUser(userData);
@@ -83,156 +89,164 @@ export default function Auth() {
 
   return (
     <div
-      className="min-h-screen w-full flex items-center justify-center"
+      className="min-h-screen w-full flex flex-col font-sans"
       style={{ background: BG_COLOR }}
     >
-      {/* Centered Box with Image and Form Side by Side */}
-      <div className="flex flex-row w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden bg-white">
-        {/* Left: Image */}
-        <div className="w-1/2 flex items-center justify-center bg-[#f5faf8]">
-          <img
-            src="/assets/hi1.jpg"
-            alt="Welcome"
-            className="w-full h-full object-cover"
-            style={{
-              minHeight: "100%",
-              minWidth: "100%",
-              background: ACCENT_COLOR,
-            }}
-          />
-        </div>
-        {/* Right: Form */}
-        <div className="flex flex-col justify-center items-center w-1/2 p-8 bg-white">
-          {/* Logo and App Name */}
-          <div className="w-full max-w-sm">
-            <div className="flex justify-center mb-6">
-              <img
-                src="/assets/logo2.png"
-                alt="GreenLeaf Logo"
-                className="w-14 h-14 object-contain"
-              />
+      <PublicNavbar />
+      <div className="flex-grow flex items-center justify-center p-6 pt-24">
+        {/* Centered Box with Image and Form Side by Side */}
+        <div 
+          className="flex flex-col md:flex-row w-full max-w-4xl rounded-3xl overflow-hidden"
+          style={{ 
+            background: BOX_BG, 
+            border: `1px solid ${BORDER}`,
+            backdropFilter: "blur(10px)",
+            boxShadow: "0 24px 60px rgba(0,0,0,0.35)"
+          }}
+        >
+          {/* Left: Image */}
+          <div className="w-full md:w-1/2 relative min-h-[300px]">
+            <img
+              src="/assets/hi1.jpg"
+              alt="Welcome"
+              className="w-full h-full object-cover absolute inset-0"
+              style={{ opacity: 0.8 }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center p-10">
+              <div>
+                <h2 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  Welcome back to GreenLeaf.
+                </h2>
+                <p className="text-white/80 font-medium tracking-wide">
+                  Sign in to access your dashboard.
+                </p>
+              </div>
             </div>
+          </div>
+          
+          {/* Right: Form */}
+          <div className="w-full md:w-1/2 p-8 sm:p-12 flex flex-col justify-center">
             <h2
-              className="text-3xl font-extrabold mb-1 tracking-tight text-center"
-              style={{ color: ACCENT_COLOR }}
+              className="text-2xl font-bold mb-2 tracking-tight"
+              style={{ color: TEXT_PRIMARY, fontFamily: "'DM Sans', sans-serif" }}
             >
-              Welcome Back
+              Sign In
             </h2>
-            <p className="mb-6 text-gray-500 text-center">
-              Sign in to your dashboard
+            <p className="mb-8 text-sm" style={{ color: TEXT_SECONDARY }}>
+              Please enter your details to continue.
             </p>
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Email */}
               <div>
-                <label className="text-sm font-semibold text-gray-700 mb-1 block">
+                <label className="text-sm font-semibold mb-2 block" style={{ color: TEXT_PRIMARY }}>
                   Email
                 </label>
                 <div className="relative">
                   <User
-                    className="absolute top-3 left-3"
-                    size={20}
-                    style={{ color: ACCENT_COLOR }}
+                    className="absolute top-3.5 left-3.5"
+                    size={18}
+                    style={{ color: ACCENT }}
                   />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-3 py-2 border border-emerald-100 rounded-xl focus:ring-0 bg-[#F5FAF8] focus:outline-none transition"
+                    className="w-full pl-11 pr-3 py-3 rounded-xl focus:outline-none transition"
                     placeholder="Enter your email"
                     required
-                    style={{ color: "#222" }}
+                    style={{ 
+                      background: "rgba(255,255,255,0.05)",
+                      border: `1px solid ${BORDER}`,
+                      color: TEXT_PRIMARY
+                    }}
+                    onFocus={e => e.target.style.borderColor = ACCENT}
+                    onBlur={e => e.target.style.borderColor = BORDER}
                   />
                 </div>
               </div>
               {/* Password */}
               <div>
-                <label className="text-sm font-semibold text-gray-700 mb-1 block">
+                <label className="text-sm font-semibold mb-2 block" style={{ color: TEXT_PRIMARY }}>
                   Password
                 </label>
                 <div className="relative">
                   <Lock
-                    className="absolute top-3 left-3"
-                    size={20}
-                    style={{ color: ACCENT_COLOR }}
+                    className="absolute top-3.5 left-3.5"
+                    size={18}
+                    style={{ color: ACCENT }}
                   />
                   <input
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-2 border border-emerald-100 rounded-xl focus:ring-0 bg-[#F5FAF8] focus:outline-none transition"
+                    className="w-full pl-11 pr-11 py-3 rounded-xl focus:outline-none transition"
                     placeholder="Enter your password"
                     required
-                    style={{ color: "#222" }}
+                    style={{ 
+                      background: "rgba(255,255,255,0.05)",
+                      border: `1px solid ${BORDER}`,
+                      color: TEXT_PRIMARY
+                    }}
+                    onFocus={e => e.target.style.borderColor = ACCENT}
+                    onBlur={e => e.target.style.borderColor = BORDER}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 focus:outline-none"
-                    style={{
-                      color: ACCENT_COLOR,
-                      boxShadow: showPassword ? "0 0 0 4px #165e52" : "none",
-                    }}
-                    onFocus={(e) =>
-                      (e.currentTarget.style.boxShadow = "0 0 0 4px #165e52")
-                    }
-                    onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 focus:outline-none"
+                    style={{ color: ACCENT }}
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
               </div>
+              
               {error && (
-                <div className="text-red-600 text-center text-sm font-medium">
+                <div className="text-red-400 text-center text-sm font-medium p-2 bg-red-900/20 rounded-lg border border-red-500/30">
                   {error}
                 </div>
               )}
               {loading && (
                 <div className="flex flex-col items-center my-2">
                   <span className="relative flex h-6 w-6 mb-1">
-                    <span className="animate-spin inline-block w-full h-full rounded-full border-4 border-solid border-emerald-400 border-t-transparent"></span>
-                  </span>
-                  <span
-                    className="text-center text-sm font-medium"
-                    style={{ color: ACCENT_COLOR }}
-                  >
-                    Logging in...
+                    <span className="animate-spin inline-block w-full h-full rounded-full border-2 border-solid border-t-transparent" style={{ borderColor: ACCENT, borderTopColor: "transparent" }}></span>
                   </span>
                 </div>
               )}
               {success && !loading && (
                 <div
                   className="text-center text-sm font-medium"
-                  style={{ color: ACCENT_COLOR }}
+                  style={{ color: ACCENT }}
                 >
                   {success}
                 </div>
               )}
               <button
                 type="submit"
-                className="w-full text-white py-3 rounded-xl font-bold shadow-lg transition focus:outline-none focus:ring-0 flex items-center justify-center"
+                className="w-full py-3.5 rounded-xl font-bold transition flex items-center justify-center mt-2"
                 style={{
-                  background: BUTTON_COLOR,
-                  boxShadow: "0 4px 24px 0 rgba(22,94,82, 0.08)",
+                  background: ACCENT,
+                  color: "#0b1a0e",
                   opacity: loading ? 0.7 : 1,
                   cursor: loading ? "not-allowed" : "pointer",
                 }}
                 disabled={loading}
               >
-                {"Sign In"}
+                Sign In
               </button>
             </form>
-            <div className="text-center mt-2">
+            <div className="text-center mt-4">
               <a
                 href="/forgot-password"
-                className="text-sm hover:underline font-medium"
-                style={{ color: ACCENT_COLOR }}
+                className="text-sm font-medium"
+                style={{ color: ACCENT, textDecoration: "none" }}
               >
                 Forgot Password?
               </a>
             </div>
-            <div className="text-center mt-4">
-              <span className="text-gray-600">Don't have an account? </span>
-              <a href="/signup" className="text-black font-semibold hover:underline" style={{ color: ACCENT_COLOR }}>
+            <div className="text-center mt-6">
+              <span style={{ color: TEXT_SECONDARY }}>Don't have an account? </span>
+              <a href="/signup" className="font-semibold" style={{ color: ACCENT, textDecoration: "none" }}>
                 Sign Up
               </a>
             </div>

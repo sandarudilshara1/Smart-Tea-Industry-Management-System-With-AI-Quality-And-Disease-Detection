@@ -20,13 +20,15 @@ export default function AssignmentModal({
   onClose,
   onSubmit,
   availableDrivers = [],
+  vehicles = [],
   preSelectedDriver = null,
 }) {
   const { user } = useAuth();
-  
+
   const [formData, setFormData] = useState({
     driverId: "",
     route: "",
+    vehicleNo: preSelectedDriver?.vehicleNo || "",
     date: new Date().toISOString().split("T")[0],
     notes: "",
   });
@@ -62,8 +64,8 @@ export default function AssignmentModal({
   const fetchRoutes = async () => {
     try {
       setLoadingRoutes(true);
-      // Use "me" instead of hardcoded factory ID; backend resolves from JWT token
-      const response = await getAllRoutes("me", { status: "Active", limit: 100 });
+      // Backend resolves from JWT token, no longer multi-tenant
+      const response = await getAllRoutes({ status: "Active", limit: 100 });
       if (response.success && response.content) {
         console.log('✅ Routes fetched for assignment:', response.content.length);
         setRoutes(Array.isArray(response.content) ? response.content : []);
@@ -81,7 +83,7 @@ export default function AssignmentModal({
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.driverId) newErrors.driverId = "Please select a driver";      
+    if (!formData.driverId) newErrors.driverId = "Please select a driver";
     if (!formData.route) newErrors.route = "Please select a route";
     return newErrors;
   };
@@ -130,7 +132,7 @@ export default function AssignmentModal({
       const selectedDriver = availableDrivers.find((d) => (d._id || d.id) === formData.driverId);
       // Route matching: formData.route contains the route _id, so search by _id
       const selectedRoute = routes.find((r) => r._id === formData.route);
-      
+
       if (!selectedRoute) {
         throw new Error('Selected route not found');
       }
@@ -142,6 +144,7 @@ export default function AssignmentModal({
           name: selectedRoute.routeName,
           number: selectedRoute.routeNumber,
         },
+        vehicleNo: formData.vehicleNo,
         date: formData.date,
         notes: formData.notes,
       };
@@ -162,13 +165,13 @@ export default function AssignmentModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-[1000] backdrop-blur-sm bg-black/30 overflow-hidden">
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border"     
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border"
         style={{ borderColor: BORDER_COLOR }}
       >
         {/* Header */}
         <div
           className="p-6 border-b flex items-center justify-between"
-          style={{ borderColor: BORDER_COLOR, backgroundColor: HEADER_BG }}     
+          style={{ borderColor: BORDER_COLOR, backgroundColor: HEADER_BG }}
         >
           <h2 className="text-xl font-semibold" style={{ color: ACCENT_COLOR }}>
             Assign Route to Driver
@@ -195,14 +198,14 @@ export default function AssignmentModal({
           <div className="p-6 space-y-6">
             {/* Driver */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">  
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Driver <span className="text-red-500">*</span>
               </label>
               <select
                 className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:outline-none"
                 style={{ borderColor: BORDER_COLOR }}
                 value={formData.driverId}
-                onChange={(e) => handleInputChange("driverId", e.target.value)} 
+                onChange={(e) => handleInputChange("driverId", e.target.value)}
                 disabled={Boolean(preSelectedDriver)}
               >
                 <option value="">Choose driver...</option>
@@ -213,13 +216,13 @@ export default function AssignmentModal({
                 ))}
               </select>
               {errors.driverId && (
-                <p className="text-sm text-red-500">{errors.driverId}</p>       
+                <p className="text-sm text-red-500">{errors.driverId}</p>
               )}
             </div>
 
             {/* Route */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">  
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Route <span className="text-red-500">*</span>
               </label>
               <div className="relative">
@@ -228,7 +231,7 @@ export default function AssignmentModal({
                   className="w-full pl-10 border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:outline-none bg-white"
                   style={{ borderColor: errors.route ? '#ef4444' : BORDER_COLOR }}
                   value={formData.route}
-                  onChange={(e) => handleInputChange("route", e.target.value)}  
+                  onChange={(e) => handleInputChange("route", e.target.value)}
                   disabled={loadingRoutes || routes.length === 0}
                 >
                   <option value="">
@@ -249,9 +252,29 @@ export default function AssignmentModal({
               )}
             </div>
 
+            {/* Vehicle Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Assign Vehicle (Optional)
+              </label>
+              <select
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:outline-none bg-white"
+                style={{ borderColor: BORDER_COLOR }}
+                value={formData.vehicleNo}
+                onChange={(e) => handleInputChange("vehicleNo", e.target.value)}
+              >
+                <option value="">-- Let driver use default or any vehicle --</option>
+                {vehicles.map((v) => (
+                  <option key={v._id || v.vehicleNumber} value={v.vehicleNumber}>
+                    {v.vehicleNumber} - {v.vehicleType || 'Vehicle'}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Date */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">  
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Assignment Date
               </label>
               <div className="relative">
@@ -261,7 +284,7 @@ export default function AssignmentModal({
                   className="pl-10 w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:outline-none"
                   style={{ borderColor: BORDER_COLOR }}
                   value={formData.date}
-                  onChange={(e) => handleInputChange("date", e.target.value)}   
+                  onChange={(e) => handleInputChange("date", e.target.value)}
                   min={new Date().toISOString().split("T")[0]}
                 />
               </div>
@@ -269,7 +292,7 @@ export default function AssignmentModal({
 
             {/* Notes */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">  
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Additional Notes
               </label>
               <textarea
@@ -278,7 +301,7 @@ export default function AssignmentModal({
                 rows={3}
                 placeholder="Optional notes..."
                 value={formData.notes}
-                onChange={(e) => handleInputChange("notes", e.target.value)}    
+                onChange={(e) => handleInputChange("notes", e.target.value)}
               />
             </div>
 
@@ -293,12 +316,12 @@ export default function AssignmentModal({
           {/* Footer Buttons */}
           <div
             className="flex gap-3 justify-end p-6 border-t"
-            style={{ borderColor: BORDER_COLOR, backgroundColor: HEADER_BG }}   
+            style={{ borderColor: BORDER_COLOR, backgroundColor: HEADER_BG }}
           >
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 rounded-lg text-sm font-medium transition"   
+              className="px-6 py-2 rounded-lg text-sm font-medium transition"
               style={{
                 backgroundColor: "transparent",
                 color: ACCENT_COLOR,
@@ -325,13 +348,13 @@ export default function AssignmentModal({
       {showConfirmation && (
         <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/30 backdrop-blur-sm">
           <div
-            className="bg-white rounded-2xl w-full max-w-md shadow-2xl border"  
+            className="bg-white rounded-2xl w-full max-w-md shadow-2xl border"
             style={{ borderColor: BORDER_COLOR }}
           >
             {/* Header */}
             <div
               className="p-6 border-b flex items-center space-x-3"
-              style={{ borderColor: BORDER_COLOR, backgroundColor: HEADER_BG }} 
+              style={{ borderColor: BORDER_COLOR, backgroundColor: HEADER_BG }}
             >
               <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-100">
                 <AlertTriangle className="w-5 h-5 text-blue-600" />

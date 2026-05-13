@@ -8,6 +8,8 @@ import TransportManagerRoutes from "./TransportManagerRoutes";
 import FactoryManagerRoutes from "./FactoryManagerRoutes";
 import OwnerRoutes from "./OwnerRoutes";
 import PaymentManagerRoutes from "./PaymentManagerRoutes";
+import supplierRoutes from "./SupplierRoutes";
+import DriverRoutes from "./DriverRoutes";
 
 import Auth from "../components/Auth";
 import DevLogin from "../pages/auth/login";
@@ -29,6 +31,8 @@ export default function AppRouter() {
         {FactoryManagerRoutes}
         {TransportManagerRoutes}
         {PaymentManagerRoutes}
+        {supplierRoutes}
+        {DriverRoutes}
 
         <Route path="/login" element={<Auth />} />
         {/* Development-only simple login (bypasses backend) */}
@@ -45,6 +49,14 @@ export default function AppRouter() {
         />
         <Route
           path="/owner/tea-disease"
+          element={
+            <Layout>
+              <TeaDiseaseDetection />
+            </Layout>
+          }
+        />
+        <Route
+          path="/factory-manager/tea-disease"
           element={
             <Layout>
               <TeaDiseaseDetection />

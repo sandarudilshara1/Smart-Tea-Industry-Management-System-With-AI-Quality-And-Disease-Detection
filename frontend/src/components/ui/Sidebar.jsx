@@ -30,15 +30,19 @@ const LOGO_SRC = "/assets/logo2.png";
 const sidebarLinks = {
   supplier: [
     { name: "Dashboard", path: "/supplier/dashboard", icon: Home },
+    {
+      name: "Leaf Supply Requests",
+      path: "/supplier/leaf-supply-requests",
+      icon: Package,
+    },
     { name: "Tea Production", path: "/supplier/production", icon: Package },
     { name: "Tea Quality", path: "/supplier/tea-quality", icon: Package },
-    { name: "Inventory", path: "/supplier/inventory", icon: Package },
-    { name: "Processing", path: "/supplier/processing", icon: Settings },
   ],
   driver: [
     { name: "Dashboard", path: "/driver/dashboard", icon: Home },
-    { name: "Trips", path: "/driver/trips", icon: Truck },
-    { name: "Emergency", path: "/driver/emergency", icon: Award },
+    { name: "My Routes", path: "/driver/routes", icon: Route },
+    { name: "My Vehicle", path: "/driver/vehicle", icon: Truck },
+    { name: "Profile", path: "/driver/profile", icon: UserCheck },
   ],
   transport_manager: [
     { name: "Dashboard", path: "/transportManager/dashboard", icon: Home },
@@ -51,11 +55,6 @@ const sidebarLinks = {
       icon: Bell,
     },
     {
-      name: "Route Planner",
-      path: "/transportManager/routePlan",
-      icon: ListCheck,
-    },
-    {
       name: "Emergency",
       path: "/transportManager/emergency",
       icon: BadgeAlert,
@@ -63,10 +62,19 @@ const sidebarLinks = {
   ],
   inventory_manager: [
     { name: "Dashboard", path: "/inventoryManager/dashboard", icon: Home },
-    { name: "Leaf Weight", path: "/inventoryManager/leaf_weight", icon: Truck },
     {
-      name: "Bag Weight",
-      path: "/inventoryManager/empty_bags_weight",
+      name: "Leaf Inventory",
+      path: "/inventoryManager/leaf-inventory",
+      icon: Package,
+    },
+    {
+      name: "Fertilizer Inventory",
+      path: "/inventoryManager/fertilizer-inventory",
+      icon: Package,
+    },
+    {
+      name: "Fertilizer Companies",
+      path: "/inventoryManager/fertilizer-companies",
       icon: Package,
     },
     {
@@ -74,7 +82,6 @@ const sidebarLinks = {
       path: "/inventoryManager/announcements",
       icon: Bell,
     },
-    { name: "History", path: "/inventoryManager/history", icon: Award },
   ],
   fertilizer_manager: [
     { name: "Dashboard", path: "/fertilizerManager/dashboard", icon: Home },
@@ -89,48 +96,12 @@ const sidebarLinks = {
   ],
   factory_manager: [
     { name: "Dashboard", path: "/factoryManager/dashboard", icon: Home },
-    { name: "Fertilizers", path: "/factoryManager/fertilizers", icon: Package },
-    { name: "Suppliers", path: "/factoryManager/suppliers", icon: Users },
     { name: "Tea Quality", path: "/factoryManager/tea-quality", icon: Package },
+    { name: "Tea Disease", path: "/factory-manager/tea-disease", icon: BadgeAlert },
     {
       name: "Announcements",
       path: "/factoryManager/announcements",
       icon: Bell,
-    },
-    // { name: "Routes", path: "/factoryManager/routes", icon: Route },
-    { name: "Inventory", path: "/factoryManager/inventory", icon: Package },
-    // { name: "Drivers", path: "/factoryManager/drivers", icon: Users },
-    // { name: "Payments New", path: "/factoryManager/payment/main", icon: Users },
-    {
-      name: "Payments",
-      icon: DollarSign,
-      children: [
-        // {
-        //   name: "Payments Proceed",
-        //   path: "/factoryManager/payment/proceed",
-        //   icon: DollarSign,
-        // },
-        {
-          name: "Payments",
-          path: "/factoryManager/payment/payments",
-          icon: DollarSign,
-        },
-        {
-          name: "Tea Rate",
-          path: "/factoryManager/payment/teaRate",
-          icon: Package,
-        },
-        {
-          name: "Advance",
-          path: "/factoryManager/payment/advance",
-          icon: DollarSign,
-        },
-        {
-          name: "Loans",
-          path: "/factoryManager/payment/loans",
-          icon: BarChart3,
-        },
-      ],
     },
   ],
   owner: [
@@ -139,11 +110,11 @@ const sidebarLinks = {
     { name: "Tea Disease Detection", path: "/owner/tea-disease", icon: BadgeAlert },
     { name: "Tea Quality", path: "/owner/tea-quality", icon: Package },
     { name: "Drivers", path: "/owner/drivers", icon: Truck },
-    { name: "Payments", path: "/owner/payments", icon: DollarSign },
     { name: "Manager Works", path: "/owner/managers", icon: UserCheck },
     { name: "Employer Management", path: "/owner/employers", icon: Users },
+    { name: "Suppliers", path: "/owner/suppliers", icon: Route },
     {
-      name: "Fertilizer Company",
+      name: "Fertilizer Companies",
       path: "/owner/fertilizer-companies",
       icon: Package,
     },
@@ -184,7 +155,7 @@ export default function Sidebar() {
   const role = String(user?.role || "").trim().toLowerCase();
   const [paymentsOpen, setPaymentsOpen] = React.useState(false);
 
-  // Use sidebarLinks[role] directly; Payments handled in rendering below
+  // Use sidebarLinks[role] directly
   let linksToShow = sidebarLinks[role];
 
   return (
@@ -214,58 +185,7 @@ export default function Sidebar() {
       {/* Menu Items */}
       <nav className="flex-1 mt-6 px-4">
         {linksToShow?.map((link) => {
-          // For Factory Manager, render Payments as collapsible
-          if (role === "factory_manager" && link.name === "Payments") {
-            return (
-              <div key={link.name}>
-                <button
-                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 font-medium transition-all duration-200 ${paymentsOpen
-                    ? "shadow-lg text-white bg-[#104137]"
-                    : "text-white/70 hover:bg-[#104137] hover:text-white"
-                    }`}
-                  onClick={() => setPaymentsOpen((open) => !open)}
-                  style={{
-                    backgroundColor: paymentsOpen ? "#104137" : "transparent",
-                    // additional style if needed
-                  }}
-                >
-                  <link.icon className="w-5 h-5" />
-                  <span>{link.name}</span>
-                  <span className="ml-auto">{paymentsOpen ? "▲" : "▼"}</span>
-                </button>
-
-                {paymentsOpen && (
-                  <div className="ml-6">
-                    {link.children.map((child) => {
-                      const ChildIcon = child.icon;
-                      const isActive = location.pathname === child.path;
-                      return (
-                        <Link
-                          key={child.name}
-                          to={child.path}
-                          className={`w-full flex items-center space-x-3 px-4 py-2 rounded-lg mb-1 font-medium transition-all duration-200 ${isActive
-                            ? "shadow-lg text-white bg-[#104137]"
-                            : "text-white/70 hover:bg-[#104137] hover:text-white"
-                            }`}
-                          style={{
-                            backgroundColor: isActive
-                              ? "#104137"
-                              : "transparent",
-                          }}
-                        >
-                          <ChildIcon className="w-4 h-4" />
-                          <span>{child.name}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          }
-          // Render other links as usual
           const Icon = link.icon;
-          // Highlight parent if inside nested route
           const isActive = location.pathname.startsWith(link.path);
           return (
             <Link

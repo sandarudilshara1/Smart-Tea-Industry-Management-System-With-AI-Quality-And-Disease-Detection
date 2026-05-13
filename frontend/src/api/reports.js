@@ -1,9 +1,9 @@
 import api from './axios';
 
 // Get business overview statistics
-export const getOverview = async () => {
+export const getOverview = async (days) => {
     try {
-        const response = await api.get('/reports/overview');
+        const response = await api.get('/reports/overview', { params: days ? { days } : undefined });
         return response.data;
     } catch (error) {
         console.error('Get overview error:', error);
@@ -12,9 +12,9 @@ export const getOverview = async () => {
 };
 
 // Get production statistics
-export const getProduction = async () => {
+export const getProduction = async (days) => {
     try {
-        const response = await api.get('/reports/production');
+        const response = await api.get('/reports/production', { params: days ? { days } : undefined });
         return response.data;
     } catch (error) {
         console.error('Get production error:', error);
@@ -23,9 +23,9 @@ export const getProduction = async () => {
 };
 
 // Get financial statistics
-export const getFinancial = async () => {
+export const getFinancial = async (days) => {
     try {
-        const response = await api.get('/reports/financial');
+        const response = await api.get('/reports/financial', { params: days ? { days } : undefined });
         return response.data;
     } catch (error) {
         console.error('Get financial error:', error);
@@ -34,9 +34,9 @@ export const getFinancial = async () => {
 };
 
 // Get quality assessment statistics
-export const getQuality = async () => {
+export const getQuality = async (days) => {
     try {
-        const response = await api.get('/reports/quality');
+        const response = await api.get('/reports/quality', { params: days ? { days } : undefined });
         return response.data;
     } catch (error) {
         console.error('Get quality error:', error);
@@ -45,12 +45,23 @@ export const getQuality = async () => {
 };
 
 // Get disease monitoring statistics
-export const getDiseases = async () => {
+export const getDiseases = async (days) => {
     try {
-        const response = await api.get('/reports/diseases');
+        const response = await api.get('/reports/diseases', { params: days ? { days } : undefined });
         return response.data;
     } catch (error) {
         console.error('Get diseases error:', error);
+        throw error;
+    }
+};
+
+// Get supplier insights
+export const getSupplierInsights = async (days) => {
+    try {
+        const response = await api.get('/reports/suppliers', { params: days ? { days } : undefined });
+        return response.data;
+    } catch (error) {
+        console.error('Get supplier insights error:', error);
         throw error;
     }
 };

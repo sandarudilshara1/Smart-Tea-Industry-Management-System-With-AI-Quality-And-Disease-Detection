@@ -6,11 +6,13 @@ import {
   LogOut,
   Calculator,
 } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 const ACCENT_COLOR = "#165E52";
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [showCalculator, setShowCalculator] = useState(false);
 
   const handleLogout = () => {
@@ -26,7 +28,7 @@ export default function Navbar() {
             {/* Left side - Logo/Title */}
             <div className="flex items-center">
               <h1 className="text-2xl font-bold" style={{ color: ACCENT_COLOR }}>
-                Tea Factory Management
+                {user?.factoryName || "GreenLeaf Tea Factory"}
               </h1>
             </div>
 

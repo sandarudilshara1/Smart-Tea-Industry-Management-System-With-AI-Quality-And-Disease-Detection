@@ -50,11 +50,9 @@ export const getAllAnnouncements = async (factoryId = null, options = {}) => {
     }
 
     try {
-        const url = factoryId 
-            ? `/announcements?factoryId=${factoryId}` 
-            : '/announcements';
-
-        const requestPromise = api.get(url)
+        const requestPromise = api.get('/announcements', {
+            params: factoryId != null ? { factoryId } : undefined,
+        })
             .then((response) => {
                 announcementsCache.set(cacheKey, {
                     data: response.data,
@@ -112,10 +110,9 @@ export const deleteAnnouncement = async (id) => {
 // Get announcements by topic
 export const getAnnouncementsByTopic = async (topic, factoryId = null) => {
     try {
-        const url = factoryId 
-            ? `/announcements/topic/${topic}?factoryId=${factoryId}` 
-            : `/announcements/topic/${topic}`;
-        const response = await api.get(url);
+        const response = await api.get(`/announcements/topic/${topic}`, {
+            params: factoryId != null ? { factoryId } : undefined,
+        });
         return response.data;
     } catch (error) {
         console.error('Get announcements by topic error:', error);

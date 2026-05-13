@@ -83,7 +83,7 @@ const EMPTY_FORM = {
     emergencyContactName: "", emergencyContactPhone: "", emergencyContactRelationship: "",
 };
 
-function DriverModal({ driver, onClose, onSaved }) {
+function DriverModal({ driver, onClose, onSaved, onError }) {
     const isEdit = !!driver;
     const [form, setForm] = useState(isEdit ? {
         name: driver.name || "",
@@ -145,7 +145,9 @@ function DriverModal({ driver, onClose, onSaved }) {
             else await createDriver(payload);
             onSaved(isEdit ? "Driver updated successfully!" : "Driver added successfully!");
         } catch (err) {
-            setErrors({ submit: err?.message || (isEdit ? "Failed to update driver" : "Failed to add driver") });
+            const errorMsg = err?.message || (isEdit ? "Failed to update driver" : "Failed to add driver");
+            setErrors({ submit: errorMsg });
+            if (onError) onError(errorMsg);
         } finally {
             setSaving(false);
         }
@@ -232,7 +234,7 @@ function DriverModal({ driver, onClose, onSaved }) {
 }
 
 // ── Delete Confirm Modal ───────────────────────────────────────────────────────
-function DeleteModal({ driver, onClose, onDeleted }) {
+function DeleteModal({ driver, onClose, onDeleted, onError }) {
     const [deleting, setDeleting] = useState(false);
     const [error, setError] = useState("");
     const handleDelete = async () => {
@@ -241,7 +243,9 @@ function DeleteModal({ driver, onClose, onDeleted }) {
             await deleteDriver(driver._id);
             onDeleted("Driver removed successfully.");
         } catch (err) {
-            setError(err?.message || "Failed to delete driver");
+            const errorMsg = err?.message || "Failed to delete driver";
+            setError(errorMsg);
+            if (onError) onError(errorMsg);
         } finally { setDeleting(false); }
     };
     return (
@@ -272,22 +276,51 @@ function DeleteModal({ driver, onClose, onDeleted }) {
 }
 
 // ── Assign Route Modal ─────────────────────────────────────────────────────────
-function AssignRouteModal({ driver, routes, onClose, onSaved }) {
+function AssignRouteModal({ driver, routes, vehicles = [], drivers = [], onClose, onSaved, onError }) {
     const [selectedRoute, setSelectedRoute] = useState("");
+    const [selectedVehicle, setSelectedVehicle] = useState(driver.vehicleNo || "");
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
     const assigned = (driver.assignedRoutes || []).map(r => r.routeId);
     const available = routes.filter(r => !assigned.includes(r._id) && r.status === "Active");
+
+    // Filter out vehicles that are currently in use by other drivers or marked unavailable
+    const takenVehicles = drivers
+        .filter(d => d._id !== driver._id)
+        .flatMap(d => {
+            const taken = [];
+            // Only block vehicles actively used by other drivers' current trips.
+            // Do NOT block just because another driver has a default vehicleNo set.
+            if (d.currentTrip && d.currentTrip.routeId && d.currentTrip.status !== 'Completed' && d.currentTrip.vehicleNo) {
+                taken.push(String(d.currentTrip.vehicleNo).toUpperCase());
+            }
+            return taken;
+        });
+
+    const normalizedSelectedVehicle = String(selectedVehicle || '').toUpperCase();
+    const availableVehicles = vehicles.filter(v => {
+        const vehicleNumber = String(v.vehicleNumber || '').toUpperCase();
+        if (!vehicleNumber) return false;
+        if (takenVehicles.includes(vehicleNumber)) return false;
+        if (vehicleNumber === normalizedSelectedVehicle) return true;
+        return v.status === 'Available';
+    });
 
     const handleAssign = async () => {
         if (!selectedRoute) { setError("Please select a route"); return; }
         const route = routes.find(r => r._id === selectedRoute);
         setSaving(true);
         try {
-            await assignRoute(driver._id, { routeId: route._id, routeName: route.routeName });
+            await assignRoute(driver._id, {
+                routeId: route._id,
+                routeName: route.routeName,
+                vehicleNo: selectedVehicle
+            });
             onSaved(`Route "${route.routeName}" assigned to ${driver.name}.`);
         } catch (err) {
-            setError(err?.message || "Failed to assign route");
+            const errorMsg = err?.message || "Failed to assign route";
+            setError(errorMsg);
+            if (onError) onError(errorMsg);
         } finally { setSaving(false); }
     };
 
@@ -295,7 +328,11 @@ function AssignRouteModal({ driver, routes, onClose, onSaved }) {
         try {
             await unassignRoute(driver._id, routeId);
             onSaved("Route unassigned successfully.");
-        } catch (err) { setError(err?.message || "Failed to unassign route"); }
+        } catch (err) {
+            const errorMsg = err?.message || "Failed to unassign route";
+            setError(errorMsg);
+            if (onError) onError(errorMsg);
+        }
     };
 
     return (
@@ -358,6 +395,23 @@ function AssignRouteModal({ driver, routes, onClose, onSaved }) {
                         )}
                         {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
                     </div>
+
+                    {/* Assign Vehicle */}
+                    {available.length > 0 && (
+                        <div className="mt-4 border-t pt-4" style={{ borderColor: BORDER }}>
+                            <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: A }}>Assign Vehicle <span className="font-normal opacity-60">(Optional)</span></p>
+                            <select value={selectedVehicle} onChange={e => setSelectedVehicle(e.target.value)}
+                                className="w-full border rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none"
+                                style={{ borderColor: BORDER, color: A }}>
+                                <option value="">-- Let driver use default or any vehicle --</option>
+                                {availableVehicles.map(v => (
+                                    <option key={v._id || v.vehicleNumber} value={v.vehicleNumber}>
+                                        {v.vehicleNumber} - {v.vehicleType || 'Vehicle'}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                 </div>
                 <div className="flex gap-3 p-4 border-t" style={{ borderColor: BORDER, backgroundColor: HEADER_BG }}>
                     <button onClick={onClose} className="flex-1 py-2.5 rounded-lg border text-sm font-semibold"
@@ -665,6 +719,7 @@ export default function DriverManagement() {
     const [toast, setToast] = useState(null);
 
     const showToast = useCallback((msg, type = "success") => setToast({ msg, type }), []);
+    const handleError = useCallback((msg) => showToast(msg, "error"), [showToast]);
 
     // ── Fetch ────────────────────────────────────────────────────────────────────
     const fetchData = useCallback(async () => {
@@ -672,7 +727,7 @@ export default function DriverManagement() {
         try {
             const [dResp, rResp] = await Promise.all([
                 getAllDrivers(),
-                getAllRoutes("me", { limit: 200 }),
+                getAllRoutes({ limit: 200 }),
             ]);
             if (dResp?.success) setDrivers(dResp.data?.drivers || []);
             // getAllRoutes returns { success, content: [...] }
@@ -701,6 +756,12 @@ export default function DriverManagement() {
             );
         }
         return true;
+    }).sort((a, b) => {
+        // Fallback to _id sorting which inherently contains the timestamp in MongoDB
+        if (a._id && b._id) {
+            return b._id.localeCompare(a._id); // Descending (newest first)
+        }
+        return 0;
     });
 
     // ── Action Handlers ──────────────────────────────────────────────────────────
@@ -906,7 +967,16 @@ export default function DriverManagement() {
                                                         ) : <span className="text-xs text-gray-300 italic">None</span>}
                                                     </td>
                                                     {/* Status */}
-                                                    <td className="py-3 px-4"><StatusBadge status={d.status} /></td>
+                                                    <td className="py-3 px-4">
+                                                        <StatusBadge status={d.status} />
+                                                        {d.currentTrip && d.currentTrip.status !== 'Completed' && d.currentTrip.status !== 'Not Started' && (
+                                                            <div className="mt-1">
+                                                                <span className="text-[10px] uppercase font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 shadow-sm">
+                                                                    ▶ {d.currentTrip.status}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </td>
                                                     {/* Actions */}
                                                     <td className="py-3 px-4">
                                                         <div className="flex items-center gap-1">
@@ -953,13 +1023,13 @@ export default function DriverManagement() {
 
             {/* ── Modals & Panels ── */}
             {showAddEdit && (
-                <DriverModal driver={editTarget} onClose={() => { setShowAddEdit(false); setEditTarget(null); }} onSaved={handleSaved} />
+                <DriverModal driver={editTarget} onClose={() => { setShowAddEdit(false); setEditTarget(null); }} onSaved={handleSaved} onError={handleError} />
             )}
             {deleteTarget && (
-                <DeleteModal driver={deleteTarget} onClose={() => setDeleteTarget(null)} onDeleted={handleDeleted} />
+                <DeleteModal driver={deleteTarget} onClose={() => setDeleteTarget(null)} onDeleted={handleDeleted} onError={handleError} />
             )}
             {routeTarget && (
-                <AssignRouteModal driver={routeTarget} routes={routes} onClose={() => setRouteTarget(null)} onSaved={handleSaved} />
+                <AssignRouteModal driver={routeTarget} routes={routes} vehicles={vehicles} drivers={drivers} onClose={() => setRouteTarget(null)} onSaved={handleSaved} onError={handleError} />
             )}
             {viewTarget && (
                 <DriverDetailDrawer driver={viewTarget} onClose={() => setViewTarget(null)}

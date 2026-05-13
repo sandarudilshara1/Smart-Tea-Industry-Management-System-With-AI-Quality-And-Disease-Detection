@@ -9,7 +9,7 @@ const paymentSchema = new mongoose.Schema({
     factoryId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
+        required: false
     },
     routeId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -137,6 +137,10 @@ const paymentSchema = new mongoose.Schema({
     },
     receiptNumber: {
         type: String
+    },
+    referenceNumber: {
+        type: String,
+        sparse: true
     },
     notes: {
         type: String

@@ -104,15 +104,17 @@ teaFlavorQualityCalculationSchema.index({ status: 1 });
 
 // Static methods
 teaFlavorQualityCalculationSchema.statics.getStatistics = async function(userId, startDate, endDate) {
+  const match = {
+    createdAt: {
+      $gte: startDate,
+      $lte: endDate
+    }
+  };
+  if (userId) match.userId = new mongoose.Types.ObjectId(userId);
+
   return this.aggregate([
     {
-      $match: {
-        userId: new mongoose.Types.ObjectId(userId),
-        createdAt: {
-          $gte: startDate,
-          $lte: endDate
-        }
-      }
+      $match: match
     },
     {
       $group: {
@@ -134,15 +136,17 @@ teaFlavorQualityCalculationSchema.statics.getDailyStatistics = async function(us
   const endOfDay = new Date();
   endOfDay.setHours(23, 59, 59, 999);
 
+  const match = {
+    createdAt: {
+      $gte: startOfDay,
+      $lte: endOfDay
+    }
+  };
+  if (userId) match.userId = new mongoose.Types.ObjectId(userId);
+
   return this.aggregate([
     {
-      $match: {
-        userId: new mongoose.Types.ObjectId(userId),
-        createdAt: {
-          $gte: startOfDay,
-          $lte: endOfDay
-        }
-      }
+      $match: match
     },
     {
       $group: {
@@ -165,12 +169,12 @@ teaFlavorQualityCalculationSchema.statics.getGradeDistribution = async function(
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
 
+  const match = { createdAt: { $gte: startDate } };
+  if (userId) match.userId = new mongoose.Types.ObjectId(userId);
+
   return this.aggregate([
     {
-      $match: {
-        userId: new mongoose.Types.ObjectId(userId),
-        createdAt: { $gte: startDate }
-      }
+      $match: match
     },
     {
       $group: {

@@ -9,7 +9,7 @@ const supplierSchema = new mongoose.Schema({
     factoryId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
+        required: false
     },
     supplierCode: {
         type: String,
@@ -23,7 +23,7 @@ const supplierSchema = new mongoose.Schema({
     routeId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Route',
-        required: true
+        required: false  // Assigned by admin after registration
     },
     address: {
         type: String,
@@ -38,7 +38,7 @@ const supplierSchema = new mongoose.Schema({
     },
     nicNumber: {
         type: String,
-        required: true
+        required: false  // Optional for self-registered suppliers
     },
     bankDetails: {
         bankName: String,
@@ -81,8 +81,7 @@ const supplierSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Indexes
-supplierSchema.index({ supplierCode: 1 }, { unique: true });
+
 supplierSchema.index({ factoryId: 1, status: 1 });
 supplierSchema.index({ routeId: 1 });
 supplierSchema.index({ userId: 1 });

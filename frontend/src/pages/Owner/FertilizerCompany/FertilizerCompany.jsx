@@ -1,14 +1,9 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Plus, Edit, Trash } from "lucide-react";
-import {
-  getFertilizerCompanies,
-  deleteFertilizerCompany,
-} from "../../../api/owner";
+import { Plus } from "lucide-react";
+import { getFertilizerCompanies } from "../../../api/owner";
 
 const FertilizerCompany = () => {
-  const navigate = useNavigate();
   const [companies, setCompanies] = useState([]);
   const [categories, setCategories] = useState([]);
   const [totalFertilizers, setTotalFertilizers] = useState(0);
@@ -197,26 +192,6 @@ const FertilizerCompany = () => {
     fetchCompanies();
   }, []);
 
-  const handleOpenAddPage = () => {
-    navigate("/owner/fertilizer-companies/add");
-  };
-
-  const handleOpenEditPage = (company) => {
-    navigate("/owner/fertilizer-companies/edit", { state: { company } });
-  };
-
-  const handleDeleteCompany = async (id) => {
-    await deleteFertilizerCompany(id);
-    const remainingCompanies = companies.filter((company) => company.id !== id);
-    setCompanies(remainingCompanies);
-    // Recalculate categories
-    const remainingCategories = Array.from(
-      new Set(remainingCompanies.flatMap((company) => company.categories))
-    );
-    setCategories(remainingCategories);
-    setTotalFertilizers(remainingCategories.length);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-green-50 to-gray-50 p-6">
       {/* Header */}
@@ -225,15 +200,8 @@ const FertilizerCompany = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Fertilizer Companies
           </h1>
-          <p className="text-gray-600">Manage fertilizer suppliers and their product categories</p>
+          <p className="text-gray-600">View fertilizer suppliers and their product categories</p>
         </div>
-        <button
-          className="flex items-center gap-2 bg-gradient-to-r from-[#165E52] to-[#1a7566] hover:shadow-xl text-white py-3 px-6 rounded-xl transition-all duration-200 font-medium"
-          onClick={handleOpenAddPage}
-        >
-          <Plus size={20} />
-          <span>Add New Company</span>
-        </button>
       </div>
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -286,9 +254,6 @@ const FertilizerCompany = () => {
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                   Categories
                 </th>
-                <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  Actions
-                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
@@ -338,34 +303,12 @@ const FertilizerCompany = () => {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-center">
-                    <div className="flex justify-center gap-2">
-                      <button
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                        onClick={() => handleOpenEditPage(company)}
-                        title="Edit Company"
-                      >
-                        <Edit size={18} />
-                      </button>
-                      <button
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-                        onClick={() => {
-                          if (window.confirm(`Are you sure you want to delete ${company.name}?`)) {
-                            handleDeleteCompany(company.id);
-                          }
-                        }}
-                        title="Delete Company"
-                      >
-                        <Trash size={18} />
-                      </button>
-                    </div>
-                  </td>
                 </tr>
               ))}
               {companies.length === 0 && (
                 <tr>
                   <td
-                    colSpan="5"
+                    colSpan="4"
                     className="px-6 py-12 text-center"
                   >
                     <div className="flex flex-col items-center justify-center">
@@ -373,7 +316,7 @@ const FertilizerCompany = () => {
                         <Plus className="w-8 h-8 text-gray-400" />
                       </div>
                       <p className="text-gray-500 font-medium mb-2">No companies found</p>
-                      <p className="text-sm text-gray-400">Add a company to get started</p>
+                      <p className="text-sm text-gray-400">No companies available</p>
                     </div>
                   </td>
                 </tr>

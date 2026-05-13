@@ -26,17 +26,19 @@ instance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Development-only error logger for easier diagnostics
-if (import.meta.env?.DEV) {
-  instance.interceptors.response.use(
-    (res) => res,
-    (error) => {
+// Global Response Interceptor
+instance.interceptors.response.use(
+  (res) => res,
+  (error) => {
+    const status = error?.response?.status;
+    const isAuthError = status === 401 || status === 403;
+
+    // Development-only error logger for easier diagnostics
+    if (import.meta.env?.DEV) {
       try {
         const method = (error?.config?.method || 'GET').toUpperCase();
         const url = error?.config?.url || '';
-        const status = error?.response?.status;
         const msg = error?.response?.data?.message || error?.message;
-        // Avoid logging tokens or sensitive headers
         // eslint-disable-next-line no-console
         console.debug(`[API ${method} ${url}] -> ${status || 'ERR'}: ${msg}`);
         // eslint-disable-next-line no-console
@@ -44,9 +46,23 @@ if (import.meta.env?.DEV) {
       } catch {
         // ignore logging errors
       }
-      return Promise.reject(error);
     }
-  );
-}
+
+    // Handle authentication failures (e.g., "No authentication token, access denied")
+    if (isAuthError) {
+      // eslint-disable-next-line no-console
+      console.warn('[axios] Unauthorized access or expired token detected. Redirecting to login...');
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("user");
+      
+      // Prevent infinite redirect loop if somehow a 401 is triggered on the login page
+      if (window.location.pathname !== '/login' && window.location.pathname !== '/landing') {
+        window.location.href = '/login';
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export default instance;

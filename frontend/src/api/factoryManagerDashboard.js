@@ -1,6 +1,6 @@
 import instance from "./axios";
 
-export const getInventorySummary = async (factoryId, viewMode, params = {}) => {
+export const getInventorySummary = async (viewMode, params = {}) => {
   const queryParams = { viewMode };
 
   if (viewMode === "daily") {
@@ -17,7 +17,7 @@ export const getInventorySummary = async (factoryId, viewMode, params = {}) => {
 
   try {
     const response = await instance.get(
-      `/factory-dashboard/inventory/${factoryId}`,
+      `/factory-dashboard/inventory`,
       { params: queryParams }
     );
     return response.data;
@@ -27,7 +27,7 @@ export const getInventorySummary = async (factoryId, viewMode, params = {}) => {
   }
 };
 
-export const getInventoryRoutes = async (factoryId, viewMode, params = {}) => {
+export const getInventoryRoutes = async (viewMode, params = {}) => {
   const queryParams = { viewMode };
 
   if (viewMode === "daily") {
@@ -45,7 +45,7 @@ export const getInventoryRoutes = async (factoryId, viewMode, params = {}) => {
 
   try {
     const response = await instance.get(
-      `/factory-dashboard/inventory/route/${factoryId}`,
+      `/factory-dashboard/inventory/route`,
       { params: queryParams }
     );
     return response.data;

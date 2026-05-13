@@ -5,21 +5,16 @@ const mongoose = require('mongoose');
 // Get all routes for a factory
 exports.getAllRoutes = async (req, res) => {
     try {
-        const { factoryId } = req.params;
-        const { page = 0, limit = 10, search, status } = req.query;
+        const { page = 0, limit = 10, search, status, factoryId } = req.query;
 
-        const resolvedFactoryId = factoryId === 'me' ? req.user?.userId : factoryId;
-
-        if (!resolvedFactoryId || !mongoose.Types.ObjectId.isValid(resolvedFactoryId)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid factoryId'
-            });
-        }
-
-        const query = { factoryId: resolvedFactoryId };
+        const query = {};
 
         if (status) query.status = status;
+
+        // Optional filter by factoryId when it is a valid ObjectId.
+        if (factoryId && mongoose.Types.ObjectId.isValid(factoryId)) {
+            query.factoryId = factoryId;
+        }
 
         // Search by route name or number
         if (search) {
@@ -41,7 +36,8 @@ exports.getAllRoutes = async (req, res) => {
 
         const total = await Route.countDocuments(query);
 
-        console.log(`📊 GET /api/routes/factory/${resolvedFactoryId} - Found ${routes.length} routes`);
+        // Log removed to reduce noise during polling
+        // console.log(`📊 GET /api/routes - Found ${routes.length} routes`);
 
         res.status(200).json({
             success: true,
@@ -65,6 +61,13 @@ exports.getAllRoutes = async (req, res) => {
 exports.getRouteById = async (req, res) => {
     try {
         const { routeId } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(routeId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid routeId'
+            });
+        }
 
         const route = await Route.findById(routeId)
             .populate('driverId')
@@ -246,6 +249,20 @@ exports.deleteRoute = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: `Cannot delete route. It has ${supplierCount} active supplier(s)`
+            });
+        }
+
+        // Hardening Rule 4: Check if route is currently active on any driver's trip
+        const Driver = require('../models/Driver'); // Ensure Driver model is loaded
+        const activeDriverTrip = await Driver.findOne({
+            'currentTrip.routeId': routeId,
+            'currentTrip.status': { $in: ['Started', 'Collecting', 'Returning', 'Reached Destination'] }
+        });
+
+        if (activeDriverTrip) {
+            return res.status(400).json({
+                success: false,
+                message: `Cannot delete route. Driver ${activeDriverTrip.name} is currently on this route.`
             });
         }
 
